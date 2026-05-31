@@ -9,6 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
 
 # FFmpeg libraries required for H.264 encoding
 pkg_check_modules(FFMPEG REQUIRED
@@ -33,6 +34,10 @@ target_include_directories(camstream_server PRIVATE
     ${FFMPEG_INCLUDE_DIRS}
 )
 
+target_link_directories(camstream_server PRIVATE
+    ${FFMPEG_LIBRARY_DIRS}
+)
+
 target_link_libraries(camstream_server PRIVATE
     ${OpenCV_LIBS}
     ${FFMPEG_LIBRARIES}
@@ -44,5 +49,3 @@ target_compile_options(camstream_server PRIVATE
     ${FFMPEG_CFLAGS_OTHER}
     -Wall -Wextra -Wpedantic
 )
-
-find_package(Threads REQUIRED)

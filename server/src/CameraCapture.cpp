@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <thread>
 
 namespace camstream {
 
@@ -51,11 +52,24 @@ void CameraCapture::loop()
     const auto start_time = std::chrono::steady_clock::now();
     cv::Mat frame;
 
+    int consecutive_failures = 0;
+    constexpr int MAX_FAILURES = 10;
+
     while (running_) {
         if (!cap.read(frame) || frame.empty()) {
-            std::cerr << "[CameraCapture] cam" << cam_id_ << ": read failed\n";
+            ++consecutive_failures;
+            std::cerr << "[CameraCapture] cam" << cam_id_ << ": read failed ("
+                      << consecutive_failures << "/" << MAX_FAILURES << ")\n";
+            if (consecutive_failures >= MAX_FAILURES) {
+                std::cerr << "[CameraCapture] cam" << cam_id_
+                          << ": too many failures, stopping\n";
+                running_ = false;
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
         }
+        consecutive_failures = 0;
 
         const auto now = std::chrono::steady_clock::now();
         const int64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(
