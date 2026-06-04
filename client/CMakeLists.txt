@@ -39,6 +39,7 @@ add_executable(camstream_client
     src/StreamReceiver.cpp
     src/VideoDecoder.cpp
     src/Display.cpp
+    src/Recorder.cpp
 )
 
 target_include_directories(camstream_client PRIVATE

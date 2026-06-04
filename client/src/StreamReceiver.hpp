@@ -42,6 +42,8 @@ public:
     void stop();
 
     bool isConnected() const noexcept { return connected_.load(); }
+    /// False once the receive thread exits (connection failed or was closed).
+    bool isRunning()   const noexcept { return running_.load(); }
 
 private:
     void receiveLoop();
