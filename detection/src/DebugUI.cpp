@@ -153,6 +153,13 @@ void DebugUI::setCamDelay(int cam_id, int frames)
     cam_delays_[cam_id] = frames;
 }
 
+void DebugUI::setRoundStatus(const std::string& message, int phase_index)
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    round_status_msg_ = message;
+    round_phase_      = phase_index;
+}
+
 bool DebugUI::consumeResetRequest()
 {
     std::lock_guard<std::mutex> lk(mtx_);
@@ -235,6 +242,20 @@ void DebugUI::drawCamTile(cv::Mat& out, const cv::Rect& roi, int cam_id,
     } else {
         overlay = frames_[cam_id].clone();
     }
+
+    // Tint the "full dart region" — every fg pixel within the perp band of
+    // the refined axis between tip and tail.  Lets the user see fragments
+    // glued back to the shaft (black-on-black sectors split the mask but the
+    // line-extend merges them).
+    if (!vizs_[cam_id].dart_region.empty() &&
+        vizs_[cam_id].dart_region.size() == overlay.size()) {
+        cv::Mat layer(overlay.size(), overlay.type(),
+                      cv::Scalar(60, 230, 90));
+        cv::Mat blended;
+        cv::addWeighted(overlay, 0.45, layer, 0.55, 0, blended);
+        blended.copyTo(overlay, vizs_[cam_id].dart_region);
+    }
+
     if (calibs_[cam_id].isValid())
         Renderer::drawCalibrationOverlay(overlay, calibs_[cam_id]);
     for (const auto& lt : vizs_[cam_id].logged_tips_px)
@@ -443,6 +464,31 @@ void DebugUI::composite(cv::Mat& out) const
                 cv::FONT_HERSHEY_DUPLEX, 0.55, ACCENT_INFO, 1, cv::LINE_AA);
     y += 18;
     putDivider();
+
+    // ── Round status banner ───────────────────────────────────────────────
+    {
+        // Phase index: 0 = waiting dart, 1 = complete, 2 = resyncing
+        cv::Scalar status_col;
+        switch (round_phase_) {
+            case 1:  status_col = ACCENT_OK;   break;  // collect
+            case 2:  status_col = ACCENT_WARN; break;  // wait
+            default: status_col = ACCENT_INFO; break;  // throw
+        }
+        const cv::Rect banner(8, y - 14, INFO_PANEL_W - 16, 44);
+        cv::Mat banner_roi = panel(banner);
+        cv::Mat fill(banner.height, banner.width, CV_8UC3,
+                     status_col * 0.18);
+        cv::addWeighted(fill, 1.0, banner_roi, 1.0, 0, banner_roi);
+        cv::rectangle(panel, banner, status_col, 1, cv::LINE_AA);
+        const std::string msg = round_status_msg_.empty()
+                                    ? std::string("Initialising...")
+                                    : round_status_msg_;
+        cv::putText(panel, msg,
+                    {18, y + 14},
+                    cv::FONT_HERSHEY_DUPLEX, 0.55, status_col, 1, cv::LINE_AA);
+        y += 50;
+        putDivider();
+    }
 
     putHeader("CALIBRATION");
     for (int i = 0; i < NUM_CAMS; ++i) {

@@ -42,6 +42,12 @@ struct DetectorViz {
     bool                     has_detection{false};
     double                   timestamp    {0.0};
     cv::Mat                  mask;
+    /// Binary mask of all pixels considered part of the dart after
+    /// fragment-merging along the refined axis (CV_8U, 0/255).  Lets the
+    /// debug UI tint the full "claimed" dart region — useful when the dart
+    /// is split into pieces by a dark sector and we want to verify which
+    /// fragments we glued back together.
+    cv::Mat                  dart_region;
     std::vector<cv::Point2f> logged_tips_px;
     DetectorState            state        {DetectorState::Warmup};
 };

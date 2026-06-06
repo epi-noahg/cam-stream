@@ -36,6 +36,10 @@ public:
     /// processFrame; call from the same thread.
     DetectorViz lastViz() const { return last_viz_; }
 
+    /// Current detector state — used by Pipeline for cross-cam coordination
+    /// (e.g. force-resync a cam stuck in HumanBlob when its peers say OK).
+    DetectorState state() const { return last_viz_.state; }
+
     /// Live-tunable detection threshold on the LAB diff distance (5..80).
     void  setDiffThreshold(float v) { diff_threshold_ = v; }
     float diffThreshold() const     { return diff_threshold_; }
@@ -70,6 +74,9 @@ private:
     bool                              human_seen_         {false};
     int                               consecutive_small_  {0};
     int                               artifact_frames_    {0};
+    cv::Point2f                       prev_big_centroid_  {};
+    bool                              has_prev_big_centroid_ {false};
+    int                               static_big_frames_  {0};
 
     static constexpr int   WARMUP_FRAMES_REQUIRED       = 30;
     // Higher → wait longer for the dart to settle before emitting; lower
@@ -85,6 +92,19 @@ private:
     static constexpr float CHROMA_DIFF_THRESH           =     6.f;  // LAB a*b* dist
     static constexpr int   ARTIFACT_SNAP_FRAMES         = 30;       // ~1s residual
     static constexpr float HUMAN_MIN_SOLIDITY           =     0.55f;
+    /// Per-frame centroid motion (px) below which the biggest blob counts as
+    /// static.  Real humans always jitter; lighting drift is pixel-stable.
+    /// Bumped from 3 to 6 because contour-boundary noise on big blobs can
+    /// shift the centroid 3-5 px between frames without anyone moving.
+    static constexpr float STATIC_BLOB_MOTION_PX        =     6.f;
+    /// Consecutive frames of below-threshold motion before classifying a
+    /// large blob as static noise (≈0.83s @ 30fps).
+    static constexpr int   STATIC_BLOB_FRAMES_REQ       =    25;
+    /// Area (px) of the smallest coherent blob we still treat as "human is
+    /// present".  Below this, post-human exit is allowed even if there's
+    /// plenty of speckle noise elsewhere — that noise is residual bg drift,
+    /// not a person.
+    static constexpr float HUMAN_PRESENT_AREA           =  3000.f;
     static constexpr float TIP_BACKING_MIN_SOLIDITY     =     0.40f;
     static constexpr float TIP_BACKING_MIN_AREA         =   100.f;
     static constexpr float TIP_BACKING_SEARCH_PX        =    20.f;

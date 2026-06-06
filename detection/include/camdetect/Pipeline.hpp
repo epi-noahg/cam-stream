@@ -9,9 +9,24 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace camdetect {
+
+/// High-level phase of the current throwing round, surfaced for player-facing
+/// UI.  Computed from `darts_in_round_` and the per-cam detector states.
+enum class RoundPhase {
+    WaitingDart,   ///< throw the next dart
+    Complete,      ///< 3 darts done, go collect them
+    Resyncing,     ///< human in frame / background re-learning
+};
+
+struct RoundStatus {
+    RoundPhase  phase     {RoundPhase::WaitingDart};
+    int         next_dart {1};   ///< 1..3, meaningful only when WaitingDart
+    std::string message;         ///< short label for the UI
+};
 
 /// Orchestrates per-camera detection and multi-camera fusion.
 ///
@@ -60,8 +75,14 @@ public:
 
     int dartsInRound() const;
 
+    /// High-level round status (phase + human-readable message).  Computed
+    /// from current detector states + dart count, no extra state machine.
+    RoundStatus roundStatus() const;
+
 private:
-    void maybeAutoReset();   // checks all detectors → clear round if all quiet
+    void maybeAutoReset();              ///< clear round if all cams are quiet
+    void watchdogStuckHuman();          ///< force-resync a lone-HUMAN cam
+    RoundStatus computeRoundStatus_() const;  ///< lock-held helper
 
     mutable std::mutex                                  mtx_;
     std::array<std::unique_ptr<DartDetector>, NUM_CAMS> detectors_;
@@ -70,7 +91,17 @@ private:
     int                                                 darts_in_round_{0};
     double                                              fusion_clock_{-1.0};
     std::vector<FusedHit>                               round_hits_;
-    static constexpr int                                MAX_DARTS_PER_ROUND = 3;
+    std::array<int, NUM_CAMS>                           stuck_human_frames_{};
+    int                                                 post_round_human_frames_{0};
+
+    static constexpr int                                MAX_DARTS_PER_ROUND  = 3;
+    /// ~2s @ 30fps: how long one cam can be HUMAN while ≥2 peers are OK
+    /// before we decide it's a noise hallucination and force-resync it.
+    static constexpr int                                STUCK_HUMAN_FRAMES   = 60;
+    /// ~5s @ 30fps: when the round is complete and any cam is still HUMAN,
+    /// after this long we force a global bg refresh.  Backstop for the case
+    /// where ALL cams hallucinate human together (rim noise after a collect).
+    static constexpr int                                POST_ROUND_STUCK_FRAMES = 150;
 };
 
 } // namespace camdetect

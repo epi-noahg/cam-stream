@@ -220,6 +220,8 @@ int main(int argc, char* argv[])
         }
         ui.setRoundProgress(pipeline.dartsInRound(), round_total_score);
         ui.setRoundHits(pipeline.roundHits());
+        const RoundStatus rs = pipeline.roundStatus();
+        ui.setRoundStatus(rs.message, static_cast<int>(rs.phase));
 
         if (ui.consumeResetRequest()) {
             pipeline.resetRound();

@@ -246,6 +246,56 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
     return r;
 }
 
+/// Build a binary mask of every foreground pixel that falls inside the dart's
+/// axis band (perp distance <= perp_tol from the refined line AND axis-coord
+/// inside [a, b]).  This is the "full hitbox" the detector treats as the dart
+/// — including fragments separated by dark sectors that got glued back to the
+/// shaft by the line-extend logic.  Used purely for visualisation.
+void fillDartRegion(cv::Mat&        out,
+                    const cv::Mat&  full_mask,
+                    const Endpoints& ep,
+                    float           perp_tol_px)
+{
+    if (full_mask.empty()) return;
+    if (out.size() != full_mask.size() || out.type() != CV_8U)
+        out = cv::Mat::zeros(full_mask.size(), CV_8U);
+    else
+        out.setTo(0);
+
+    const cv::Point2f a       = ep.a;
+    const cv::Point2f dir     = ep.dir;
+    const cv::Point2f perp{-dir.y, dir.x};
+    const float       total_l = static_cast<float>(cv::norm(ep.b - ep.a));
+    if (total_l <= 0.f) return;
+
+    std::vector<cv::Point> corners{
+        {cvRound(ep.a.x), cvRound(ep.a.y)},
+        {cvRound(ep.b.x), cvRound(ep.b.y)}
+    };
+    cv::Rect bb = cv::boundingRect(corners);
+    const int pad = static_cast<int>(std::ceil(perp_tol_px)) + 4;
+    bb.x      -= pad;
+    bb.y      -= pad;
+    bb.width  += 2 * pad;
+    bb.height += 2 * pad;
+    bb &= cv::Rect(0, 0, full_mask.cols, full_mask.rows);
+
+    for (int y = bb.y; y < bb.y + bb.height; ++y) {
+        const uint8_t* mrow = full_mask.ptr<uint8_t>(y);
+        uint8_t*       orow = out.ptr<uint8_t>(y);
+        for (int x = bb.x; x < bb.x + bb.width; ++x) {
+            if (!mrow[x]) continue;
+            const float dx = x - a.x;
+            const float dy = y - a.y;
+            const float t  = dx * dir.x + dy * dir.y;
+            if (t < 0.f || t > total_l) continue;
+            const float p  = dx * perp.x + dy * perp.y;
+            if (std::abs(p) > perp_tol_px) continue;
+            orow[x] = 255;
+        }
+    }
+}
+
 } // anon
 
 DartDetector::DartDetector(int cam_id, BoardCalibration calib)
@@ -297,17 +347,20 @@ void DartDetector::refreshBackground()
 
 void DartDetector::reset()
 {
-    stable_frames_     = 0;
-    quiet_frames_      = 0;
-    has_candidate_     = false;
-    emitted_           = false;
-    last_tip_pixel_    = {};
-    last_viz_          = {};
+    stable_frames_           = 0;
+    quiet_frames_            = 0;
+    has_candidate_           = false;
+    emitted_                 = false;
+    last_tip_pixel_          = {};
+    last_viz_                = {};
     logged_tips_px_.clear();
-    clean_frames_      = 0;
-    human_seen_        = false;
-    consecutive_small_ = 0;
-    artifact_frames_   = 0;
+    clean_frames_            = 0;
+    human_seen_              = false;
+    consecutive_small_       = 0;
+    artifact_frames_         = 0;
+    prev_big_centroid_       = {};
+    has_prev_big_centroid_   = false;
+    static_big_frames_       = 0;
 }
 
 bool DartDetector::boardLooksCleared() const
@@ -393,6 +446,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
 
     // Human gating: big + non-elongated + chroma diff + SOLID (continuous mass).
     bool huge_now = false;
+    const std::vector<cv::Point>* huge_contour = nullptr;
     for (const auto& c : contours) {
         const float area = static_cast<float>(cv::contourArea(c));
         if (area < HUGE_CONTOUR_AREA) continue;
@@ -403,8 +457,49 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         if (aspect >= HUMAN_MAX_ASPECT)         continue;
         if (isLightingArtifact(c))              continue;
         if (solidity(c) < HUMAN_MIN_SOLIDITY)   continue;   // ← speckles, not human
-        huge_now = true;
+        huge_now     = true;
+        huge_contour = &c;
         break;
+    }
+
+    // Motion check: a real human's centroid always wobbles a few pixels frame
+    // to frame; a static blob that survives chroma + solidity gating is almost
+    // certainly residual lighting drift the bg model hasn't caught up with.
+    // We track the huge-contour centroid and demote "huge_now" to false when
+    // it's been pixel-stable for too long.
+    if (huge_now && huge_contour) {
+        const cv::Moments m = cv::moments(*huge_contour);
+        if (m.m00 > 0.0) {
+            const cv::Point2f c{static_cast<float>(m.m10 / m.m00),
+                                static_cast<float>(m.m01 / m.m00)};
+            if (has_prev_big_centroid_) {
+                const cv::Point2f d = c - prev_big_centroid_;
+                const float move = std::sqrt(d.x*d.x + d.y*d.y);
+                if (move < STATIC_BLOB_MOTION_PX) ++static_big_frames_;
+                else                              static_big_frames_ = 0;
+            }
+            prev_big_centroid_     = c;
+            has_prev_big_centroid_ = true;
+        }
+        if (static_big_frames_ > STATIC_BLOB_FRAMES_REQ) {
+            huge_now = false;
+            // Snap bg if no committed darts to protect.  After a long stretch
+            // (2× the threshold), force the snap regardless — the round_hits
+            // are already captured upstream in Pipeline, so clearing the
+            // local logged_tips here only forfeits dart-re-emit suppression.
+            if (logged_tips_px_.empty()) {
+                lab.copyTo(bg_lab_);
+                static_big_frames_ = 0;
+            } else if (static_big_frames_ > STATIC_BLOB_FRAMES_REQ * 2) {
+                lab.copyTo(bg_lab_);
+                logged_tips_px_.clear();
+                static_big_frames_ = 0;
+            }
+        }
+    } else {
+        // No huge candidate this frame → reset the motion tracker.
+        has_prev_big_centroid_ = false;
+        static_big_frames_     = 0;
     }
 
     // Watchdog: residual foreground that is all artifact AND no round is
@@ -453,13 +548,19 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         return std::nullopt;
     }
 
-    // ── Just-exited: wait until mask is REALLY quiet before validating ─────
-    // Avoids false clears when the human is mid-grab and the blob shrinks
-    // momentarily but is still very much present.
+    // ── Just-exited: gate on whether a HUMAN-SHAPED coherent blob is still
+    // present, NOT on total foreground pixel count.  After collection, bg
+    // drift can leave a speckle storm across the whole rim that keeps
+    // total-fg high indefinitely — but if no single contour is human-sized,
+    // there's clearly no person standing there.
     if (human_seen_) {
-        const int fg_now = cv::countNonZero(mask);
-        if (fg_now < POST_HUMAN_QUIET_FG_PIXELS) ++consecutive_small_;
-        else                                      consecutive_small_ = 0;
+        float largest_now = 0.f;
+        for (const auto& c : contours)
+            largest_now = std::max(largest_now,
+                                   static_cast<float>(cv::contourArea(c)));
+        const bool human_blob_present = (largest_now > HUMAN_PRESENT_AREA);
+        if (human_blob_present) consecutive_small_ = 0;
+        else                    ++consecutive_small_;
 
         if (consecutive_small_ < POST_HUMAN_QUIET_FRAMES) {
             last_viz_.has_detection = false;
@@ -595,6 +696,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         ++quiet_frames_;
         has_candidate_ = false;
         stable_frames_ = 0;
+        last_viz_.dart_region.release();   // no candidate → nothing to tint
         return std::nullopt;
     }
     quiet_frames_ = 0;
@@ -610,6 +712,8 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     last_viz_.dart_dir      = best_dir;
     last_viz_.board_xy      = best_board_xy;
     last_viz_.has_detection = true;
+    fillDartRegion(last_viz_.dart_region, mask, best_ep,
+                   line_merge_perp_px_);
 
     // Stability tracking
     if (has_candidate_) {

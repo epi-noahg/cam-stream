@@ -97,10 +97,88 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
                 }
             }
         }
+        watchdogStuckHuman();
         maybeAutoReset();
     }
 
     if (cb && fused) cb(*fused);
+}
+
+void Pipeline::watchdogStuckHuman()
+{
+    // Cross-cam watchdog: if 2+ peers say OK and one is HumanBlob, the
+    // outlier is almost certainly seeing lighting noise rather than a real
+    // human → force a bg refresh on it after STUCK_HUMAN_FRAMES (~2s).
+    int ok_count    = 0;
+    int human_count = 0;
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        const auto s = detectors_[i]->state();
+        if (s == DetectorState::Normal || s == DetectorState::BoardClean)
+            ++ok_count;
+        if (s == DetectorState::HumanBlob)
+            ++human_count;
+    }
+
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        const bool is_human = detectors_[i]->state() == DetectorState::HumanBlob;
+        const bool peers_ok = ok_count >= 2;
+        if (is_human && peers_ok) {
+            if (++stuck_human_frames_[i] > STUCK_HUMAN_FRAMES) {
+                detectors_[i]->refreshBackground();
+                stuck_human_frames_[i] = 0;
+            }
+        } else {
+            stuck_human_frames_[i] = 0;
+        }
+    }
+
+    // Post-round backstop: when the round is complete (collect phase) and
+    // ANY cam is still HUMAN, after POST_ROUND_STUCK_FRAMES (~5s) we force a
+    // global bg refresh.  Covers the all-cams-stuck case (rim noise after
+    // collect) that the per-cam watchdog can't break out of.
+    const bool round_complete = (darts_in_round_ >= MAX_DARTS_PER_ROUND);
+    if (round_complete && human_count > 0) {
+        if (++post_round_human_frames_ > POST_ROUND_STUCK_FRAMES) {
+            for (auto& d : detectors_) d->refreshBackground();
+            post_round_human_frames_ = 0;
+        }
+    } else {
+        post_round_human_frames_ = 0;
+    }
+}
+
+RoundStatus Pipeline::roundStatus() const
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    return computeRoundStatus_();
+}
+
+RoundStatus Pipeline::computeRoundStatus_() const
+{
+    bool any_human  = false;
+    bool any_warmup = false;
+    for (const auto& d : detectors_) {
+        const auto s = d->state();
+        if (s == DetectorState::HumanBlob) any_human  = true;
+        if (s == DetectorState::Warmup)    any_warmup = true;
+    }
+
+    RoundStatus rs;
+    if (any_warmup) {
+        rs.phase   = RoundPhase::Resyncing;
+        rs.message = "Initialising — please wait";
+    } else if (any_human) {
+        rs.phase   = RoundPhase::Resyncing;
+        rs.message = "Wait — board is being cleaned";
+    } else if (darts_in_round_ >= MAX_DARTS_PER_ROUND) {
+        rs.phase   = RoundPhase::Complete;
+        rs.message = "Collect your darts";
+    } else {
+        rs.phase     = RoundPhase::WaitingDart;
+        rs.next_dart = darts_in_round_ + 1;
+        rs.message   = "Throw dart " + std::to_string(rs.next_dart);
+    }
+    return rs;
 }
 
 void Pipeline::resetRound()

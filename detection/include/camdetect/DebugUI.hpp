@@ -7,6 +7,7 @@
 #include <mutex>
 #include <opencv2/core.hpp>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace camdetect {
@@ -44,6 +45,9 @@ public:
     /// Update the per-cam delay readout (in frames, can be negative).
     void setCamDelay(int cam_id, int frames);
 
+    /// Set the high-level round phase + message shown to the player.
+    void setRoundStatus(const std::string& message, int phase_index);
+
     /// Render one frame.  @returns false if the user requested to quit.
     bool render();
 
@@ -79,6 +83,8 @@ private:
     int                                      round_total_score_{0};
     float                                    diff_threshold_   {15.f};
     std::array<int, NUM_CAMS>                cam_delays_       {{0, 0, 0}};
+    std::string                              round_status_msg_;
+    int                                      round_phase_      {0};
 
     // UI state
     bool reset_requested_     {false};
