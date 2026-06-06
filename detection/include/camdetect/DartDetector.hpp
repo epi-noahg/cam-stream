@@ -72,7 +72,10 @@ private:
     int                               artifact_frames_    {0};
 
     static constexpr int   WARMUP_FRAMES_REQUIRED       = 30;
-    static constexpr int   STABLE_FRAMES_REQUIRED       = 8;
+    // Higher → wait longer for the dart to settle before emitting; lower
+    // means we may emit while the dart is still wobbling on impact or even
+    // in motion.  15 frames ≈ 0.5s @30fps is a good middle ground.
+    static constexpr int   STABLE_FRAMES_REQUIRED       = 15;
     static constexpr int   CLEAN_FRAMES_FOR_RESET       = 45;
     static constexpr int   CLEAN_FG_PIXELS              = 800;
     static constexpr int   POST_HUMAN_QUIET_FG_PIXELS   = 1500;   // mask "really" empty

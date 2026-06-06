@@ -41,52 +41,208 @@ cv::Mat labDistance(const cv::Mat& a, const cv::Mat& b)
     return dist;
 }
 
-/// Project the two endpoints of @p contour along the principal axis @p dir,
-/// returning {endpoint_a, endpoint_b, unit_dir}.
-struct Endpoints { cv::Point2f a, b, dir; };
+/// Endpoints of a dart's axis plus approximate cross-section widths.  Widths
+/// are in pixels and let the caller decide which end is the (narrower) tip,
+/// independent of the dart's pose on the board.
+struct Endpoints {
+    cv::Point2f a, b, dir;
+    float       width_a   {0.f};   // cross-section near `a`
+    float       width_b   {0.f};   // cross-section near `b`
+    float       width_mid {0.f};   // cross-section near the dart's middle
+};
 
-/// Fit a line through @p seed_contour, then EXTEND its endpoints by scanning
-/// the entire @p full_mask for any foreground pixel within @p merge_perp_px
-/// of that line.  Captures collinear fragments of a dart whose middle is
-/// invisible (black shaft on black sector).
-Endpoints lineExtendByMask(const std::vector<cv::Point>& seed_contour,
-                           const cv::Mat&                full_mask,
-                           float                         merge_perp_px)
+/// Extract a dart's axis by sampling perpendicular cross-section centroids
+/// along its principal direction.  The midpoints of those slices lie on the
+/// dart's geometric axis (independent of contour noise on the edges); fitting
+/// a line through them gives a sharper direction than fitLine on the contour.
+/// The tip is then the last in-mask pixel walking along the refined axis past
+/// the extreme midpoint, with small mask gaps tolerated so a fragmented blob
+/// (black shaft over black sector) still extends to its true tip.
+///
+/// @p perp_tol_px sets the half-width band around the rough axis used for
+/// inclusion — also user-tunable via the line_merge_px slider.
+Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
+                              const cv::Mat&                full_mask,
+                              float                         perp_tol_px)
 {
     Endpoints r{};
     if (seed_contour.empty()) return r;
 
-    cv::Vec4f line;
-    cv::fitLine(seed_contour, line, cv::DIST_L2, 0, 0.01, 0.01);
-    const cv::Point2f dir   {line[0], line[1]};
-    const cv::Point2f origin{line[2], line[3]};
-    const cv::Point2f perp  {-dir.y, dir.x};
+    // ── 1. Rough axis from the contour outline ─────────────────────────────
+    cv::Vec4f line0;
+    cv::fitLine(seed_contour, line0, cv::DIST_L2, 0, 0.01, 0.01);
+    const cv::Point2f dir0   {line0[0], line0[1]};
+    const cv::Point2f origin0{line0[2], line0[3]};
+    const cv::Point2f perp0  {-dir0.y, dir0.x};
 
+    // ── 2. Search region: contour bbox padded by perp tolerance ────────────
+    cv::Rect bb = cv::boundingRect(seed_contour);
+    const int pad = static_cast<int>(std::ceil(perp_tol_px)) + 4;
+    bb.x      = std::max(0,                  bb.x - pad);
+    bb.y      = std::max(0,                  bb.y - pad);
+    bb.width  = std::min(full_mask.cols - bb.x, bb.width  + 2 * pad);
+    bb.height = std::min(full_mask.rows - bb.y, bb.height + 2 * pad);
+
+    // ── 3. Compute axis range of all in-band mask pixels ───────────────────
     float t_min =  std::numeric_limits<float>::max();
     float t_max = -std::numeric_limits<float>::max();
-    for (int y = 0; y < full_mask.rows; ++y) {
+    for (int y = bb.y; y < bb.y + bb.height; ++y) {
         const uint8_t* row = full_mask.ptr<uint8_t>(y);
-        for (int x = 0; x < full_mask.cols; ++x) {
+        for (int x = bb.x; x < bb.x + bb.width; ++x) {
             if (!row[x]) continue;
-            const float dx = x - origin.x;
-            const float dy = y - origin.y;
-            const float d_perp = dx * perp.x + dy * perp.y;
-            if (std::abs(d_perp) > merge_perp_px) continue;
-            const float t = dx * dir.x + dy * dir.y;
+            const float dx = x - origin0.x;
+            const float dy = y - origin0.y;
+            if (std::abs(dx * perp0.x + dy * perp0.y) > perp_tol_px) continue;
+            const float t = dx * dir0.x + dy * dir0.y;
             if (t < t_min) t_min = t;
             if (t > t_max) t_max = t;
         }
     }
-    if (t_min > t_max) {
+    if (!(t_min < t_max)) {
+        // Fall back to contour-only range.
         for (const auto& p : seed_contour) {
-            const float t = (p.x - origin.x) * dir.x + (p.y - origin.y) * dir.y;
+            const float t = (p.x - origin0.x) * dir0.x +
+                            (p.y - origin0.y) * dir0.y;
             t_min = std::min(t_min, t);
             t_max = std::max(t_max, t);
         }
+        r.a   = origin0 + dir0 * t_min;
+        r.b   = origin0 + dir0 * t_max;
+        r.dir = dir0;
+        return r;
     }
-    r.a   = origin + dir * t_min;
-    r.b   = origin + dir * t_max;
-    r.dir = dir;
+
+    // ── 4. Bin into N slices, accumulate per-slice centroid (the midpoints) ─
+    constexpr int N_BINS = 24;
+    const float bin_w = (t_max - t_min) / static_cast<float>(N_BINS);
+    if (bin_w < 0.5f) {
+        r.a   = origin0 + dir0 * t_min;
+        r.b   = origin0 + dir0 * t_max;
+        r.dir = dir0;
+        return r;
+    }
+    std::array<double, N_BINS> sx{}, sy{};
+    std::array<int,    N_BINS> cnt{};
+    for (int y = bb.y; y < bb.y + bb.height; ++y) {
+        const uint8_t* row = full_mask.ptr<uint8_t>(y);
+        for (int x = bb.x; x < bb.x + bb.width; ++x) {
+            if (!row[x]) continue;
+            const float dx = x - origin0.x;
+            const float dy = y - origin0.y;
+            if (std::abs(dx * perp0.x + dy * perp0.y) > perp_tol_px) continue;
+            const float t = dx * dir0.x + dy * dir0.y;
+            int bi = static_cast<int>((t - t_min) / bin_w);
+            if (bi < 0)        bi = 0;
+            if (bi >= N_BINS)  bi = N_BINS - 1;
+            sx[bi]  += x;
+            sy[bi]  += y;
+            cnt[bi] += 1;
+        }
+    }
+    std::vector<cv::Point2f> midpts;
+    std::vector<int>         midpts_bin;     // which bin each midpoint came from
+    midpts.reserve(N_BINS);
+    midpts_bin.reserve(N_BINS);
+    for (int b = 0; b < N_BINS; ++b) {
+        if (cnt[b] < 2) continue;
+        midpts.emplace_back(static_cast<float>(sx[b] / cnt[b]),
+                            static_cast<float>(sy[b] / cnt[b]));
+        midpts_bin.push_back(b);
+    }
+
+    // Cross-section widths: bin pixel count divided by bin axis length is an
+    // approximation of the perpendicular extent.  We average over a couple of
+    // bins at each end to dampen single-bin noise.
+    auto avgWidthAtEnd = [&](bool first_end) -> float {
+        constexpr int K = 2;
+        double sum = 0.0;
+        int    n   = 0;
+        if (first_end) {
+            for (int b = 0; b < N_BINS && n < K; ++b)
+                if (cnt[b] > 0) { sum += cnt[b]; ++n; }
+        } else {
+            for (int b = N_BINS - 1; b >= 0 && n < K; --b)
+                if (cnt[b] > 0) { sum += cnt[b]; ++n; }
+        }
+        if (n == 0) return 0.f;
+        return static_cast<float>(sum / n / std::max(0.5f, bin_w));
+    };
+    const float width_a = avgWidthAtEnd(true);
+    const float width_b = avgWidthAtEnd(false);
+    float width_mid = 0.f;
+    {
+        double sum = 0.0;
+        int    n   = 0;
+        for (int off = -2; off <= 2; ++off) {
+            const int b = N_BINS / 2 + off;
+            if (b < 0 || b >= N_BINS) continue;
+            if (cnt[b] > 0) { sum += cnt[b]; ++n; }
+        }
+        if (n > 0) width_mid = static_cast<float>(sum / n /
+                                                  std::max(0.5f, bin_w));
+    }
+
+    // ── 5. Refit line through cross-section midpoints ──────────────────────
+    cv::Point2f dir1, origin1;
+    if (midpts.size() >= 3) {
+        cv::Vec4f line1;
+        cv::fitLine(midpts, line1, cv::DIST_L2, 0, 0.01, 0.01);
+        dir1    = {line1[0], line1[1]};
+        origin1 = {line1[2], line1[3]};
+    } else {
+        dir1    = dir0;
+        origin1 = origin0;
+    }
+
+    // ── 6. Axis range from midpoints; walk to in-mask edge for each end ────
+    float nt_min =  std::numeric_limits<float>::max();
+    float nt_max = -std::numeric_limits<float>::max();
+    if (midpts.empty()) {
+        nt_min = t_min;
+        nt_max = t_max;
+    } else {
+        for (const auto& m : midpts) {
+            const float t = (m.x - origin1.x) * dir1.x +
+                            (m.y - origin1.y) * dir1.y;
+            nt_min = std::min(nt_min, t);
+            nt_max = std::max(nt_max, t);
+        }
+    }
+
+    // Walk one px at a time from a midpoint endpoint along ±dir1, tracking the
+    // last in-mask sample.  Small gaps (≤4 px) are bridged so dart fragments
+    // separated by a dark sector still extend to the true tip.
+    constexpr int  MAX_WALK_STEPS = 800;
+    constexpr int  MAX_GAP        = 4;
+    auto walkToEdge = [&](float t_start, float step) {
+        float last_in = t_start;
+        int   gap     = 0;
+        for (int i = 1; i < MAX_WALK_STEPS; ++i) {
+            const float t = t_start + static_cast<float>(i) * step;
+            const cv::Point2f p = origin1 + dir1 * t;
+            const int px = cvRound(p.x);
+            const int py = cvRound(p.y);
+            if (px < 0 || py < 0 ||
+                px >= full_mask.cols || py >= full_mask.rows) break;
+            if (full_mask.at<uint8_t>(py, px)) {
+                last_in = t;
+                gap     = 0;
+            } else if (++gap > MAX_GAP) {
+                break;
+            }
+        }
+        return last_in;
+    };
+
+    const float t_a = walkToEdge(nt_min, -1.0f);
+    const float t_b = walkToEdge(nt_max, +1.0f);
+
+    r.a         = origin1 + dir1 * t_a;
+    r.b         = origin1 + dir1 * t_b;
+    r.dir       = dir1;
+    r.width_a   = width_a;
+    r.width_b   = width_b;
+    r.width_mid = width_mid;
     return r;
 }
 
@@ -385,12 +541,24 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         const float aspect = (h > 0.f) ? w / h : 0.f;
         if (aspect < MIN_ASPECT_RATIO) continue;
 
-        const Endpoints ep = lineExtendByMask(c, mask, line_merge_perp_px_);
+        const Endpoints ep = dartAxisByMidpoints(c, mask, line_merge_perp_px_);
         const cv::Point2f a_board = calib_.imageToBoard(ep.a);
         const cv::Point2f b_board = calib_.imageToBoard(ep.b);
         const float a_r2 = a_board.x*a_board.x + a_board.y*a_board.y;
         const float b_r2 = b_board.x*b_board.x + b_board.y*b_board.y;
-        const bool a_is_tip = a_r2 < b_r2;
+
+        // Tip = the narrower end (dart point is sharp, tail with flights is
+        // wide).  Only use width when both ends measured and the difference
+        // is meaningful — otherwise fall back to "endpoint closer to board
+        // centre".
+        bool a_is_tip;
+        if (ep.width_a > 0.f && ep.width_b > 0.f &&
+            std::abs(ep.width_a - ep.width_b) >
+            0.10f * std::max(ep.width_a, ep.width_b)) {
+            a_is_tip = ep.width_a < ep.width_b;
+        } else {
+            a_is_tip = a_r2 < b_r2;
+        }
         const cv::Point2f tip      = a_is_tip ? ep.a     : ep.b;
         const cv::Point2f board_xy = a_is_tip ? a_board  : b_board;
         cv::Point2f dir = a_is_tip ? ep.dir : -ep.dir;
@@ -468,16 +636,32 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     stable_frames_ = 0;
     has_candidate_ = false;
 
-    const float r_mm = std::sqrt(best_board_xy.x*best_board_xy.x +
-                                 best_board_xy.y*best_board_xy.y);
+    // ── Confidence: based on dart-shape quality, NOT board radius ─────────
+    // The old `1 - r/2R` formula systematically rewarded cams whose tip
+    // projected nearer to the bullseye — even when the tip was wrong (e.g.
+    // wrong endpoint picked, or dart still mid-flight with a long streak).
+    //
+    //   aspect_q   ∝ length / mid-width — penalises blob-like masks
+    //   tip_sharp  ∝ 1 - tip-width / mid-width — penalises blunt or noisy ends
+    //
+    // A real dart at rest sits at aspect ~6-12 and tip much narrower than mid
+    // → near 1.0.  A mid-flight or fragment-shaped mask → much lower.
+    const float length  = static_cast<float>(cv::norm(best_ep.a - best_ep.b));
+    const float w_mid   = std::max(1.f, best_ep.width_mid);
+    const float aspect  = length / w_mid;
+    const bool  a_was_tip = (best_tip.x == best_ep.a.x &&
+                             best_tip.y == best_ep.a.y);
+    const float tip_w   = a_was_tip ? best_ep.width_a : best_ep.width_b;
+    const float aspect_q   = std::clamp(aspect / 8.f,            0.3f, 1.f);
+    const float tip_sharp  = std::clamp(1.f - tip_w / w_mid,     0.3f, 1.f);
+
     const ZoneResult zr = ZoneMapper::lookup(best_board_xy);
     DartHit hit{};
     hit.cam_id     = cam_id_;
     hit.board_xy   = best_board_xy;
     hit.zone       = zr.label;
     hit.score      = zr.value;
-    hit.confidence = std::clamp(1.f - r_mm / (2.f * board::DOUBLE_OUTER),
-                                0.3f, 1.f);
+    hit.confidence = std::clamp(aspect_q * tip_sharp, 0.3f, 1.f);
     hit.timestamp  = timestamp;
     return hit;
 }

@@ -12,19 +12,19 @@ namespace camdetect {
 /// A single physical dart makes each camera emit one DartHit, but at slightly
 /// different times (inter-camera lag / shutter offset) and slightly different
 /// board projections (parallax + calibration error).  This class buffers hits
-/// in a time window, clusters them spatially, and confirms a fused hit once at
-/// least MIN_CAMS_FOR_CONFIRM cameras agree on a location.
+/// in a window, clusters them spatially, and confirms a fused hit once at
+/// least MIN_CAMS_FOR_CONFIRM cameras have voted.
+///
+/// Policy: a single camera vote is sufficient to emit (with lower confidence).
+/// We still wait out the window in case other cameras catch the same dart a
+/// few frames later — but if they don't, we commit with what we have.
 ///
 /// Timing is driven by tick(now), NOT by hit arrival: an open window still
-/// closes when the "missing" camera never reports the dart, as long as some
-/// camera keeps feeding frames that advance the clock.  This is what lets a
-/// 2-camera hit confirm even though the third camera stayed silent.
-///
-/// Single-camera votes, and votes that don't spatially agree with any other
-/// camera, are dropped as phantoms rather than confirmed.
+/// closes when missing cameras never report the dart, as long as some camera
+/// keeps feeding frames that advance the clock.
 class MultiCamFusion {
 public:
-    explicit MultiCamFusion(double window_seconds = 0.5);
+    explicit MultiCamFusion(double window_seconds = 0.4);
 
     /// Buffer a per-camera hit.  Returns a FusedHit immediately only once every
     /// camera has voted (no reason to wait out the window); otherwise nullopt.
@@ -41,8 +41,10 @@ public:
 
     bool hasPending() const { return first_ts_ >= 0.0; }
 
-    /// Minimum number of agreeing cameras required to confirm a dart.
-    static constexpr int   MIN_CAMS_FOR_CONFIRM = 2;
+    /// Minimum number of votes required to confirm a dart.  Set to 1 because
+    /// the cameras share a single physical dart event: if even one detector
+    /// sees it, we have a hit — we just attenuate the confidence accordingly.
+    static constexpr int   MIN_CAMS_FOR_CONFIRM = 1;
     /// Two per-cam projections within this board distance count as agreeing.
     static constexpr float AGREEMENT_RADIUS_MM  = 25.f;
 

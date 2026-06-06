@@ -26,12 +26,12 @@ class Pipeline {
 public:
     using HitCallback = std::function<void(const FusedHit&)>;
 
-    // 0.5s window absorbs the measured inter-camera detection lag (~0.4s): a
-    // camera that stabilises on the same dart a few frames later still lands in
-    // the same fusion window.  Darts are thrown >1s apart, so this won't merge
-    // two physical darts.
+    // 0.4s window (~12 frames @ 30fps): wide enough to absorb the per-cam
+    // stability lag — different views of the same dart stabilise at different
+    // master moments, so we need to wait for the slowest cam to converge.
+    // Darts are thrown >1s apart, so this won't merge two physical darts.
     explicit Pipeline(std::array<BoardCalibration, NUM_CAMS> calibrations,
-                      double fusion_window_seconds = 0.5);
+                      double fusion_window_seconds = 0.4);
 
     void setOnHit(HitCallback cb);
 

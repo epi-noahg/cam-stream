@@ -60,17 +60,27 @@ std::optional<FusedHit> MultiCamFusion::confirm()
 
     // Largest spatially-coherent cluster: for each vote count how many votes
     // (incl. itself) lie within AGREEMENT_RADIUS_MM; the densest seeds it.
-    int best_seed = -1, best_count = 0;
+    // Ties broken by per-vote confidence (relevant when only 1 cam voted, or
+    // when multiple cams disagree spatially — we still want the best guess).
+    int   best_seed       = -1;
+    int   best_count      = 0;
+    float best_seed_conf  = -1.f;
     for (int a = 0; a < n; ++a) {
         int count = 0;
         for (int b = 0; b < n; ++b)
             if (dist(pending_[idx[a]]->board_xy,
                      pending_[idx[b]]->board_xy) <= AGREEMENT_RADIUS_MM)
                 ++count;
-        if (count > best_count) { best_count = count; best_seed = a; }
+        const float conf_a = pending_[idx[a]]->confidence;
+        if (count > best_count ||
+            (count == best_count && conf_a > best_seed_conf)) {
+            best_count     = count;
+            best_seed      = a;
+            best_seed_conf = conf_a;
+        }
     }
 
-    if (best_count < MIN_CAMS_FOR_CONFIRM) {  // cams disagree → phantom, drop
+    if (best_count < MIN_CAMS_FOR_CONFIRM) {  // nothing usable, drop
         reset();
         return std::nullopt;
     }

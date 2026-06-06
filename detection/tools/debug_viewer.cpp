@@ -120,16 +120,23 @@ int main(int argc, char* argv[])
         return std::clamp(t, 0, std::max(0, sources[i]->totalFrames() - 1));
     };
 
+    // Shared "master" clock: all cams feed the pipeline with this same value so
+    // that fusion groups votes by physical-time, not by per-cam source ts (which
+    // diverge once delays are applied).
+    const int sync_fps = std::max(1, sources[0]->fps());
+    auto masterTs = [&]() { return double(master_pos) / double(sync_fps); };
+
     // Reads one frame from cam `i`, seeking first if its current head doesn't
-    // already match `target`.  Updates last_frames + feeds the pipeline.
+    // already match `target`.  Updates last_frames + feeds the pipeline using
+    // the SHARED master timestamp (per-cam source ts is discarded for fusion).
     auto readCam = [&](int i, int target) -> bool {
         if (sources[i]->currentFrame() + 1 != target) {
             sources[i]->seek(target);
         }
         cv::Mat f;
-        double  ts = 0.0;
-        if (!sources[i]->next(f, ts)) return false;
-        pipeline.feedFrame(i, f, ts);
+        double  source_ts = 0.0;
+        if (!sources[i]->next(f, source_ts)) return false;
+        pipeline.feedFrame(i, f, masterTs());
         last_frames[i] = f;
         return true;
     };
