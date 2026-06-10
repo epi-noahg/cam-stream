@@ -10,6 +10,7 @@
 #include "camdetect/BoardCalibration.hpp"
 #include "camdetect/Pipeline.hpp"
 #include "camdetect/Types.hpp"
+#include "camdetect/ZoneMap.hpp"
 #include "../sources/FileSource.hpp"
 
 #include <array>
@@ -49,6 +50,16 @@ int main(int argc, char* argv[])
 
     // ── Run pipeline ─────────────────────────────────────────────────────────
     Pipeline pipeline(std::move(calibs));
+
+    // Pixel-accurate zone maps (camN_zones.png next to camN.yml), if present.
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        ZoneMap zm;
+        const std::string zpath = ZoneMap::companionPath(argv[1 + NUM_CAMS + i]);
+        if (zm.loadFromFile(zpath)) {
+            pipeline.setZoneMap(i, std::move(zm));
+            std::cout << "[cam" << i << "] pixel zone map: " << zpath << '\n';
+        }
+    }
     pipeline.setOnHit([](const FusedHit& h) {
         std::cout << "[hit] t=" << h.timestamp
                   << " zone=" << h.zone

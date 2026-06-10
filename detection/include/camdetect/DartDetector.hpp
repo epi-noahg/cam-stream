@@ -2,6 +2,7 @@
 
 #include "BoardCalibration.hpp"
 #include "Types.hpp"
+#include "ZoneMap.hpp"
 
 #include <opencv2/core.hpp>
 #include <optional>
@@ -48,11 +49,17 @@ public:
     void  setLineMergePerpPx(float v) { line_merge_perp_px_ = v; }
     float lineMergePerpPx() const     { return line_merge_perp_px_; }
 
+    /// Pixel-accurate zone map (from AutoCalibrator).  When set, scoring
+    /// reads the zone at the tip PIXEL instead of projecting through the
+    /// homography — exact even with lens distortion.
+    void setZoneMap(ZoneMap zm) { zone_map_ = std::move(zm); }
+
     int cam_id() const { return cam_id_; }
 
 private:
     int                               cam_id_;
     BoardCalibration                  calib_;
+    ZoneMap                           zone_map_;
 
     cv::Mat                           bg_lab_;        // "empty-board" ref (CV_32FC3, LAB)
     cv::Mat                           throw_bg_lab_;  // snapped after each commit; empty before first throw

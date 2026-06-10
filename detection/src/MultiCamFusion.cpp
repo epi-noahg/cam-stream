@@ -124,7 +124,33 @@ std::optional<FusedHit> MultiCamFusion::confirm()
         }
     }
 
-    const ZoneResult zr = ZoneMapper::lookup(centroid);
+    // Zone: majority vote of the per-cam labels first.  With pixel-accurate
+    // ZoneMaps each cam's label was read at its own tip pixel, so two cams
+    // agreeing on "T20" beats the homography-projected mm centroid (which
+    // ignores wires and lens distortion).  No majority → fall back to the
+    // geometric lookup on the fused centroid.
+    ZoneResult zr{"", 0};
+    {
+        int   best_votes = 0;
+        float best_conf  = -1.f;
+        for (int a = 0; a < NUM_CAMS; ++a) {
+            if (!in_cluster[a]) continue;
+            int   nv = 0;
+            float cv_sum = 0.f;
+            for (int b = 0; b < NUM_CAMS; ++b) {
+                if (!in_cluster[b]) continue;
+                if (pending_[b]->zone != pending_[a]->zone) continue;
+                ++nv;
+                cv_sum += pending_[b]->confidence;
+            }
+            if (nv > best_votes || (nv == best_votes && cv_sum > best_conf)) {
+                best_votes = nv;
+                best_conf  = cv_sum;
+                zr = {pending_[a]->zone, pending_[a]->score};
+            }
+        }
+        if (best_votes < 2) zr = ZoneMapper::lookup(centroid);
+    }
     const float base_conf       = conf_sum / votes;
     const float agreement_decay = std::exp(-spread / 15.f);  // 15mm = soft knee
     const float count_factor    = std::sqrt(votes / float(NUM_CAMS));

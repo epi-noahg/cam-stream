@@ -53,6 +53,11 @@ public:
 
     void setOnHit(HitCallback cb);
 
+    /// Attach a pixel-accurate zone map (AutoCalibrator output) to one
+    /// camera's detector.  Call before the first feedFrame() ideally; safe
+    /// at any time.
+    void setZoneMap(int cam_id, ZoneMap zm);
+
     /// Push one decoded BGR frame from camera @p cam_id (0..NUM_CAMS-1).
     void feedFrame(int cam_id, const cv::Mat& frame, double timestamp);
 

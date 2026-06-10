@@ -12,6 +12,7 @@
 #include "camdetect/DebugUI.hpp"
 #include "camdetect/Pipeline.hpp"
 #include "camdetect/Types.hpp"
+#include "camdetect/ZoneMap.hpp"
 
 #include "Protocol.hpp"
 #include "StreamReceiver.hpp"
@@ -89,6 +90,16 @@ int main(int argc, char* argv[])
     std::signal(SIGTERM, onSignal);
 
     Pipeline pipeline(calibs);
+
+    // Pixel-accurate zone maps (camN_zones.png next to camN.yml), if present.
+    for (int c = 0; c < NUM_CAMS; ++c) {
+        ZoneMap zm;
+        const std::string zpath = ZoneMap::companionPath(argv[i + c]);
+        if (zm.loadFromFile(zpath)) {
+            pipeline.setZoneMap(c, std::move(zm));
+            std::cout << "[cam" << c << "] pixel zone map: " << zpath << '\n';
+        }
+    }
 
     int round_total_score = 0;   // recomputed from pipeline.roundHits() each tick
     pipeline.setOnHit([&](const FusedHit& h) {

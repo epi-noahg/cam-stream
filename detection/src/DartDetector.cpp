@@ -871,7 +871,12 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     const float aspect_q   = std::clamp(aspect / 8.f,            0.3f, 1.f);
     const float tip_sharp  = std::clamp(1.f - tip_w / w_mid,     0.3f, 1.f);
 
-    const ZoneResult zr = ZoneMapper::lookup(best_board_xy);
+    // Pixel-accurate zone map beats the homography projection when present:
+    // the label is read at the tip pixel itself, so wires / fisheye are
+    // already accounted for.
+    const ZoneResult zr = zone_map_.empty()
+        ? ZoneMapper::lookup(best_board_xy)
+        : zone_map_.lookup(best_tip);
     DartHit hit{};
     hit.cam_id     = cam_id_;
     hit.board_xy   = best_board_xy;

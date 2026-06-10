@@ -121,3 +121,35 @@ Total bandwidth (3 cameras × 500 kbit/s) is roughly **1.5 Mbit/s** upstream fro
 
 The client uses only POSIX sockets, libavcodec, and OpenCV – all available on Android via NDK.  
 Replace `Display` with an Android `SurfaceView`/`ANativeWindow` renderer and adapt `main.cpp` to your activity lifecycle.
+
+---
+
+## Dartboard auto-calibration (detection/)
+
+`camdetect_autocalib` replaces the old click-4-points calibration.  It finds the
+board from the image colours alone and produces two files per camera:
+
+- `camN.yml` — classic homography calibration (drop-in for the old system)
+- `camN_zones.png` — **pixel-accurate zone map**: a label image where every
+  pixel knows its scoring zone (S/D/T per sector, bull, 25, miss).  Boundaries
+  follow the real wires via watershed, so lens distortion is a non-issue.
+
+All tools (`camdetect_offline`, `camdetect_live`) auto-load `camN_zones.png`
+when it sits next to `camN.yml`; scoring then reads the zone at the dart-tip
+pixel instead of projecting through the homography, and fusion majority-votes
+the per-camera labels.
+
+### Run
+
+```bash
+# Interactive: pick a clean frame, inspect the coloured overlay, save with 's'.
+# If the sector numbering is rotated, CLICK anywhere inside sector 20.
+./build/camdetect_autocalib video.mp4 cam0.yml
+
+# Headless: also writes camN_zones_overlay.png for visual inspection
+./build/camdetect_autocalib video.mp4 cam0.yml --batch --frame 5 [--hint X Y]
+```
+
+The only human input ever needed is the sector-20 click (`--hint` in batch):
+"which sector is 20" cannot be inferred without reading the printed numbers.
+Everything else — rings, sectors, bull, per-pixel boundaries — is automatic.

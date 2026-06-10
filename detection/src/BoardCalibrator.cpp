@@ -1,16 +1,18 @@
 #include "camdetect/BoardCalibrator.hpp"
+#include "camdetect/AutoCalibrator.hpp"
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/core.hpp>
 
 namespace camdetect {
 
-bool BoardCalibrator::detectAuto(const cv::Mat& /*frame*/,
-                                 BoardCalibration& /*out*/) const
+bool BoardCalibrator::detectAuto(const cv::Mat& frame,
+                                 BoardCalibration& out) const
 {
-    // TODO: Hough circles on grayscale + red/green colour masks to find the
-    // bullseye and lock orientation, then build the homography.
-    return false;
+    const AutoCalibrator::Result r = AutoCalibrator{}.run(frame);
+    if (!r.ok) return false;
+    out = r.calibration;
+    return true;
 }
 
 bool BoardCalibrator::fromReferencePoints(const std::vector<cv::Point2f>& points,

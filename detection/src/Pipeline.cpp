@@ -64,6 +64,13 @@ void Pipeline::setOnHit(HitCallback cb)
     on_hit_ = std::move(cb);
 }
 
+void Pipeline::setZoneMap(int cam_id, ZoneMap zm)
+{
+    if (cam_id < 0 || cam_id >= NUM_CAMS) return;
+    std::lock_guard<std::mutex> lk(mtx_);
+    detectors_[cam_id]->setZoneMap(std::move(zm));
+}
+
 void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
 {
     if (cam_id < 0 || cam_id >= NUM_CAMS) return;

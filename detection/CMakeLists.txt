@@ -26,6 +26,7 @@ endif()
 
 # ── Library ──────────────────────────────────────────────────────────────────
 add_library(camdetect STATIC
+    src/AutoCalibrator.cpp
     src/BoardCalibration.cpp
     src/BoardCalibrator.cpp
     src/DartDetector.cpp
@@ -33,6 +34,7 @@ add_library(camdetect STATIC
     src/MultiCamFusion.cpp
     src/Pipeline.cpp
     src/Renderer.cpp
+    src/ZoneMap.cpp
     src/ZoneMapper.cpp
     sources/FileSource.cpp
 )
@@ -47,6 +49,9 @@ target_compile_options(camdetect PRIVATE -Wall -Wextra)
 # ── Tools ────────────────────────────────────────────────────────────────────
 add_executable(camdetect_calibrate tools/calibrate.cpp)
 target_link_libraries(camdetect_calibrate PRIVATE camdetect)
+
+add_executable(camdetect_autocalib tools/autocalib.cpp)
+target_link_libraries(camdetect_autocalib PRIVATE camdetect)
 
 add_executable(camdetect_offline tools/detect_offline.cpp)
 target_link_libraries(camdetect_offline PRIVATE camdetect)
