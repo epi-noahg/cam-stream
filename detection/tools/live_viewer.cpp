@@ -91,16 +91,6 @@ int main(int argc, char* argv[])
 
     Pipeline pipeline(calibs);
 
-    // Pixel-accurate zone maps (camN_zones.png next to camN.yml), if present.
-    for (int c = 0; c < NUM_CAMS; ++c) {
-        ZoneMap zm;
-        const std::string zpath = ZoneMap::companionPath(argv[i + c]);
-        if (zm.loadFromFile(zpath)) {
-            pipeline.setZoneMap(c, std::move(zm));
-            std::cout << "[cam" << c << "] pixel zone map: " << zpath << '\n';
-        }
-    }
-
     int round_total_score = 0;   // recomputed from pipeline.roundHits() each tick
     pipeline.setOnHit([&](const FusedHit& h) {
         std::cout << "[hit] t=" << h.timestamp
@@ -128,6 +118,18 @@ int main(int argc, char* argv[])
     constexpr int TILE_W = 640;
     constexpr int TILE_H = 480;
     DebugUI ui(calibs, TILE_W, TILE_H, 480);
+
+    // Pixel-accurate zone maps (camN_zones.png next to camN.yml), if present:
+    // scoring reads them at the tip pixel, and 'z' overlays them on the tiles.
+    for (int c = 0; c < NUM_CAMS; ++c) {
+        ZoneMap zm;
+        const std::string zpath = ZoneMap::companionPath(argv[i + c]);
+        if (zm.loadFromFile(zpath)) {
+            ui.setZoneMap(c, zm);
+            pipeline.setZoneMap(c, std::move(zm));
+            std::cout << "[cam" << c << "] pixel zone map: " << zpath << '\n';
+        }
+    }
 
     const auto session_start = std::chrono::steady_clock::now();
     auto monotonicTs = [&]() {

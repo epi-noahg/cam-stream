@@ -2,6 +2,7 @@
 
 #include "BoardCalibration.hpp"
 #include "Types.hpp"
+#include "ZoneMap.hpp"
 
 #include <array>
 #include <mutex>
@@ -31,6 +32,11 @@ public:
 
     /// Push the latest frame + per-cam visualisation for one camera.
     void updateCam(int cam_id, const cv::Mat& frame, const DetectorViz& viz);
+
+    /// Register a pixel-accurate zone map for one camera; enables the 'z'
+    /// overlay toggle on that cam's tile.  The colour/edge layers are
+    /// precomputed here so per-frame rendering stays a cheap blend.
+    void setZoneMap(int cam_id, const ZoneMap& zm);
 
     /// All fused hits in the current round (up to 3, throw order).
     /// The hit with highest confidence is auto-highlighted.
@@ -86,6 +92,11 @@ private:
     std::string                              round_status_msg_;
     int                                      round_phase_      {0};
 
+    // Precomputed zone-overlay layers (from setZoneMap).
+    std::array<cv::Mat, NUM_CAMS>            zone_color_;   // CV_8UC3 tint
+    std::array<cv::Mat, NUM_CAMS>            zone_area_;    // CV_8U, non-MISS
+    std::array<cv::Mat, NUM_CAMS>            zone_edges_;   // CV_8U, id changes
+
     // UI state
     bool reset_requested_     {false};
     bool bg_refresh_requested_{false};
@@ -93,6 +104,7 @@ private:
     bool step_backward_       {false};
     bool paused_              {false};
     bool show_mask_           {false};
+    bool show_zones_          {false};
     int  focused_cam_id_      {-1};
 
     // ROIs of the last composite, for mouse hit-testing.  composite() is

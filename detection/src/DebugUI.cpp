@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
+#include <map>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <sstream>
@@ -127,6 +128,38 @@ void DebugUI::updateCam(int cam_id, const cv::Mat& frame, const DetectorViz& viz
     vizs_[cam_id]   = viz;
 }
 
+void DebugUI::setZoneMap(int cam_id, const ZoneMap& zm)
+{
+    if (cam_id < 0 || cam_id >= NUM_CAMS || zm.empty()) return;
+    const cv::Mat& labels = zm.labels();
+
+    cv::Mat color(labels.size(), CV_8UC3, cv::Scalar(0, 0, 0));
+    std::map<uint16_t, cv::Vec3b> palette;
+    for (int y = 0; y < labels.rows; ++y) {
+        const auto* lr = labels.ptr<uint16_t>(y);
+        auto*       cr = color.ptr<cv::Vec3b>(y);
+        for (int x = 0; x < labels.cols; ++x) {
+            const uint16_t id = lr[x];
+            if (id == ZoneMap::MISS) continue;
+            auto it = palette.find(id);
+            if (it == palette.end()) {
+                const cv::Scalar c = ZoneMap::idColor(id);
+                it = palette.emplace(id, cv::Vec3b(uchar(c[0]), uchar(c[1]),
+                                                   uchar(c[2]))).first;
+            }
+            cr[x] = it->second;
+        }
+    }
+    cv::Mat gx, gy;
+    cv::Sobel(labels, gx, CV_32F, 1, 0, 1);
+    cv::Sobel(labels, gy, CV_32F, 0, 1, 1);
+
+    std::lock_guard<std::mutex> lk(mtx_);
+    zone_color_[cam_id] = color;
+    zone_area_[cam_id]  = labels > 0;
+    zone_edges_[cam_id] = (cv::abs(gx) + cv::abs(gy)) > 0;
+}
+
 void DebugUI::setRoundHits(std::vector<FusedHit> hits)
 {
     std::lock_guard<std::mutex> lk(mtx_);
@@ -241,6 +274,16 @@ void DebugUI::drawCamTile(cv::Mat& out, const cv::Rect& roi, int cam_id,
         cv::cvtColor(vizs_[cam_id].mask, overlay, cv::COLOR_GRAY2BGR);
     } else {
         overlay = frames_[cam_id].clone();
+    }
+
+    // Pixel-zone overlay ('z'): tint every scoring zone + hairline wire
+    // boundaries, beneath the dart drawings so detections stay on top.
+    if (show_zones_ && !zone_color_[cam_id].empty() &&
+        zone_color_[cam_id].size() == overlay.size()) {
+        cv::Mat blended;
+        cv::addWeighted(overlay, 0.65, zone_color_[cam_id], 0.35, 0, blended);
+        blended.copyTo(overlay, zone_area_[cam_id]);
+        overlay.setTo(cv::Scalar(230, 230, 230), zone_edges_[cam_id]);
     }
 
     // Tint + bounding box around every dart-shaped region.  The detector
@@ -538,7 +581,8 @@ void DebugUI::composite(cv::Mat& out) const
         s << "  focus       cam" << focused_cam_id_;
         putLine(s.str(), ACCENT_INFO);
     }
-    if (show_mask_) putLine("  view        MASK", ACCENT_WARN);
+    if (show_mask_)  putLine("  view        MASK", ACCENT_WARN);
+    if (show_zones_) putLine("  view        +ZONES", ACCENT_INFO);
     if (paused_)    putLine("  state       PAUSED", ACCENT_WARN);
     y += 4;
     putDivider();
@@ -570,6 +614,7 @@ void DebugUI::composite(cv::Mat& out) const
     putLine("  space       play/pause", TEXT_DIM);
     putLine("  </>         step bwd/fwd", TEXT_DIM);
     putLine("  m           mask view",  TEXT_DIM);
+    putLine("  z           zones overlay", TEXT_DIM);
     putLine("  1/2/3       focus cam",  TEXT_DIM);
     putLine("  0           grid view",  TEXT_DIM);
     putLine("  r           reset round", TEXT_DIM);
@@ -601,6 +646,7 @@ bool DebugUI::render()
     if (is_right || ascii == '.' || ascii == 'n')  step_forward_         = true;
     if (is_left  || ascii == ',' || ascii == 'p')  step_backward_        = true;
     if (ascii == 'm')                              show_mask_            = !show_mask_;
+    if (ascii == 'z')                              show_zones_           = !show_zones_;
     if (ascii == '0')                              focused_cam_id_       = -1;
     if (ascii == '1' && NUM_CAMS > 0)              focused_cam_id_       = 0;
     if (ascii == '2' && NUM_CAMS > 1)              focused_cam_id_       = 1;
