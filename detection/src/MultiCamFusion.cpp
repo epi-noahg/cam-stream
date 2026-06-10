@@ -86,20 +86,32 @@ std::optional<FusedHit> MultiCamFusion::confirm()
     }
 
     // Build the agreeing cluster around the densest seed.
+    //
+    // Centroid is CONFIDENCE-WEIGHTED: a cam looking perpendicular to the
+    // dart axis sees a longer, sharper shape (higher aspect_q × tip_sharp),
+    // so its position estimate should dominate over a cam seeing the dart
+    // end-on with a shorter, blurrier silhouette.  Plain averaging treats all
+    // cluster members equally and gets pulled toward poor-angle cams.
     std::array<bool, NUM_CAMS> in_cluster{};
-    cv::Point2f sum{0.f, 0.f};
+    cv::Point2f weighted_sum{0.f, 0.f};
+    cv::Point2f unweighted_sum{0.f, 0.f};
     float       conf_sum = 0.f;
     int         votes = 0;
     for (int b = 0; b < n; ++b) {
         if (dist(pending_[idx[best_seed]]->board_xy,
                  pending_[idx[b]]->board_xy) > AGREEMENT_RADIUS_MM) continue;
         in_cluster[idx[b]] = true;
-        sum      += pending_[idx[b]]->board_xy;
-        conf_sum += pending_[idx[b]]->confidence;
+        const float c = pending_[idx[b]]->confidence;
+        weighted_sum.x  += pending_[idx[b]]->board_xy.x * c;
+        weighted_sum.y  += pending_[idx[b]]->board_xy.y * c;
+        unweighted_sum  += pending_[idx[b]]->board_xy;
+        conf_sum        += c;
         ++votes;
     }
 
-    const cv::Point2f centroid{sum.x / votes, sum.y / votes};
+    const cv::Point2f centroid = (conf_sum > 1e-3f)
+        ? cv::Point2f{weighted_sum.x / conf_sum, weighted_sum.y / conf_sum}
+        : cv::Point2f{unweighted_sum.x / votes,  unweighted_sum.y / votes};
 
     // Max pairwise spread within the cluster (parallax / agreement indicator).
     float spread = 0.f;

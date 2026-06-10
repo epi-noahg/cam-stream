@@ -9,7 +9,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_server_src_cameracapture_cpp",
-      "community": 8,
+      "community": 9,
       "norm_label": "cameracapture.cpp"
     },
     {
@@ -18,7 +18,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.hpp",
       "source_location": "L23",
       "id": "cameracapture_cameracapture",
-      "community": 8,
+      "community": 9,
       "norm_label": "cameracapture"
     },
     {
@@ -27,7 +27,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.cpp",
       "source_location": "L20",
       "id": "cameracapture_start",
-      "community": 8,
+      "community": 9,
       "norm_label": "start()"
     },
     {
@@ -36,7 +36,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.cpp",
       "source_location": "L27",
       "id": "cameracapture_stop",
-      "community": 8,
+      "community": 9,
       "norm_label": "stop()"
     },
     {
@@ -45,7 +45,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.cpp",
       "source_location": "L33",
       "id": "cameracapture_loop",
-      "community": 8,
+      "community": 9,
       "norm_label": "loop()"
     },
     {
@@ -81,7 +81,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_server_src_videoencoder_hpp",
-      "community": 9,
+      "community": 10,
       "norm_label": "videoencoder.hpp"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.cpp",
       "source_location": "L8",
       "id": "videoencoder_videoencoder",
-      "community": 9,
+      "community": 10,
       "norm_label": "videoencoder()"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.hpp",
       "source_location": "L41",
       "id": "videoencoder_videoencoder_videoencoder",
-      "community": 9,
+      "community": 10,
       "norm_label": ".videoencoder()"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_server_src_cameracapture_hpp",
-      "community": 8,
+      "community": 9,
       "norm_label": "cameracapture.hpp"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/CameraCapture.hpp",
       "source_location": "L35",
       "id": "cameracapture_cameracapture_cameracapture",
-      "community": 8,
+      "community": 9,
       "norm_label": ".cameracapture()"
     },
     {
@@ -207,7 +207,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_server_src_videoencoder_cpp",
-      "community": 9,
+      "community": 10,
       "norm_label": "videoencoder.cpp"
     },
     {
@@ -216,7 +216,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.cpp",
       "source_location": "L69",
       "id": "videoencoder_encode",
-      "community": 9,
+      "community": 10,
       "norm_label": "encode()"
     },
     {
@@ -225,7 +225,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.cpp",
       "source_location": "L83",
       "id": "videoencoder_flush",
-      "community": 9,
+      "community": 10,
       "norm_label": "flush()"
     },
     {
@@ -234,7 +234,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/VideoEncoder.cpp",
       "source_location": "L89",
       "id": "videoencoder_drain",
-      "community": 9,
+      "community": 10,
       "norm_label": "drain()"
     },
     {
@@ -243,7 +243,7 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/main.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_server_src_main_cpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "main.cpp"
     },
     {
@@ -252,7 +252,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
       "source_location": "L24",
       "id": "main_onsignal",
-      "community": 0,
+      "community": 1,
       "norm_label": "onsignal()"
     },
     {
@@ -261,7 +261,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
       "source_location": "L83",
       "id": "main_main",
-      "community": 0,
+      "community": 1,
       "norm_label": "main()"
     },
     {
@@ -270,7 +270,7 @@
       "source_file": "/Users/noahg/github/cam-stream/common/Protocol.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_common_protocol_hpp",
-      "community": 15,
+      "community": 17,
       "norm_label": "protocol.hpp"
     },
     {
@@ -279,7 +279,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_videodecoder_hpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "videodecoder.hpp"
     },
     {
@@ -288,7 +288,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp",
       "source_location": "L9",
       "id": "videodecoder_videodecoder",
-      "community": 0,
+      "community": 1,
       "norm_label": "videodecoder()"
     },
     {
@@ -297,7 +297,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.hpp",
       "source_location": "L25",
       "id": "videodecoder_videodecoder_videodecoder",
-      "community": 0,
+      "community": 1,
       "norm_label": ".videodecoder()"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_streamreceiver_hpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "streamreceiver.hpp"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L14",
       "id": "streamreceiver_streamreceiver",
-      "community": 0,
+      "community": 1,
       "norm_label": "streamreceiver()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.hpp",
       "source_location": "L35",
       "id": "streamreceiver_streamreceiver_streamreceiver",
-      "community": 0,
+      "community": 1,
       "norm_label": ".streamreceiver()"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_recorder_hpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "recorder.hpp"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L13",
       "id": "recorder_recorder",
-      "community": 0,
+      "community": 1,
       "norm_label": "recorder()"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.hpp",
       "source_location": "L26",
       "id": "recorder_recorder_recorder",
-      "community": 0,
+      "community": 1,
       "norm_label": ".recorder()"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_display_cpp",
-      "community": 10,
+      "community": 11,
       "norm_label": "display.cpp"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.hpp",
       "source_location": "L15",
       "id": "display_display",
-      "community": 10,
+      "community": 11,
       "norm_label": "display"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.cpp",
       "source_location": "L27",
       "id": "display_updateframe",
-      "community": 10,
+      "community": 11,
       "norm_label": "updateframe()"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.cpp",
       "source_location": "L34",
       "id": "display_render",
-      "community": 10,
+      "community": 11,
       "norm_label": "render()"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_display_hpp",
-      "community": 10,
+      "community": 11,
       "norm_label": "display.hpp"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Display.hpp",
       "source_location": "L24",
       "id": "display_display_display",
-      "community": 10,
+      "community": 11,
       "norm_label": ".display()"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_videodecoder_cpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "videodecoder.cpp"
     },
     {
@@ -423,7 +423,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp",
       "source_location": "L19",
       "id": "videodecoder_init",
-      "community": 0,
+      "community": 1,
       "norm_label": "init()"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp",
       "source_location": "L61",
       "id": "videodecoder_decode",
-      "community": 0,
+      "community": 1,
       "norm_label": "decode()"
     },
     {
@@ -441,7 +441,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_main_cpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "main.cpp"
     },
     {
@@ -450,7 +450,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
       "source_location": "L36",
       "id": "main_printusage",
-      "community": 0,
+      "community": 1,
       "norm_label": "printusage()"
     },
     {
@@ -459,7 +459,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
       "source_location": "L51",
       "id": "main_parseargs",
-      "community": 0,
+      "community": 1,
       "norm_label": "parseargs()"
     },
     {
@@ -468,7 +468,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_streamreceiver_cpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "streamreceiver.cpp"
     },
     {
@@ -477,7 +477,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L23",
       "id": "streamreceiver_start",
-      "community": 0,
+      "community": 1,
       "norm_label": "start()"
     },
     {
@@ -486,7 +486,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L30",
       "id": "streamreceiver_stop",
-      "community": 0,
+      "community": 1,
       "norm_label": "stop()"
     },
     {
@@ -495,7 +495,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L37",
       "id": "streamreceiver_receiveloop",
-      "community": 0,
+      "community": 1,
       "norm_label": "receiveloop()"
     },
     {
@@ -504,7 +504,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L100",
       "id": "streamreceiver_recvall",
-      "community": 0,
+      "community": 1,
       "norm_label": "recvall()"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_client_src_recorder_cpp",
-      "community": 0,
+      "community": 1,
       "norm_label": "recorder.cpp"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L29",
       "id": "recorder_open",
-      "community": 0,
+      "community": 1,
       "norm_label": "open()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L54",
       "id": "recorder_writeframe",
-      "community": 0,
+      "community": 1,
       "norm_label": "writeframe()"
     },
     {
@@ -540,7 +540,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L65",
       "id": "recorder_close",
-      "community": 0,
+      "community": 1,
       "norm_label": "close()"
     },
     {
@@ -549,7 +549,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L77",
       "id": "recorder_isopen",
-      "community": 7,
+      "community": 8,
       "norm_label": "isopen()"
     },
     {
@@ -558,7 +558,7 @@
       "source_file": "/Users/noahg/github/cam-stream/client/src/Recorder.cpp",
       "source_location": "L85",
       "id": "recorder_makefilename",
-      "community": 0,
+      "community": 1,
       "norm_label": "makefilename()"
     },
     {
@@ -567,7 +567,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_detect_offline_cpp",
-      "community": 7,
+      "community": 8,
       "norm_label": "detect_offline.cpp"
     },
     {
@@ -576,7 +576,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
       "source_location": "L21",
       "id": "detect_offline_main",
-      "community": 7,
+      "community": 8,
       "norm_label": "main()"
     },
     {
@@ -585,25 +585,70 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_debug_viewer_cpp",
-      "community": 1,
+      "community": 0,
       "norm_label": "debug_viewer.cpp"
     },
     {
       "label": "onSeekTrackbar()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L29",
+      "source_location": "L35",
       "id": "debug_viewer_onseektrackbar",
-      "community": 1,
+      "community": 0,
       "norm_label": "onseektrackbar()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L40",
+      "source_location": "L46",
       "id": "debug_viewer_main",
-      "community": 1,
+      "community": 0,
+      "norm_label": "main()"
+    },
+    {
+      "label": "live_viewer.cpp",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L1",
+      "id": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "community": 0,
+      "norm_label": "live_viewer.cpp"
+    },
+    {
+      "label": "onSignal()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L37",
+      "id": "live_viewer_onsignal",
+      "community": 0,
+      "norm_label": "onsignal()"
+    },
+    {
+      "label": "isNumeric()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L39",
+      "id": "live_viewer_isnumeric",
+      "community": 0,
+      "norm_label": "isnumeric()"
+    },
+    {
+      "label": "printUsage()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L47",
+      "id": "live_viewer_printusage",
+      "community": 0,
+      "norm_label": "printusage()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L60",
+      "id": "live_viewer_main",
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -612,7 +657,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_calibrate_cpp",
-      "community": 2,
+      "community": 5,
       "norm_label": "calibrate.cpp"
     },
     {
@@ -621,7 +666,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L52",
       "id": "calibrate_onmouse",
-      "community": 2,
+      "community": 5,
       "norm_label": "onmouse()"
     },
     {
@@ -630,7 +675,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L60",
       "id": "calibrate_ontrackbar",
-      "community": 2,
+      "community": 5,
       "norm_label": "ontrackbar()"
     },
     {
@@ -639,7 +684,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L71",
       "id": "calibrate_drawhud",
-      "community": 2,
+      "community": 5,
       "norm_label": "drawhud()"
     },
     {
@@ -648,7 +693,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L147",
       "id": "calibrate_main",
-      "community": 2,
+      "community": 5,
       "norm_label": "main()"
     },
     {
@@ -657,16 +702,16 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DartDetector.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_dartdetector_hpp",
-      "community": 3,
+      "community": 7,
       "norm_label": "dartdetector.hpp"
     },
     {
       "label": "DartDetector()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L95",
+      "source_location": "L338",
       "id": "dartdetector_dartdetector",
-      "community": 3,
+      "community": 7,
       "norm_label": "dartdetector()"
     },
     {
@@ -675,7 +720,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/BoardCalibration.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_boardcalibration_hpp",
-      "community": 16,
+      "community": 18,
       "norm_label": "boardcalibration.hpp"
     },
     {
@@ -684,7 +729,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/ZoneMapper.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_zonemapper_hpp",
-      "community": 12,
+      "community": 14,
       "norm_label": "zonemapper.hpp"
     },
     {
@@ -693,7 +738,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/ZoneMapper.hpp",
       "source_location": "L14",
       "id": "zonemapper_zonemapper",
-      "community": 12,
+      "community": 14,
       "norm_label": "zonemapper"
     },
     {
@@ -702,7 +747,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Renderer.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_renderer_hpp",
-      "community": 13,
+      "community": 15,
       "norm_label": "renderer.hpp"
     },
     {
@@ -711,7 +756,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Renderer.hpp",
       "source_location": "L15",
       "id": "renderer_renderer",
-      "community": 13,
+      "community": 15,
       "norm_label": "renderer"
     },
     {
@@ -720,7 +765,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/BoardCalibrator.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_boardcalibrator_hpp",
-      "community": 14,
+      "community": 16,
       "norm_label": "boardcalibrator.hpp"
     },
     {
@@ -729,7 +774,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/BoardCalibrator.hpp",
       "source_location": "L12",
       "id": "boardcalibrator_boardcalibrator",
-      "community": 14,
+      "community": 16,
       "norm_label": "boardcalibrator"
     },
     {
@@ -738,25 +783,25 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_debugui_hpp",
-      "community": 1,
+      "community": 12,
       "norm_label": "debugui.hpp"
     },
     {
       "label": "DebugUI()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L55",
+      "source_location": "L104",
       "id": "debugui_debugui",
-      "community": 1,
+      "community": 12,
       "norm_label": "debugui()"
     },
     {
       "label": ".DebugUI()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
-      "source_location": "L28",
+      "source_location": "L29",
       "id": "debugui_debugui_debugui",
-      "community": 1,
+      "community": 12,
       "norm_label": ".debugui()"
     },
     {
@@ -765,16 +810,16 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Pipeline.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_pipeline_hpp",
-      "community": 1,
+      "community": 2,
       "norm_label": "pipeline.hpp"
     },
     {
       "label": "Pipeline()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L5",
+      "source_location": "L53",
       "id": "pipeline_pipeline",
-      "community": 1,
+      "community": 2,
       "norm_label": "pipeline()"
     },
     {
@@ -783,7 +828,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/MultiCamFusion.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_multicamfusion_hpp",
-      "community": 5,
+      "community": 6,
       "norm_label": "multicamfusion.hpp"
     },
     {
@@ -792,7 +837,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L17",
       "id": "multicamfusion_multicamfusion",
-      "community": 5,
+      "community": 6,
       "norm_label": "multicamfusion()"
     },
     {
@@ -801,7 +846,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Types.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_types_hpp",
-      "community": 17,
+      "community": 19,
       "norm_label": "types.hpp"
     },
     {
@@ -810,7 +855,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/FrameSource.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_framesource_hpp",
-      "community": 11,
+      "community": 13,
       "norm_label": "framesource.hpp"
     },
     {
@@ -819,7 +864,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/FrameSource.hpp",
       "source_location": "L10",
       "id": "framesource_framesource",
-      "community": 11,
+      "community": 13,
       "norm_label": "framesource"
     },
     {
@@ -828,7 +873,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/FrameSource.hpp",
       "source_location": "L12",
       "id": "framesource_framesource_framesource",
-      "community": 11,
+      "community": 13,
       "norm_label": ".framesource()"
     },
     {
@@ -837,7 +882,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/sources/FileSource.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_sources_filesource_cpp",
-      "community": 7,
+      "community": 8,
       "norm_label": "filesource.cpp"
     },
     {
@@ -846,7 +891,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/sources/FileSource.hpp",
       "source_location": "L11",
       "id": "filesource_filesource",
-      "community": 7,
+      "community": 8,
       "norm_label": "filesource"
     },
     {
@@ -855,7 +900,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/sources/FileSource.cpp",
       "source_location": "L18",
       "id": "filesource_next",
-      "community": 7,
+      "community": 8,
       "norm_label": "next()"
     },
     {
@@ -864,7 +909,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/sources/FileSource.cpp",
       "source_location": "L28",
       "id": "filesource_seek",
-      "community": 7,
+      "community": 8,
       "norm_label": "seek()"
     },
     {
@@ -873,7 +918,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/sources/FileSource.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_sources_filesource_hpp",
-      "community": 7,
+      "community": 8,
       "norm_label": "filesource.hpp"
     },
     {
@@ -882,115 +927,160 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
-      "community": 1,
+      "community": 2,
       "norm_label": "pipeline.cpp"
+    },
+    {
+      "label": "fusedCentroid()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L10",
+      "id": "pipeline_fusedcentroid",
+      "community": 2,
+      "norm_label": "fusedcentroid()"
+    },
+    {
+      "label": "fusedVoteCount()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L24",
+      "id": "pipeline_fusedvotecount",
+      "community": 2,
+      "norm_label": "fusedvotecount()"
     },
     {
       "label": "setOnHit()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L13",
+      "source_location": "L61",
       "id": "pipeline_setonhit",
-      "community": 7,
+      "community": 0,
       "norm_label": "setonhit()"
     },
     {
       "label": "feedFrame()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L19",
+      "source_location": "L67",
       "id": "pipeline_feedframe",
-      "community": 5,
+      "community": 2,
       "norm_label": "feedframe()"
+    },
+    {
+      "label": "watchdogStuckHuman()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L147",
+      "id": "pipeline_watchdogstuckhuman",
+      "community": 2,
+      "norm_label": "watchdogstuckhuman()"
+    },
+    {
+      "label": "roundStatus()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L190",
+      "id": "pipeline_roundstatus",
+      "community": 2,
+      "norm_label": "roundstatus()"
+    },
+    {
+      "label": "computeRoundStatus_()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L196",
+      "id": "pipeline_computeroundstatus",
+      "community": 2,
+      "norm_label": "computeroundstatus_()"
     },
     {
       "label": "resetRound()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L52",
+      "source_location": "L224",
       "id": "pipeline_resetround",
-      "community": 3,
+      "community": 0,
       "norm_label": "resetround()"
     },
     {
       "label": "setDiffThreshold()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L61",
+      "source_location": "L233",
       "id": "pipeline_setdiffthreshold",
-      "community": 1,
+      "community": 2,
       "norm_label": "setdiffthreshold()"
     },
     {
       "label": "diffThreshold()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L67",
+      "source_location": "L239",
       "id": "pipeline_diffthreshold",
-      "community": 1,
+      "community": 2,
       "norm_label": "diffthreshold()"
     },
     {
       "label": "setLineMergePerpPx()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L73",
+      "source_location": "L245",
       "id": "pipeline_setlinemergeperppx",
-      "community": 1,
+      "community": 2,
       "norm_label": "setlinemergeperppx()"
     },
     {
       "label": "lineMergePerpPx()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L79",
+      "source_location": "L251",
       "id": "pipeline_linemergeperppx",
-      "community": 1,
+      "community": 2,
       "norm_label": "linemergeperppx()"
     },
     {
       "label": "roundHits()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L85",
+      "source_location": "L257",
       "id": "pipeline_roundhits",
-      "community": 1,
+      "community": 0,
       "norm_label": "roundhits()"
     },
     {
       "label": "refreshBackground()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L91",
+      "source_location": "L263",
       "id": "pipeline_refreshbackground",
-      "community": 1,
+      "community": 2,
       "norm_label": "refreshbackground()"
     },
     {
       "label": "camViz()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L101",
+      "source_location": "L273",
       "id": "pipeline_camviz",
-      "community": 1,
+      "community": 0,
       "norm_label": "camviz()"
     },
     {
       "label": "dartsInRound()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L108",
+      "source_location": "L280",
       "id": "pipeline_dartsinround",
-      "community": 1,
+      "community": 0,
       "norm_label": "dartsinround()"
     },
     {
       "label": "maybeAutoReset()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L114",
+      "source_location": "L286",
       "id": "pipeline_maybeautoreset",
-      "community": 3,
+      "community": 2,
       "norm_label": "maybeautoreset()"
     },
     {
@@ -999,7 +1089,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_multicamfusion_cpp",
-      "community": 5,
+      "community": 6,
       "norm_label": "multicamfusion.cpp"
     },
     {
@@ -1008,7 +1098,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L10",
       "id": "multicamfusion_dist",
-      "community": 5,
+      "community": 6,
       "norm_label": "dist()"
     },
     {
@@ -1017,7 +1107,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L20",
       "id": "multicamfusion_addhit",
-      "community": 5,
+      "community": 6,
       "norm_label": "addhit()"
     },
     {
@@ -1026,7 +1116,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L35",
       "id": "multicamfusion_tick",
-      "community": 5,
+      "community": 6,
       "norm_label": "tick()"
     },
     {
@@ -1035,7 +1125,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L42",
       "id": "multicamfusion_flush",
-      "community": 5,
+      "community": 6,
       "norm_label": "flush()"
     },
     {
@@ -1044,16 +1134,16 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L48",
       "id": "multicamfusion_confirm",
-      "community": 5,
+      "community": 6,
       "norm_label": "confirm()"
     },
     {
       "label": "reset()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
-      "source_location": "L123",
+      "source_location": "L145",
       "id": "multicamfusion_reset",
-      "community": 5,
+      "community": 6,
       "norm_label": "reset()"
     },
     {
@@ -1062,7 +1152,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_boardcalibrator_cpp",
-      "community": 2,
+      "community": 5,
       "norm_label": "boardcalibrator.cpp"
     },
     {
@@ -1071,7 +1161,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L8",
       "id": "boardcalibrator_detectauto",
-      "community": 2,
+      "community": 5,
       "norm_label": "detectauto()"
     },
     {
@@ -1080,7 +1170,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L16",
       "id": "boardcalibrator_fromreferencepoints",
-      "community": 2,
+      "community": 5,
       "norm_label": "fromreferencepoints()"
     },
     {
@@ -1089,124 +1179,187 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
-      "community": 1,
+      "community": 0,
       "norm_label": "debugui.cpp"
     },
     {
       "label": "pairwiseSpread()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L28",
+      "source_location": "L41",
       "id": "debugui_pairwisespread",
-      "community": 6,
+      "community": 3,
       "norm_label": "pairwisespread()"
     },
     {
       "label": "fusedCentroid()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L40",
+      "source_location": "L53",
       "id": "debugui_fusedcentroid",
-      "community": 6,
+      "community": 3,
       "norm_label": "fusedcentroid()"
+    },
+    {
+      "label": "blitAspectFit()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L67",
+      "id": "debugui_blitaspectfit",
+      "community": 3,
+      "norm_label": "blitaspectfit()"
+    },
+    {
+      "label": "onMouseStatic()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L97",
+      "id": "debugui_onmousestatic",
+      "community": 0,
+      "norm_label": "onmousestatic()"
     },
     {
       "label": "updateCam()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L72",
+      "source_location": "L122",
       "id": "debugui_updatecam",
-      "community": 1,
+      "community": 0,
       "norm_label": "updatecam()"
     },
     {
       "label": "setRoundHits()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L80",
+      "source_location": "L130",
       "id": "debugui_setroundhits",
-      "community": 1,
+      "community": 0,
       "norm_label": "setroundhits()"
     },
     {
       "label": "setRoundProgress()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L86",
+      "source_location": "L136",
       "id": "debugui_setroundprogress",
-      "community": 1,
+      "community": 0,
       "norm_label": "setroundprogress()"
     },
     {
       "label": "setDiffThreshold()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L93",
+      "source_location": "L143",
       "id": "debugui_setdiffthreshold",
-      "community": 1,
+      "community": 0,
       "norm_label": "setdiffthreshold()"
+    },
+    {
+      "label": "setCamDelay()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L149",
+      "id": "debugui_setcamdelay",
+      "community": 0,
+      "norm_label": "setcamdelay()"
+    },
+    {
+      "label": "setRoundStatus()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L156",
+      "id": "debugui_setroundstatus",
+      "community": 0,
+      "norm_label": "setroundstatus()"
     },
     {
       "label": "consumeResetRequest()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L99",
+      "source_location": "L163",
       "id": "debugui_consumeresetrequest",
-      "community": 1,
+      "community": 0,
       "norm_label": "consumeresetrequest()"
     },
     {
       "label": "consumeBgRefreshRequest()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L107",
+      "source_location": "L171",
       "id": "debugui_consumebgrefreshrequest",
-      "community": 1,
+      "community": 0,
       "norm_label": "consumebgrefreshrequest()"
     },
     {
       "label": "consumeStepForward()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L115",
+      "source_location": "L179",
       "id": "debugui_consumestepforward",
-      "community": 1,
+      "community": 0,
       "norm_label": "consumestepforward()"
     },
     {
       "label": "consumeStepBackward()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L123",
+      "source_location": "L187",
       "id": "debugui_consumestepbackward",
-      "community": 1,
+      "community": 0,
       "norm_label": "consumestepbackward()"
     },
     {
       "label": "isPaused()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L131",
+      "source_location": "L195",
       "id": "debugui_ispaused",
-      "community": 1,
+      "community": 0,
       "norm_label": "ispaused()"
+    },
+    {
+      "label": "focusedCam()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L201",
+      "id": "debugui_focusedcam",
+      "community": 0,
+      "norm_label": "focusedcam()"
+    },
+    {
+      "label": "handleClick()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L207",
+      "id": "debugui_handleclick",
+      "community": 0,
+      "norm_label": "handleclick()"
+    },
+    {
+      "label": "drawCamTile()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L220",
+      "id": "debugui_drawcamtile",
+      "community": 3,
+      "norm_label": "drawcamtile()"
     },
     {
       "label": "composite()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L137",
+      "source_location": "L359",
       "id": "debugui_composite",
-      "community": 6,
+      "community": 3,
       "norm_label": "composite()"
     },
     {
       "label": "render()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L319",
+      "source_location": "L580",
       "id": "debugui_render",
-      "community": 1,
+      "community": 0,
       "norm_label": "render()"
     },
     {
@@ -1215,7 +1368,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
-      "community": 3,
+      "community": 7,
       "norm_label": "dartdetector.cpp"
     },
     {
@@ -1224,7 +1377,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
       "source_location": "L22",
       "id": "dartdetector_tolab32",
-      "community": 3,
+      "community": 7,
       "norm_label": "tolab32()"
     },
     {
@@ -1233,61 +1386,79 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
       "source_location": "L33",
       "id": "dartdetector_labdistance",
-      "community": 3,
+      "community": 7,
       "norm_label": "labdistance()"
     },
     {
-      "label": "lineExtendByMask()",
+      "label": "extendBboxAlongAxis()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L52",
-      "id": "dartdetector_lineextendbymask",
-      "community": 3,
-      "norm_label": "lineextendbymask()"
+      "source_location": "L57",
+      "id": "dartdetector_extendbboxalongaxis",
+      "community": 7,
+      "norm_label": "extendbboxalongaxis()"
+    },
+    {
+      "label": "dartAxisByMidpoints()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L85",
+      "id": "dartdetector_dartaxisbymidpoints",
+      "community": 7,
+      "norm_label": "dartaxisbymidpoints()"
+    },
+    {
+      "label": "fillDartRegion()",
+      "file_type": "code",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L281",
+      "id": "dartdetector_filldartregion",
+      "community": 7,
+      "norm_label": "filldartregion()"
     },
     {
       "label": "buildRoiMask()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L108",
+      "source_location": "L351",
       "id": "dartdetector_buildroimask",
-      "community": 3,
+      "community": 7,
       "norm_label": "buildroimask()"
     },
     {
       "label": "refreshBackground()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L133",
+      "source_location": "L376",
       "id": "dartdetector_refreshbackground",
-      "community": 3,
+      "community": 0,
       "norm_label": "refreshbackground()"
     },
     {
       "label": "reset()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L142",
+      "source_location": "L386",
       "id": "dartdetector_reset",
-      "community": 3,
+      "community": 0,
       "norm_label": "reset()"
     },
     {
       "label": "boardLooksCleared()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L157",
+      "source_location": "L405",
       "id": "dartdetector_boardlookscleared",
-      "community": 3,
+      "community": 7,
       "norm_label": "boardlookscleared()"
     },
     {
       "label": "processFrame()",
       "file_type": "code",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L162",
+      "source_location": "L410",
       "id": "dartdetector_processframe",
-      "community": 3,
+      "community": 7,
       "norm_label": "processframe()"
     },
     {
@@ -1296,7 +1467,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_boardcalibration_cpp",
-      "community": 2,
+      "community": 5,
       "norm_label": "boardcalibration.cpp"
     },
     {
@@ -1305,7 +1476,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L8",
       "id": "boardcalibration_imagetoboard",
-      "community": 2,
+      "community": 5,
       "norm_label": "imagetoboard()"
     },
     {
@@ -1314,7 +1485,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L16",
       "id": "boardcalibration_boardtoimage",
-      "community": 2,
+      "community": 5,
       "norm_label": "boardtoimage()"
     },
     {
@@ -1323,7 +1494,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L24",
       "id": "boardcalibration_savetofile",
-      "community": 2,
+      "community": 5,
       "norm_label": "savetofile()"
     },
     {
@@ -1332,7 +1503,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L39",
       "id": "boardcalibration_loadfromfile",
-      "community": 2,
+      "community": 0,
       "norm_label": "loadfromfile()"
     },
     {
@@ -1341,7 +1512,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMapper.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_zonemapper_cpp",
-      "community": 5,
+      "community": 6,
       "norm_label": "zonemapper.cpp"
     },
     {
@@ -1350,7 +1521,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMapper.cpp",
       "source_location": "L8",
       "id": "zonemapper_lookup",
-      "community": 5,
+      "community": 6,
       "norm_label": "lookup()"
     },
     {
@@ -1359,7 +1530,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_renderer_cpp",
-      "community": 6,
+      "community": 3,
       "norm_label": "renderer.cpp"
     },
     {
@@ -1368,7 +1539,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L12",
       "id": "renderer_boardtocanonicalpx",
-      "community": 6,
+      "community": 3,
       "norm_label": "boardtocanonicalpx()"
     },
     {
@@ -1377,7 +1548,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L23",
       "id": "renderer_drawcircleboardmm",
-      "community": 6,
+      "community": 3,
       "norm_label": "drawcircleboardmm()"
     },
     {
@@ -1386,7 +1557,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L37",
       "id": "renderer_rendercanonicalboard",
-      "community": 6,
+      "community": 3,
       "norm_label": "rendercanonicalboard()"
     },
     {
@@ -1395,7 +1566,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L115",
       "id": "renderer_drawhitoncanonical",
-      "community": 6,
+      "community": 3,
       "norm_label": "drawhitoncanonical()"
     },
     {
@@ -1404,7 +1575,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L130",
       "id": "renderer_drawcalibrationoverlay",
-      "community": 2,
+      "community": 3,
       "norm_label": "drawcalibrationoverlay()"
     },
     {
@@ -1413,7 +1584,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L171",
       "id": "renderer_drawdetectionoverlay",
-      "community": 6,
+      "community": 3,
       "norm_label": "drawdetectionoverlay()"
     },
     {
@@ -1422,7 +1593,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L192",
       "id": "renderer_drawfulldart",
-      "community": 6,
+      "community": 3,
       "norm_label": "drawfulldart()"
     },
     {
@@ -1431,7 +1602,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L201",
       "id": "renderer_drawloggedtip",
-      "community": 6,
+      "community": 3,
       "norm_label": "drawloggedtip()"
     }
   ],
@@ -1731,8 +1902,8 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/main.cpp",
       "source_location": "L82",
       "weight": 1.0,
-      "_src": "main_main",
-      "_tgt": "streamserver_setinitpacket",
+      "_src": "streamserver_setinitpacket",
+      "_tgt": "main_main",
       "source": "streamserver_setinitpacket",
       "target": "main_main"
     },
@@ -1743,8 +1914,8 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/main.cpp",
       "source_location": "L101",
       "weight": 1.0,
-      "_src": "main_main",
-      "_tgt": "streamserver_push",
+      "_src": "streamserver_push",
+      "_tgt": "main_main",
       "source": "streamserver_push",
       "target": "main_main"
     },
@@ -1839,8 +2010,8 @@
       "source_file": "/Users/noahg/github/cam-stream/server/src/main.cpp",
       "source_location": "L99",
       "weight": 1.0,
-      "_src": "main_main",
-      "_tgt": "videoencoder_encode",
+      "_src": "videoencoder_encode",
+      "_tgt": "main_main",
       "source": "videoencoder_encode",
       "target": "main_main"
     },
@@ -2277,6 +2448,30 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L141",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "videodecoder_init",
+      "source": "videodecoder_init",
+      "target": "live_viewer_main"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L153",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "videodecoder_decode",
+      "source": "videodecoder_decode",
+      "target": "live_viewer_main"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/client/src/main.cpp",
@@ -2352,6 +2547,18 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L166",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "streamreceiver_start",
+      "source": "streamreceiver_start",
+      "target": "live_viewer_main"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp",
       "source_location": "L33",
       "weight": 1.0,
@@ -2359,6 +2566,18 @@
       "_tgt": "recorder_close",
       "source": "streamreceiver_stop",
       "target": "recorder_close"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L179",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "streamreceiver_stop",
+      "source": "streamreceiver_stop",
+      "target": "live_viewer_main"
     },
     {
       "relation": "calls",
@@ -2463,8 +2682,8 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/calibrate.cpp",
       "source_location": "L157",
       "weight": 1.0,
-      "_src": "calibrate_main",
-      "_tgt": "recorder_open",
+      "_src": "recorder_open",
+      "_tgt": "calibrate_main",
       "source": "recorder_open",
       "target": "calibrate_main"
     },
@@ -2475,8 +2694,8 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
       "source_location": "L44",
       "weight": 1.0,
-      "_src": "detect_offline_main",
-      "_tgt": "recorder_isopen",
+      "_src": "recorder_isopen",
+      "_tgt": "detect_offline_main",
       "source": "recorder_isopen",
       "target": "detect_offline_main"
     },
@@ -2487,8 +2706,8 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L62",
       "weight": 1.0,
-      "_src": "debug_viewer_main",
-      "_tgt": "recorder_isopen",
+      "_src": "recorder_isopen",
+      "_tgt": "debug_viewer_main",
       "source": "recorder_isopen",
       "target": "debug_viewer_main"
     },
@@ -2556,7 +2775,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L29",
+      "source_location": "L35",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_tools_debug_viewer_cpp",
       "_tgt": "debug_viewer_onseektrackbar",
@@ -2568,7 +2787,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L40",
+      "source_location": "L46",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_tools_debug_viewer_cpp",
       "_tgt": "debug_viewer_main",
@@ -2605,6 +2824,30 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L169",
+      "weight": 1.0,
+      "_src": "debug_viewer_main",
+      "_tgt": "pipeline_roundhits",
+      "source": "debug_viewer_main",
+      "target": "pipeline_roundhits"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L123",
+      "weight": 1.0,
+      "_src": "debug_viewer_main",
+      "_tgt": "filesource_seek",
+      "source": "debug_viewer_main",
+      "target": "filesource_seek"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L108",
       "weight": 1.0,
       "_src": "debug_viewer_main",
@@ -2623,18 +2866,6 @@
       "_tgt": "pipeline_feedframe",
       "source": "debug_viewer_main",
       "target": "pipeline_feedframe"
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L123",
-      "weight": 1.0,
-      "_src": "debug_viewer_main",
-      "_tgt": "filesource_seek",
-      "source": "debug_viewer_main",
-      "target": "filesource_seek"
     },
     {
       "relation": "calls",
@@ -2683,6 +2914,18 @@
       "_tgt": "pipeline_setlinemergeperppx",
       "source": "debug_viewer_main",
       "target": "pipeline_setlinemergeperppx"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L182",
+      "weight": 1.0,
+      "_src": "debug_viewer_main",
+      "_tgt": "debugui_setcamdelay",
+      "source": "debug_viewer_main",
+      "target": "debugui_setcamdelay"
     },
     {
       "relation": "calls",
@@ -2809,12 +3052,24 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L169",
+      "source_location": "L227",
       "weight": 1.0,
       "_src": "debug_viewer_main",
-      "_tgt": "pipeline_roundhits",
+      "_tgt": "pipeline_roundstatus",
       "source": "debug_viewer_main",
-      "target": "pipeline_roundhits"
+      "target": "pipeline_roundstatus"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L228",
+      "weight": 1.0,
+      "_src": "debug_viewer_main",
+      "_tgt": "debugui_setroundstatus",
+      "source": "debug_viewer_main",
+      "target": "debugui_setroundstatus"
     },
     {
       "relation": "calls",
@@ -2850,6 +3105,294 @@
       "_src": "debug_viewer_main",
       "_tgt": "debugui_render",
       "source": "debug_viewer_main",
+      "target": "debugui_render"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "_tgt": "live_viewer_onsignal",
+      "source": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "target": "live_viewer_onsignal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "_tgt": "live_viewer_isnumeric",
+      "source": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "target": "live_viewer_isnumeric",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L47",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "_tgt": "live_viewer_printusage",
+      "source": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "target": "live_viewer_printusage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "_tgt": "live_viewer_main",
+      "source": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
+      "target": "live_viewer_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L71",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "live_viewer_isnumeric",
+      "source": "live_viewer_isnumeric",
+      "target": "live_viewer_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "live_viewer_printusage",
+      "source": "live_viewer_printusage",
+      "target": "live_viewer_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L82",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "boardcalibration_loadfromfile",
+      "source": "live_viewer_main",
+      "target": "boardcalibration_loadfromfile"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_setonhit",
+      "source": "live_viewer_main",
+      "target": "pipeline_setonhit"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L102",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_roundhits",
+      "source": "live_viewer_main",
+      "target": "pipeline_roundhits"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L159",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_feedframe",
+      "source": "live_viewer_main",
+      "target": "pipeline_feedframe"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_updatecam",
+      "source": "live_viewer_main",
+      "target": "debugui_updatecam"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_camviz",
+      "source": "live_viewer_main",
+      "target": "pipeline_camviz"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L199",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_setroundprogress",
+      "source": "live_viewer_main",
+      "target": "debugui_setroundprogress"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L199",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_dartsinround",
+      "source": "live_viewer_main",
+      "target": "pipeline_dartsinround"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L200",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_setroundhits",
+      "source": "live_viewer_main",
+      "target": "debugui_setroundhits"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L201",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_roundstatus",
+      "source": "live_viewer_main",
+      "target": "pipeline_roundstatus"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L202",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_setroundstatus",
+      "source": "live_viewer_main",
+      "target": "debugui_setroundstatus"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L204",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_consumeresetrequest",
+      "source": "live_viewer_main",
+      "target": "debugui_consumeresetrequest"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L205",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "pipeline_resetround",
+      "source": "live_viewer_main",
+      "target": "pipeline_resetround"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L207",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_consumebgrefreshrequest",
+      "source": "live_viewer_main",
+      "target": "debugui_consumebgrefreshrequest"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L208",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "dartdetector_refreshbackground",
+      "source": "live_viewer_main",
+      "target": "dartdetector_refreshbackground"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L211",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_consumestepforward",
+      "source": "live_viewer_main",
+      "target": "debugui_consumestepforward"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L212",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_consumestepbackward",
+      "source": "live_viewer_main",
+      "target": "debugui_consumestepbackward"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
+      "source_location": "L214",
+      "weight": 1.0,
+      "_src": "live_viewer_main",
+      "_tgt": "debugui_render",
+      "source": "live_viewer_main",
       "target": "debugui_render"
     },
     {
@@ -2964,7 +3507,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L95",
+      "source_location": "L338",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_dartdetector",
@@ -3012,7 +3555,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_include_camdetect_debugui_hpp",
       "_tgt": "debugui_debugui",
@@ -3024,7 +3567,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
-      "source_location": "L28",
+      "source_location": "L29",
       "weight": 1.0,
       "_src": "debugui_debugui",
       "_tgt": "debugui_debugui_debugui",
@@ -3036,7 +3579,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L67",
+      "source_location": "L117",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_debugui",
@@ -3048,7 +3591,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Pipeline.hpp",
-      "source_location": "L25",
+      "source_location": "L40",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_include_camdetect_pipeline_hpp",
       "_tgt": "pipeline_pipeline",
@@ -3060,7 +3603,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L5",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_pipeline",
@@ -3168,7 +3711,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L13",
+      "source_location": "L10",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "_tgt": "pipeline_fusedcentroid",
+      "source": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "target": "pipeline_fusedcentroid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "_tgt": "pipeline_fusedvotecount",
+      "source": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "target": "pipeline_fusedvotecount",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L61",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_setonhit",
@@ -3180,7 +3747,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L19",
+      "source_location": "L67",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_feedframe",
@@ -3192,7 +3759,43 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L52",
+      "source_location": "L147",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "_tgt": "pipeline_watchdogstuckhuman",
+      "source": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "target": "pipeline_watchdogstuckhuman",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L190",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "_tgt": "pipeline_roundstatus",
+      "source": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "target": "pipeline_roundstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "_tgt": "pipeline_computeroundstatus",
+      "source": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
+      "target": "pipeline_computeroundstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L224",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_resetround",
@@ -3204,7 +3807,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L61",
+      "source_location": "L233",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_setdiffthreshold",
@@ -3216,7 +3819,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L67",
+      "source_location": "L239",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_diffthreshold",
@@ -3228,7 +3831,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L73",
+      "source_location": "L245",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_setlinemergeperppx",
@@ -3240,7 +3843,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L79",
+      "source_location": "L251",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_linemergeperppx",
@@ -3252,7 +3855,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L85",
+      "source_location": "L257",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_roundhits",
@@ -3264,7 +3867,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L91",
+      "source_location": "L263",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_refreshbackground",
@@ -3276,7 +3879,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L101",
+      "source_location": "L273",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_camviz",
@@ -3288,7 +3891,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L108",
+      "source_location": "L280",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_dartsinround",
@@ -3300,7 +3903,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L114",
+      "source_location": "L286",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
       "_tgt": "pipeline_maybeautoreset",
@@ -3312,7 +3915,43 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L46",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_src": "pipeline_feedframe",
+      "_tgt": "pipeline_fusedcentroid",
+      "source": "pipeline_fusedcentroid",
+      "target": "pipeline_feedframe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L98",
+      "weight": 1.0,
+      "_src": "pipeline_feedframe",
+      "_tgt": "pipeline_fusedvotecount",
+      "source": "pipeline_fusedvotecount",
+      "target": "pipeline_feedframe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L140",
+      "weight": 1.0,
+      "_src": "pipeline_feedframe",
+      "_tgt": "pipeline_watchdogstuckhuman",
+      "source": "pipeline_feedframe",
+      "target": "pipeline_watchdogstuckhuman",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L141",
       "weight": 1.0,
       "_src": "pipeline_feedframe",
       "_tgt": "pipeline_maybeautoreset",
@@ -3355,6 +3994,30 @@
       "_tgt": "multicamfusion_tick",
       "source": "pipeline_feedframe",
       "target": "multicamfusion_tick"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L167",
+      "weight": 1.0,
+      "_src": "pipeline_watchdogstuckhuman",
+      "_tgt": "pipeline_refreshbackground",
+      "source": "pipeline_watchdogstuckhuman",
+      "target": "pipeline_refreshbackground",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L193",
+      "weight": 1.0,
+      "_src": "pipeline_roundstatus",
+      "_tgt": "pipeline_computeroundstatus",
+      "source": "pipeline_roundstatus",
+      "target": "pipeline_computeroundstatus",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -3456,7 +4119,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
-      "source_location": "L123",
+      "source_location": "L145",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_multicamfusion_cpp",
       "_tgt": "multicamfusion_reset",
@@ -3468,7 +4131,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
-      "source_location": "L67",
+      "source_location": "L71",
       "weight": 1.0,
       "_src": "multicamfusion_confirm",
       "_tgt": "multicamfusion_dist",
@@ -3564,7 +4227,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L28",
+      "source_location": "L41",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_pairwisespread",
@@ -3576,7 +4239,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L40",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_fusedcentroid",
@@ -3588,7 +4251,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L72",
+      "source_location": "L67",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_blitaspectfit",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_blitaspectfit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_onmousestatic",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_onmousestatic",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L122",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_updatecam",
@@ -3600,7 +4287,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L80",
+      "source_location": "L130",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_setroundhits",
@@ -3612,7 +4299,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L86",
+      "source_location": "L136",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_setroundprogress",
@@ -3624,7 +4311,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L93",
+      "source_location": "L143",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_setdiffthreshold",
@@ -3636,7 +4323,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L99",
+      "source_location": "L149",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_setcamdelay",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_setcamdelay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L156",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_setroundstatus",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_setroundstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L163",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_consumeresetrequest",
@@ -3648,7 +4359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L107",
+      "source_location": "L171",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_consumebgrefreshrequest",
@@ -3660,7 +4371,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L115",
+      "source_location": "L179",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_consumestepforward",
@@ -3672,7 +4383,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L123",
+      "source_location": "L187",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_consumestepbackward",
@@ -3684,7 +4395,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L131",
+      "source_location": "L195",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_ispaused",
@@ -3696,7 +4407,43 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L137",
+      "source_location": "L201",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_focusedcam",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_focusedcam",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L207",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_handleclick",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_handleclick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L220",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "_tgt": "debugui_drawcamtile",
+      "source": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
+      "target": "debugui_drawcamtile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L359",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_composite",
@@ -3708,7 +4455,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L319",
+      "source_location": "L580",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
       "_tgt": "debugui_render",
@@ -3720,7 +4467,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L296",
+      "source_location": "L553",
       "weight": 1.0,
       "_src": "debugui_composite",
       "_tgt": "debugui_pairwisespread",
@@ -3732,7 +4479,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L225",
+      "source_location": "L411",
       "weight": 1.0,
       "_src": "debugui_composite",
       "_tgt": "debugui_fusedcentroid",
@@ -3744,13 +4491,121 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L324",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_src": "debugui_drawcamtile",
+      "_tgt": "debugui_blitaspectfit",
+      "source": "debugui_blitaspectfit",
+      "target": "debugui_drawcamtile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L100",
+      "weight": 1.0,
+      "_src": "debugui_onmousestatic",
+      "_tgt": "debugui_handleclick",
+      "source": "debugui_onmousestatic",
+      "target": "debugui_handleclick",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L375",
+      "weight": 1.0,
+      "_src": "debugui_composite",
+      "_tgt": "debugui_drawcamtile",
+      "source": "debugui_drawcamtile",
+      "target": "debugui_composite",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L282",
+      "weight": 1.0,
+      "_src": "debugui_drawcamtile",
+      "_tgt": "renderer_drawcalibrationoverlay",
+      "source": "debugui_drawcamtile",
+      "target": "renderer_drawcalibrationoverlay"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L284",
+      "weight": 1.0,
+      "_src": "debugui_drawcamtile",
+      "_tgt": "renderer_drawloggedtip",
+      "source": "debugui_drawcamtile",
+      "target": "renderer_drawloggedtip"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L286",
+      "weight": 1.0,
+      "_src": "debugui_drawcamtile",
+      "_tgt": "renderer_drawdetectionoverlay",
+      "source": "debugui_drawcamtile",
+      "target": "renderer_drawdetectionoverlay"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L290",
+      "weight": 1.0,
+      "_src": "debugui_drawcamtile",
+      "_tgt": "renderer_drawfulldart",
+      "source": "debugui_drawcamtile",
+      "target": "renderer_drawfulldart"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L585",
       "weight": 1.0,
       "_src": "debugui_render",
       "_tgt": "debugui_composite",
       "source": "debugui_composite",
       "target": "debugui_render",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L209",
+      "weight": 1.0,
+      "_src": "debugui_composite",
+      "_tgt": "renderer_rendercanonicalboard",
+      "source": "debugui_composite",
+      "target": "renderer_rendercanonicalboard"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
+      "source_location": "L227",
+      "weight": 1.0,
+      "_src": "debugui_composite",
+      "_tgt": "renderer_drawhitoncanonical",
+      "source": "debugui_composite",
+      "target": "renderer_drawhitoncanonical"
     },
     {
       "relation": "calls",
@@ -3801,30 +4656,6 @@
       "target": "renderer_drawfulldart"
     },
     {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L209",
-      "weight": 1.0,
-      "_src": "debugui_composite",
-      "_tgt": "renderer_rendercanonicalboard",
-      "source": "debugui_composite",
-      "target": "renderer_rendercanonicalboard"
-    },
-    {
-      "relation": "calls",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
-      "source_location": "L227",
-      "weight": 1.0,
-      "_src": "debugui_composite",
-      "_tgt": "renderer_drawhitoncanonical",
-      "source": "debugui_composite",
-      "target": "renderer_drawhitoncanonical"
-    },
-    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
@@ -3852,19 +4683,43 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L52",
+      "source_location": "L57",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
-      "_tgt": "dartdetector_lineextendbymask",
+      "_tgt": "dartdetector_extendbboxalongaxis",
       "source": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
-      "target": "dartdetector_lineextendbymask",
+      "target": "dartdetector_extendbboxalongaxis",
       "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L108",
+      "source_location": "L85",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
+      "_tgt": "dartdetector_dartaxisbymidpoints",
+      "source": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
+      "target": "dartdetector_dartaxisbymidpoints",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L281",
+      "weight": 1.0,
+      "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
+      "_tgt": "dartdetector_filldartregion",
+      "source": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
+      "target": "dartdetector_filldartregion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L351",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_buildroimask",
@@ -3876,7 +4731,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L133",
+      "source_location": "L376",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_refreshbackground",
@@ -3888,7 +4743,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L142",
+      "source_location": "L386",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_reset",
@@ -3900,7 +4755,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L157",
+      "source_location": "L405",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_boardlookscleared",
@@ -3912,7 +4767,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L162",
+      "source_location": "L410",
       "weight": 1.0,
       "_src": "users_noahg_github_cam_stream_detection_src_dartdetector_cpp",
       "_tgt": "dartdetector_processframe",
@@ -3924,7 +4779,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L166",
+      "source_location": "L414",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
       "_tgt": "dartdetector_tolab32",
@@ -3936,7 +4791,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L189",
+      "source_location": "L452",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
       "_tgt": "dartdetector_labdistance",
@@ -3948,11 +4803,35 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L388",
+      "source_location": "L109",
+      "weight": 1.0,
+      "_src": "dartdetector_dartaxisbymidpoints",
+      "_tgt": "dartdetector_extendbboxalongaxis",
+      "source": "dartdetector_extendbboxalongaxis",
+      "target": "dartdetector_dartaxisbymidpoints",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L311",
+      "weight": 1.0,
+      "_src": "dartdetector_filldartregion",
+      "_tgt": "dartdetector_extendbboxalongaxis",
+      "source": "dartdetector_extendbboxalongaxis",
+      "target": "dartdetector_filldartregion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L737",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
-      "_tgt": "dartdetector_lineextendbymask",
-      "source": "dartdetector_lineextendbymask",
+      "_tgt": "dartdetector_dartaxisbymidpoints",
+      "source": "dartdetector_dartaxisbymidpoints",
       "target": "dartdetector_processframe",
       "confidence_score": 1.0
     },
@@ -3960,7 +4839,19 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L186",
+      "source_location": "L742",
+      "weight": 1.0,
+      "_src": "dartdetector_processframe",
+      "_tgt": "dartdetector_filldartregion",
+      "source": "dartdetector_filldartregion",
+      "target": "dartdetector_processframe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L434",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
       "_tgt": "dartdetector_buildroimask",
@@ -3984,7 +4875,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L139",
+      "source_location": "L383",
       "weight": 1.0,
       "_src": "dartdetector_refreshbackground",
       "_tgt": "dartdetector_reset",
@@ -3996,7 +4887,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
-      "source_location": "L423",
+      "source_location": "L793",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
       "_tgt": "dartdetector_boardlookscleared",
@@ -4083,8 +4974,8 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Renderer.cpp",
       "source_location": "L141",
       "weight": 1.0,
-      "_src": "renderer_drawcalibrationoverlay",
-      "_tgt": "boardcalibration_boardtoimage",
+      "_src": "boardcalibration_boardtoimage",
+      "_tgt": "renderer_drawcalibrationoverlay",
       "source": "boardcalibration_boardtoimage",
       "target": "renderer_drawcalibrationoverlay"
     },

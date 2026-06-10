@@ -243,17 +243,39 @@ void DebugUI::drawCamTile(cv::Mat& out, const cv::Rect& roi, int cam_id,
         overlay = frames_[cam_id].clone();
     }
 
-    // Tint the "full dart region" — every fg pixel within the perp band of
-    // the refined axis between tip and tail.  Lets the user see fragments
-    // glued back to the shaft (black-on-black sectors split the mask but the
-    // line-extend merges them).
+    // Tint + bounding box around every dart-shaped region.  The detector
+    // unions the band-masks of all elongated contours (including darts it
+    // already committed) so we draw a BB per connected component — i.e. one
+    // box per visible dart.  Yellow at line thickness 3 so it stands out on
+    // both color and mask views.
     if (!vizs_[cam_id].dart_region.empty() &&
         vizs_[cam_id].dart_region.size() == overlay.size()) {
+
+        // Green tint of the included pixels
         cv::Mat layer(overlay.size(), overlay.type(),
                       cv::Scalar(60, 230, 90));
         cv::Mat blended;
         cv::addWeighted(overlay, 0.45, layer, 0.55, 0, blended);
         blended.copyTo(overlay, vizs_[cam_id].dart_region);
+
+        // Per-dart rotated bounding box
+        cv::Mat labels;
+        const int n_comp = cv::connectedComponents(
+            vizs_[cam_id].dart_region, labels, 8, CV_32S);
+        for (int k = 1; k < n_comp; ++k) {
+            cv::Mat comp;
+            cv::compare(labels, k, comp, cv::CMP_EQ);
+            std::vector<cv::Point> nz;
+            cv::findNonZero(comp, nz);
+            if (nz.size() < 50) continue;   // skip tiny noise components
+            const cv::RotatedRect bb = cv::minAreaRect(nz);
+            cv::Point2f corners[4];
+            bb.points(corners);
+            for (int j = 0; j < 4; ++j) {
+                cv::line(overlay, corners[j], corners[(j + 1) % 4],
+                         cv::Scalar(0, 255, 255), 3, cv::LINE_AA);
+            }
+        }
     }
 
     if (calibs_[cam_id].isValid())

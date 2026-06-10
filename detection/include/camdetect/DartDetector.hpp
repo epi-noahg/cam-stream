@@ -54,7 +54,8 @@ private:
     int                               cam_id_;
     BoardCalibration                  calib_;
 
-    cv::Mat                           bg_lab_;        // background reference (CV_32FC3, LAB)
+    cv::Mat                           bg_lab_;        // "empty-board" ref (CV_32FC3, LAB)
+    cv::Mat                           throw_bg_lab_;  // snapped after each commit; empty before first throw
     cv::Mat                           bg_acc_;        // accumulator during warmup
     int                               warmup_count_   {0};
     bool                              warmup_done_    {false};

@@ -21,15 +21,32 @@ cv::Point2f fusedCentroid(const FusedHit& h)
     return {sum.x / n, sum.y / n};
 }
 
-// Two FusedHits refer to the same physical dart when:
-//   - their projections are tight in space (<= ROUND_DEDUP_MM), OR
-//   - they arrived close in time AND within a looser radius (rim parallax
-//     can split per-cam projections by 30-50 mm even though it's one dart).
-// Darts can't physically be thrown closer than ~0.8 s, so the time check is
-// safe against legitimate distinct hits.
-constexpr float  ROUND_DEDUP_MM      = 30.f;
-constexpr double ROUND_DEDUP_TIME_S  =  0.8;
-constexpr float  ROUND_DEDUP_TIME_MM = 70.f;
+int fusedVoteCount(const FusedHit& h)
+{
+    int n = 0;
+    for (int i = 0; i < NUM_CAMS; ++i)
+        if (h.per_cam[i].cam_id >= 0) ++n;
+    return n;
+}
+
+// Same-dart dedup against committed round hits.
+//
+// A single physical dart can produce up to NUM_CAMS independent fused-hit
+// emissions when the cams stabilise far enough apart in time to fall into
+// different fusion windows.  Each emission is single-cam, and with rim
+// parallax their board projections can disagree by tens of millimetres.  So
+// space-only dedup is not enough.
+//
+// The strongest signal we have is TIME: nobody throws two real darts in less
+// than ~1 second.  We therefore drop any new fused hit that lands inside
+// ROUND_DEDUP_HARD_TIME_S of an existing one, regardless of position.  Above
+// that, we still apply the looser combined space/time fallback so that
+// stragglers a bit past the hard window get caught when the position is
+// roughly consistent.
+constexpr double ROUND_DEDUP_HARD_TIME_S =  1.0;
+constexpr float  ROUND_DEDUP_MM          = 30.f;
+constexpr double ROUND_DEDUP_TIME_S      =  1.8;
+constexpr float  ROUND_DEDUP_TIME_MM     = 80.f;
 
 } // anon
 
@@ -69,25 +86,48 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
             if (hit) fused = fusion_.addHit(*hit);          // all-cams fast path
             if (!fused) fused = fusion_.tick(fusion_clock_); // time-driven close
             if (fused) {
-                // Dedup: when fusion windows split (single-cam stragglers
-                // come in late and start their own window) the same physical
-                // dart can produce two FusedHits.  Suppress the second one
-                // if it lands close in space, or close in time + loosely in
-                // space (rim parallax can split a single dart by 30-50 mm).
-                bool is_dup = false;
-                const cv::Point2f cur = fusedCentroid(*fused);
-                for (const auto& prev : round_hits_) {
+                // Dedup with REPLACE-IF-BETTER: when the same physical dart
+                // produces multiple FusedHits in close succession, we keep
+                // the one backed by more cameras (or, tied on votes, by
+                // higher per-cam confidence).  This lets late stragglers
+                // CORRECT an early misread instead of being silently
+                // dropped — addresses the "wrong cam wins because it
+                // emitted first" pathology.
+                bool is_dup            = false;
+                const cv::Point2f cur  = fusedCentroid(*fused);
+                const int new_votes    = fusedVoteCount(*fused);
+                const float new_conf   = fused->confidence;
+                for (auto& prev : round_hits_) {
+                    const double dt = std::abs(fused->timestamp - prev.timestamp);
+
+                    auto maybeReplace = [&]() {
+                        const int prev_votes = fusedVoteCount(prev);
+                        const bool better = (new_votes > prev_votes) ||
+                            (new_votes == prev_votes && new_conf > prev.confidence);
+                        if (better) prev = *fused;
+                    };
+
+                    // Hard time gate: same physical dart for sure.
+                    if (dt < ROUND_DEDUP_HARD_TIME_S) {
+                        maybeReplace();
+                        is_dup = true;
+                        break;
+                    }
+
                     const cv::Point2f p  = fusedCentroid(prev);
                     const float       dx = cur.x - p.x;
                     const float       dy = cur.y - p.y;
                     const float       d2 = dx * dx + dy * dy;
                     if (d2 < ROUND_DEDUP_MM * ROUND_DEDUP_MM) {
-                        is_dup = true; break;
+                        maybeReplace();
+                        is_dup = true;
+                        break;
                     }
-                    const double dt = std::abs(fused->timestamp - prev.timestamp);
                     if (dt < ROUND_DEDUP_TIME_S &&
                         d2 < ROUND_DEDUP_TIME_MM * ROUND_DEDUP_TIME_MM) {
-                        is_dup = true; break;
+                        maybeReplace();
+                        is_dup = true;
+                        break;
                     }
                 }
                 if (!is_dup) {

@@ -51,6 +51,27 @@ struct Endpoints {
     float       width_mid {0.f};   // cross-section near the dart's middle
 };
 
+/// Expand `seed_bb` along `dir` by `axial_pad` pixels on each side, and by
+/// `perp_tol_px + 4` perpendicular.  Used so the axis sweep sees fragments
+/// that sit collinear with the seed but well beyond its bounding rect.
+cv::Rect extendBboxAlongAxis(const cv::Rect& seed_bb,
+                             const cv::Point2f& dir,
+                             float perp_tol_px,
+                             const cv::Size& image_sz,
+                             float axial_pad)
+{
+    const int pad_x = static_cast<int>(std::ceil(std::abs(dir.x) * axial_pad)) +
+                      static_cast<int>(std::ceil(perp_tol_px)) + 4;
+    const int pad_y = static_cast<int>(std::ceil(std::abs(dir.y) * axial_pad)) +
+                      static_cast<int>(std::ceil(perp_tol_px)) + 4;
+    cv::Rect bb;
+    bb.x      = std::max(0, seed_bb.x - pad_x);
+    bb.y      = std::max(0, seed_bb.y - pad_y);
+    bb.width  = std::min(image_sz.width  - bb.x, seed_bb.width  + 2 * pad_x);
+    bb.height = std::min(image_sz.height - bb.y, seed_bb.height + 2 * pad_y);
+    return bb;
+}
+
 /// Extract a dart's axis by sampling perpendicular cross-section centroids
 /// along its principal direction.  The midpoints of those slices lie on the
 /// dart's geometric axis (independent of contour noise on the edges); fitting
@@ -75,13 +96,18 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
     const cv::Point2f origin0{line0[2], line0[3]};
     const cv::Point2f perp0  {-dir0.y, dir0.x};
 
-    // ── 2. Search region: contour bbox padded by perp tolerance ────────────
-    cv::Rect bb = cv::boundingRect(seed_contour);
-    const int pad = static_cast<int>(std::ceil(perp_tol_px)) + 4;
-    bb.x      = std::max(0,                  bb.x - pad);
-    bb.y      = std::max(0,                  bb.y - pad);
-    bb.width  = std::min(full_mask.cols - bb.x, bb.width  + 2 * pad);
-    bb.height = std::min(full_mask.rows - bb.y, bb.height + 2 * pad);
+    // ── 2. Search region: extended along the seed's axis ───────────────────
+    // We pad generously along ±dir0 so collinear fragments well past the
+    // seed contour (e.g. a tip blob detached from the shaft by a black
+    // sector gap of 30-80 px) are still reachable by the band sweep.  120 px
+    // floor; otherwise 3× the seed's longest side.
+    const cv::Rect seed_bb = cv::boundingRect(seed_contour);
+    const float axial_pad = std::max(
+        120.f,
+        std::max(static_cast<float>(seed_bb.width),
+                 static_cast<float>(seed_bb.height)) * 3.f);
+    const cv::Rect bb = extendBboxAlongAxis(seed_bb, dir0, perp_tol_px,
+                                            full_mask.size(), axial_pad);
 
     // ── 3. Compute axis range of all in-band mask pixels ───────────────────
     float t_min =  std::numeric_limits<float>::max();
@@ -194,51 +220,47 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
         origin1 = origin0;
     }
 
-    // ── 6. Axis range from midpoints; walk to in-mask edge for each end ────
-    float nt_min =  std::numeric_limits<float>::max();
-    float nt_max = -std::numeric_limits<float>::max();
-    if (midpts.empty()) {
-        nt_min = t_min;
-        nt_max = t_max;
-    } else {
-        for (const auto& m : midpts) {
-            const float t = (m.x - origin1.x) * dir1.x +
-                            (m.y - origin1.y) * dir1.y;
-            nt_min = std::min(nt_min, t);
-            nt_max = std::max(nt_max, t);
+    // ── 6. Find absolute axis range of all in-band fg pixels along refined
+    // axis.  No walk-to-edge with gap limit — fragments separated by ANY
+    // amount of dark sector are naturally included as long as they fall
+    // within perp_tol of the refined line.  This is what makes the tip
+    // estimate honest on fragmented black-on-black darts: the endpoint is
+    // the FARTHEST in-band pixel, not the end of the closest fragment.
+    const cv::Point2f perp1{-dir1.y, dir1.x};
+    float final_t_min =  std::numeric_limits<float>::max();
+    float final_t_max = -std::numeric_limits<float>::max();
+    for (int y = bb.y; y < bb.y + bb.height; ++y) {
+        const uint8_t* row = full_mask.ptr<uint8_t>(y);
+        for (int x = bb.x; x < bb.x + bb.width; ++x) {
+            if (!row[x]) continue;
+            const float dx = x - origin1.x;
+            const float dy = y - origin1.y;
+            if (std::abs(dx * perp1.x + dy * perp1.y) > perp_tol_px) continue;
+            const float t = dx * dir1.x + dy * dir1.y;
+            if (t < final_t_min) final_t_min = t;
+            if (t > final_t_max) final_t_max = t;
+        }
+    }
+    if (!(final_t_min < final_t_max)) {
+        // No in-band fg found along refined axis — fall back to midpoint
+        // range so the caller still gets meaningful endpoints.
+        if (midpts.empty()) {
+            final_t_min = t_min;
+            final_t_max = t_max;
+        } else {
+            final_t_min =  std::numeric_limits<float>::max();
+            final_t_max = -std::numeric_limits<float>::max();
+            for (const auto& m : midpts) {
+                const float t = (m.x - origin1.x) * dir1.x +
+                                (m.y - origin1.y) * dir1.y;
+                final_t_min = std::min(final_t_min, t);
+                final_t_max = std::max(final_t_max, t);
+            }
         }
     }
 
-    // Walk one px at a time from a midpoint endpoint along ±dir1, tracking the
-    // last in-mask sample.  Small gaps (≤4 px) are bridged so dart fragments
-    // separated by a dark sector still extend to the true tip.
-    constexpr int  MAX_WALK_STEPS = 800;
-    constexpr int  MAX_GAP        = 4;
-    auto walkToEdge = [&](float t_start, float step) {
-        float last_in = t_start;
-        int   gap     = 0;
-        for (int i = 1; i < MAX_WALK_STEPS; ++i) {
-            const float t = t_start + static_cast<float>(i) * step;
-            const cv::Point2f p = origin1 + dir1 * t;
-            const int px = cvRound(p.x);
-            const int py = cvRound(p.y);
-            if (px < 0 || py < 0 ||
-                px >= full_mask.cols || py >= full_mask.rows) break;
-            if (full_mask.at<uint8_t>(py, px)) {
-                last_in = t;
-                gap     = 0;
-            } else if (++gap > MAX_GAP) {
-                break;
-            }
-        }
-        return last_in;
-    };
-
-    const float t_a = walkToEdge(nt_min, -1.0f);
-    const float t_b = walkToEdge(nt_max, +1.0f);
-
-    r.a         = origin1 + dir1 * t_a;
-    r.b         = origin1 + dir1 * t_b;
+    r.a         = origin1 + dir1 * final_t_min;
+    r.b         = origin1 + dir1 * final_t_max;
     r.dir       = dir1;
     r.width_a   = width_a;
     r.width_b   = width_b;
@@ -246,15 +268,21 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
     return r;
 }
 
-/// Build a binary mask of every foreground pixel that falls inside the dart's
-/// axis band (perp distance <= perp_tol from the refined line AND axis-coord
-/// inside [a, b]).  This is the "full hitbox" the detector treats as the dart
-/// — including fragments separated by dark sectors that got glued back to the
-/// shaft by the line-extend logic.  Used purely for visualisation.
+/// Build a binary mask of every foreground pixel that belongs to the dart:
+///   1) the original seed contour drawn filled (catches wide flights / tail
+///      that sit OUTSIDE the perp band around the axis), AND
+///   2) every fg pixel inside the axis band [a..b] within perp_tol of the
+///      refined line (catches fragments separated by dark sectors and glued
+///      back to the shaft by the line-extend logic).
+///
+/// The output covers the whole hitbox — used by the debug UI to draw the
+/// bounding box AND by the detector to burn the dart into the background so
+/// the next throw is analysed in isolation.
 void fillDartRegion(cv::Mat&        out,
                     const cv::Mat&  full_mask,
                     const Endpoints& ep,
-                    float           perp_tol_px)
+                    float           perp_tol_px,
+                    const std::vector<cv::Point>* seed_contour = nullptr)
 {
     if (full_mask.empty()) return;
     if (out.size() != full_mask.size() || out.type() != CV_8U)
@@ -262,28 +290,37 @@ void fillDartRegion(cv::Mat&        out,
     else
         out.setTo(0);
 
+    // 1) Seed contour as a filled region — catches the wide flights.
+    if (seed_contour && !seed_contour->empty()) {
+        std::vector<std::vector<cv::Point>> v{*seed_contour};
+        cv::drawContours(out, v, 0, cv::Scalar(255), -1);
+    }
+
+    // Search bbox is extended along the dart axis so collinear fragments
+    // (tip blob detached by a dark sector) are picked up too.
+    const cv::Rect seed_bb = seed_contour && !seed_contour->empty()
+                              ? cv::boundingRect(*seed_contour)
+                              : cv::boundingRect(
+                                  std::vector<cv::Point>{
+                                      {cvRound(ep.a.x), cvRound(ep.a.y)},
+                                      {cvRound(ep.b.x), cvRound(ep.b.y)}});
+    const float axial_pad = std::max(
+        120.f,
+        std::max(static_cast<float>(seed_bb.width),
+                 static_cast<float>(seed_bb.height)) * 3.f);
+    const cv::Rect scan_bb = extendBboxAlongAxis(seed_bb, ep.dir, perp_tol_px,
+                                                  full_mask.size(), axial_pad);
+
     const cv::Point2f a       = ep.a;
     const cv::Point2f dir     = ep.dir;
     const cv::Point2f perp{-dir.y, dir.x};
     const float       total_l = static_cast<float>(cv::norm(ep.b - ep.a));
     if (total_l <= 0.f) return;
 
-    std::vector<cv::Point> corners{
-        {cvRound(ep.a.x), cvRound(ep.a.y)},
-        {cvRound(ep.b.x), cvRound(ep.b.y)}
-    };
-    cv::Rect bb = cv::boundingRect(corners);
-    const int pad = static_cast<int>(std::ceil(perp_tol_px)) + 4;
-    bb.x      -= pad;
-    bb.y      -= pad;
-    bb.width  += 2 * pad;
-    bb.height += 2 * pad;
-    bb &= cv::Rect(0, 0, full_mask.cols, full_mask.rows);
-
-    for (int y = bb.y; y < bb.y + bb.height; ++y) {
+    for (int y = scan_bb.y; y < scan_bb.y + scan_bb.height; ++y) {
         const uint8_t* mrow = full_mask.ptr<uint8_t>(y);
         uint8_t*       orow = out.ptr<uint8_t>(y);
-        for (int x = bb.x; x < bb.x + bb.width; ++x) {
+        for (int x = scan_bb.x; x < scan_bb.x + scan_bb.width; ++x) {
             if (!mrow[x]) continue;
             const float dx = x - a.x;
             const float dy = y - a.y;
@@ -339,6 +376,7 @@ cv::Mat buildRoiMask(const BoardCalibration& calib, const cv::Size& sz,
 void DartDetector::refreshBackground()
 {
     bg_lab_.release();
+    throw_bg_lab_.release();
     bg_acc_.release();
     warmup_count_ = 0;
     warmup_done_  = false;
@@ -361,6 +399,7 @@ void DartDetector::reset()
     prev_big_centroid_       = {};
     has_prev_big_centroid_   = false;
     static_big_frames_       = 0;
+    throw_bg_lab_.release();
 }
 
 bool DartDetector::boardLooksCleared() const
@@ -394,29 +433,57 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     if (roi_mask_.empty() || roi_mask_.size() != frame.size())
         roi_mask_ = buildRoiMask(calib_, frame.size());
 
-    // ── Diff: blurred LAB distance, thresholded ────────────────────────────
-    cv::Mat dist = labDistance(lab, bg_lab_);
-    cv::Mat dist8;
-    dist.convertTo(dist8, CV_8U, 1.0, 0.0);
-    cv::GaussianBlur(dist8, dist8, {5, 5}, 0);
-
-    cv::Mat mask;
-    cv::threshold(dist8, mask, diff_threshold_, 255, cv::THRESH_BINARY);
-
-    // Clean: open removes speckle, close fills the dart shaft holes
+    // ── Dual-reference diff ────────────────────────────────────────────────
+    //
+    // `bg_lab_` tracks the "empty board" via slow adaptive update.  We use it
+    // for HUMAN / BoardClean reasoning so that:
+    //   - a player walking in is detected as a big chroma-divergent blob,
+    //   - the board reads as "clean" again only when the diff really returns
+    //     to ~0 (i.e. all darts removed and lighting close to the empty ref).
+    //
+    // `throw_bg_lab_` is snapped at every commit so that NEW-dart detection
+    // sees the board exactly as it was just after the previous commit — old
+    // darts (and their plumes / fragments) sit at zero diff and don't
+    // pollute the mask.  Empty until the first commit of the round.
     const cv::Mat ker3 = cv::getStructuringElement(cv::MORPH_RECT, {3, 3});
     const cv::Mat ker7 = cv::getStructuringElement(cv::MORPH_RECT, {7, 7});
-    cv::morphologyEx(mask, mask, cv::MORPH_OPEN,  ker3);
-    cv::morphologyEx(mask, mask, cv::MORPH_CLOSE, ker7);
 
-    // Expose for debug UI (no ROI clip — board surround is uniform colour, so
-    // any dart that lands a bit outside the wire still gets caught).
+    auto buildMask = [&](const cv::Mat& reference) {
+        cv::Mat dist = labDistance(lab, reference);
+        cv::Mat dist8;
+        dist.convertTo(dist8, CV_8U, 1.0, 0.0);
+        cv::GaussianBlur(dist8, dist8, {5, 5}, 0);
+        cv::Mat m;
+        cv::threshold(dist8, m, diff_threshold_, 255, cv::THRESH_BINARY);
+        cv::morphologyEx(m, m, cv::MORPH_OPEN,  ker3);
+        cv::morphologyEx(m, m, cv::MORPH_CLOSE, ker7);
+        return m;
+    };
+
+    const bool use_throw_bg = !throw_bg_lab_.empty();
+    cv::Mat mask       = buildMask(use_throw_bg ? throw_bg_lab_ : bg_lab_);
+    cv::Mat human_mask = use_throw_bg ? buildMask(bg_lab_) : mask;
+
+    // The user-facing MASK view shows the dart-detection mask: that's the
+    // cleaner per-throw view, and it's what determines BBs and tip picks.
     last_viz_.mask           = mask.clone();
     last_viz_.logged_tips_px = logged_tips_px_;
 
-    // ── Find contours once (reused for gating + candidate picking) ─────────
-    std::vector<std::vector<cv::Point>> contours;
+    // ── Find contours once for each mask ───────────────────────────────────
+    // dart_contours drive NEW-DART logic (candidate selection, BB viz union).
+    // human_contours drive HUMAN/CLEAN logic (huge-blob check, artifact
+    // watchdog, post-human darts-still-there check).
+    std::vector<std::vector<cv::Point>> contours;        // = dart contours
     cv::findContours(mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
+    std::vector<std::vector<cv::Point>> human_contours_storage;
+    const std::vector<std::vector<cv::Point>>* human_contours_ptr = &contours;
+    if (use_throw_bg) {
+        cv::findContours(human_mask, human_contours_storage,
+                         cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        human_contours_ptr = &human_contours_storage;
+    }
+    const auto& human_contours = *human_contours_ptr;
 
     // Lighting/artifact discriminator: a real object (human, dart) changes the
     // CHROMA (a*, b*) of the region; a lighting drift mostly shifts LUMA (L).
@@ -445,9 +512,11 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     };
 
     // Human gating: big + non-elongated + chroma diff + SOLID (continuous mass).
+    // Iterate human_contours so we see the player even when throw_bg_lab_
+    // suppresses already-committed darts from the dart mask.
     bool huge_now = false;
     const std::vector<cv::Point>* huge_contour = nullptr;
-    for (const auto& c : contours) {
+    for (const auto& c : human_contours) {
         const float area = static_cast<float>(cv::contourArea(c));
         if (area < HUGE_CONTOUR_AREA) continue;
         cv::RotatedRect r = cv::minAreaRect(c);
@@ -510,7 +579,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     {
         bool any_real_big        = false;
         bool any_elongated_blob  = false;
-        for (const auto& c : contours) {
+        for (const auto& c : human_contours) {
             const float area = static_cast<float>(cv::contourArea(c));
             if (area < 400.f) continue;
             cv::RotatedRect r = cv::minAreaRect(c);
@@ -525,7 +594,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             if (area < 800.f) continue;
             if (!isLightingArtifact(c)) { any_real_big = true; break; }
         }
-        const int fg_count = cv::countNonZero(mask);
+        const int fg_count = cv::countNonZero(human_mask);
         if (fg_count > CLEAN_FG_PIXELS && !any_real_big) ++artifact_frames_;
         else                                              artifact_frames_ = 0;
 
@@ -555,7 +624,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     // there's clearly no person standing there.
     if (human_seen_) {
         float largest_now = 0.f;
-        for (const auto& c : contours)
+        for (const auto& c : human_contours)
             largest_now = std::max(largest_now,
                                    static_cast<float>(cv::contourArea(c)));
         const bool human_blob_present = (largest_now > HUMAN_PRESENT_AREA);
@@ -569,9 +638,12 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         }
 
         // A tip is "still there" only if backed by a real (solid, sized)
-        // contour nearby — speckles around the location don't count.
+        // contour nearby — speckles around the location don't count.  Use
+        // human_contours: the dart mask hides committed darts (they're in
+        // throw_bg), but they're real foreground against bg_lab_, so
+        // human_contours is where their shape actually exists.
         auto tipBackedByRealBlob = [&](const cv::Point2f& tip) -> bool {
-            for (const auto& c : contours) {
+            for (const auto& c : human_contours) {
                 const float area = static_cast<float>(cv::contourArea(c));
                 if (area < TIP_BACKING_MIN_AREA) continue;
                 cv::Rect bb = cv::boundingRect(c);
@@ -595,6 +667,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
 
         if (darts_gone) {
             lab.copyTo(bg_lab_);
+            throw_bg_lab_.release();           // next round detects against the fresh bg
             logged_tips_px_.clear();
             stable_frames_          = 0;
             has_candidate_          = false;
@@ -606,20 +679,33 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             last_viz_.logged_tips_px.clear();
             return std::nullopt;
         }
-        // Logged darts still match the mask → false alarm, resume.
+        // Logged darts still match the mask → false alarm, resume.  Re-snap
+        // throw_bg_lab_ so the post-human reference reflects the CURRENT
+        // board state (lighting may have drifted while the human was here).
+        if (!logged_tips_px_.empty()) lab.copyTo(throw_bg_lab_);
         human_seen_        = false;
         consecutive_small_ = 0;
     }
 
-    // ── Adaptive bg update: blend current LAB into bg wherever mask == 0
-    // AND not near any logged tip (extra safety: never erode confirmed darts).
+    // ── Adaptive bg updates ────────────────────────────────────────────────
+    //
+    // bg_lab_ tracks the EMPTY-BOARD reference: gate it on human_mask so
+    // pixels covered by darts or a hand don't pollute the "empty" model.
+    //
+    // throw_bg_lab_ tracks the POST-COMMIT reference: gate it on the dart
+    // mask (anything NEW since the snap shouldn't be absorbed).
     {
         cv::Mat update_mask;
-        cv::bitwise_not(mask, update_mask);   // start: background regions
+        cv::bitwise_not(human_mask, update_mask);
         for (const auto& tip : logged_tips_px_) {
             cv::circle(update_mask, tip, 20, cv::Scalar(0), -1);
         }
         cv::accumulateWeighted(lab, bg_lab_, BG_UPDATE_ALPHA, update_mask);
+    }
+    if (!throw_bg_lab_.empty()) {
+        cv::Mat update_mask;
+        cv::bitwise_not(mask, update_mask);
+        cv::accumulateWeighted(lab, throw_bg_lab_, BG_UPDATE_ALPHA, update_mask);
     }
 
     const int fg_pixels = cv::countNonZero(mask);
@@ -633,6 +719,12 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     cv::Point2f                   best_tip{}, best_board_xy{};
     cv::Point2f                   best_dir{};
 
+    // Union dart-band region across ALL elongated contours (including darts
+    // we've already logged) so the debug UI can draw a hitbox around every
+    // visible dart, not just the newest one.
+    cv::Mat region_union = cv::Mat::zeros(mask.size(), CV_8U);
+    cv::Mat scratch_region;
+
     for (const auto& c : contours) {
         const float area = static_cast<float>(cv::contourArea(c));
         if (area < MIN_BLOB_AREA || area > MAX_BLOB_AREA) continue;
@@ -643,6 +735,15 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         if (aspect < MIN_ASPECT_RATIO) continue;
 
         const Endpoints ep = dartAxisByMidpoints(c, mask, line_merge_perp_px_);
+
+        // Visualise every elongated candidate — even already-logged ones —
+        // so the user can see the hitbox of every dart on the board.  Pass
+        // the seed contour so the flights are included, not just the band.
+        fillDartRegion(scratch_region, mask, ep, line_merge_perp_px_, &c);
+        if (!scratch_region.empty() &&
+            scratch_region.size() == region_union.size())
+            cv::bitwise_or(region_union, scratch_region, region_union);
+
         const cv::Point2f a_board = calib_.imageToBoard(ep.a);
         const cv::Point2f b_board = calib_.imageToBoard(ep.b);
         const float a_r2 = a_board.x*a_board.x + a_board.y*a_board.y;
@@ -691,12 +792,12 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     last_viz_.has_detection = false;
     last_viz_.state         = boardLooksCleared() ? DetectorState::BoardClean
                                                   : DetectorState::Normal;
+    last_viz_.dart_region   = region_union;   // covers logged + new candidates
 
     if (!best) {
         ++quiet_frames_;
         has_candidate_ = false;
         stable_frames_ = 0;
-        last_viz_.dart_region.release();   // no candidate → nothing to tint
         return std::nullopt;
     }
     quiet_frames_ = 0;
@@ -712,8 +813,6 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     last_viz_.dart_dir      = best_dir;
     last_viz_.board_xy      = best_board_xy;
     last_viz_.has_detection = true;
-    fillDartRegion(last_viz_.dart_region, mask, best_ep,
-                   line_merge_perp_px_);
 
     // Stability tracking
     if (has_candidate_) {
@@ -739,6 +838,19 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         logged_tips_px_.erase(logged_tips_px_.begin());
     stable_frames_ = 0;
     has_candidate_ = false;
+
+    // ── Snap the ENTIRE board into throw_bg_lab_ ──────────────────────────
+    // The whole-frame snap goes to throw_bg_lab_ (used only for new-dart
+    // detection), NOT bg_lab_ (used for HUMAN / BoardClean against the
+    // empty-board reference).  Keeps the clean-cycle intact: when the
+    // player removes the darts at end-of-round, bg_lab_ still represents
+    // the empty board, so the mask returns to ~empty and BoardClean fires
+    // correctly.  Old darts are invisible to dart detection because they
+    // live in throw_bg_lab_; new darts pop up clean and isolated.
+    lab.copyTo(throw_bg_lab_);
+    artifact_frames_       = 0;
+    static_big_frames_     = 0;
+    has_prev_big_centroid_ = false;
 
     // ── Confidence: based on dart-shape quality, NOT board radius ─────────
     // The old `1 - r/2R` formula systematically rewarded cams whose tip

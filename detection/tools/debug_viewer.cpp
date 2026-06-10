@@ -79,14 +79,18 @@ int main(int argc, char* argv[])
     Pipeline pipeline(calibs);
     DebugUI  ui(calibs, tile_w, tile_h, 480);
 
-    int round_total_score = 0;
+    int round_total_score = 0;   // recomputed from pipeline.roundHits() each tick
     pipeline.setOnHit([&](const FusedHit& h) {
-        round_total_score += h.score;
         std::cout << "[hit] t=" << h.timestamp
                   << "  zone=" << h.zone
                   << "  score=" << h.score
                   << "  conf=" << h.confidence << '\n';
     });
+    auto recomputeTotal = [&]() {
+        int s = 0;
+        for (const auto& h : pipeline.roundHits()) s += h.score;
+        round_total_score = s;
+    };
 
     // ── Trackbars ──────────────────────────────────────────────────────────
     SeekState seek{};
@@ -185,7 +189,6 @@ int main(int argc, char* argv[])
             master_pos = seek.position;
             pipeline.resetRound();
             pipeline.refreshBackground();
-            round_total_score = 0;
             syncAllCamsAtMaster();
         }
 
@@ -218,6 +221,7 @@ int main(int argc, char* argv[])
                 ui.updateCam(i, last_frames[i], pipeline.camViz(i));
             ui.setCamDelay(i, delays[i]);
         }
+        recomputeTotal();
         ui.setRoundProgress(pipeline.dartsInRound(), round_total_score);
         ui.setRoundHits(pipeline.roundHits());
         const RoundStatus rs = pipeline.roundStatus();
@@ -225,7 +229,6 @@ int main(int argc, char* argv[])
 
         if (ui.consumeResetRequest()) {
             pipeline.resetRound();
-            round_total_score = 0;
         }
         if (ui.consumeBgRefreshRequest()) {
             pipeline.refreshBackground();

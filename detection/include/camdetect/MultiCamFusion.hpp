@@ -24,7 +24,7 @@ namespace camdetect {
 /// keeps feeding frames that advance the clock.
 class MultiCamFusion {
 public:
-    explicit MultiCamFusion(double window_seconds = 0.4);
+    explicit MultiCamFusion(double window_seconds = 1.0);
 
     /// Buffer a per-camera hit.  Returns a FusedHit immediately only once every
     /// camera has voted (no reason to wait out the window); otherwise nullopt.

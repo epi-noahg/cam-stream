@@ -41,12 +41,15 @@ class Pipeline {
 public:
     using HitCallback = std::function<void(const FusedHit&)>;
 
-    // 0.4s window (~12 frames @ 30fps): wide enough to absorb the per-cam
-    // stability lag — different views of the same dart stabilise at different
-    // master moments, so we need to wait for the slowest cam to converge.
-    // Darts are thrown >1s apart, so this won't merge two physical darts.
+    // 1.0s window (~30 frames @ 30fps): wide enough that even a slow cam
+    // (whose mask noise needs the full STABLE_FRAMES_REQUIRED to settle
+    // ~half a second later than the fastest cam) still falls in the same
+    // fusion window as its peers.  Without this, late stragglers emit in a
+    // NEW window as single-cam hits and steal the score from the legitimate
+    // 2-cam cluster.  Darts are thrown >1s apart, so this won't merge two
+    // physical darts.
     explicit Pipeline(std::array<BoardCalibration, NUM_CAMS> calibrations,
-                      double fusion_window_seconds = 0.4);
+                      double fusion_window_seconds = 1.0);
 
     void setOnHit(HitCallback cb);
 
