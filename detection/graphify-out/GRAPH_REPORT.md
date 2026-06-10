@@ -1,12 +1,12 @@
 # Graph Report - /Users/noahg/github/cam-stream/detection  (2026-06-11)
 
 ## Corpus Check
-- 29 files · ~71,332 words
+- 29 files · ~79,495 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 145 nodes · 251 edges · 20 communities detected
-- Extraction: 65% EXTRACTED · 35% INFERRED · 0% AMBIGUOUS · INFERRED: 88 edges (avg confidence: 0.8)
+- 207 nodes · 355 edges · 22 communities detected
+- Extraction: 64% EXTRACTED · 35% INFERRED · 1% AMBIGUOUS · INFERRED: 123 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -30,47 +30,46 @@
 - [[_COMMUNITY_Community 17|Community 17]]
 - [[_COMMUNITY_Community 18|Community 18]]
 - [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `main()` - 29 edges
 2. `main()` - 23 edges
-3. `feedFrame()` - 11 edges
-4. `composite()` - 11 edges
-5. `processFrame()` - 10 edges
-6. `run()` - 9 edges
-7. `main()` - 7 edges
-8. `confirm()` - 7 edges
-9. `drawCamTile()` - 7 edges
-10. `companionPath()` - 6 edges
+3. `camdetect (Static Library)` - 17 edges
+4. `feedFrame()` - 11 edges
+5. `composite()` - 11 edges
+6. `processFrame()` - 11 edges
+7. `cam0 Zones Overlay` - 10 edges
+8. `run()` - 9 edges
+9. `confirm()` - 8 edges
+10. `Cam1 Green Zone Binary Mask` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `main()` --calls--> `seek()`  [INFERRED]
   /Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp → sources/FileSource.cpp
-- `main()` --calls--> `next()`  [INFERRED]
-  /Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp → sources/FileSource.cpp
-- `main()` --calls--> `fromReferencePoints()`  [INFERRED]
-  tools/calibrate.cpp → /Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp
-- `processFrame()` --calls--> `lookup()`  [INFERRED]
-  /Users/noahg/github/cam-stream/detection/src/DartDetector.cpp → src/ZoneMapper.cpp
-- `boardToImage()` --calls--> `drawCalibrationOverlay()`  [INFERRED]
-  /Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp → src/Renderer.cpp
-
-## Hyperedges (group relationships)
-- **** — cmakelists_camdetect_calibrate, cmakelists_camdetect_offline, cmakelists_camdetect_debug, cmakelists_camdetect [EXTRACTED 1.00]
+- `cam0 Zones Overlay` --shares_data_with--> `cam0 Zones Base Mask`  [AMBIGUOUS]
+  cam0_zones_overlay.png → cam0_zones.png
+- `cam0 Zones Base Mask` --conceptually_related_to--> `Dartboard (cam0)`  [AMBIGUOUS]
+  cam0_zones.png → cam0_zones_overlay.png
+- `Green Channel Zone Mask` --semantically_similar_to--> `Red Channel Zone Mask`  [INFERRED] [semantically similar]
+  cam0_zones_green.png → cam0_zones_red.png
+- `Cam1 Green Zone Binary Mask` --semantically_similar_to--> `Cam1 Red Zone Binary Mask`  [INFERRED] [semantically similar]
+  cam1_zones_green.png → cam1_zones_red.png
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.19
-Nodes (9): main(), render(), saveAll(), companionPath(), idColor(), idToResult(), lookup(), overlay() (+1 more)
+Cohesion: 0.08
+Nodes (36): main(), blitAspectFit(), consumeBgRefreshRequest(), consumeResetRequest(), consumeStepBackward(), consumeStepForward(), handleClick(), isPaused() (+28 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.18
-Nodes (13): addHit(), confirm(), dist(), flush(), MultiCamFusion(), reset(), tick(), feedFrame() (+5 more)
+Cohesion: 0.14
+Nodes (17): AutoCalibrator.cpp, BoardCalibration.cpp, BoardCalibrator.cpp, camdetect (Static Library), camdetect_autocalib (Tool Executable), camdetect_calibrate (Tool Executable), camdetect_debug (Tool Executable), camdetect_offline (Tool Executable) (+9 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.23
-Nodes (12): main(), consumeStepBackward(), consumeStepForward(), handleClick(), isPaused(), onMouseStatic(), pairwiseSpread(), setCamDelay() (+4 more)
+Cohesion: 0.19
+Nodes (9): main(), render(), saveAll(), companionPath(), idColor(), idToResult(), lookup(), overlay() (+1 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.25
@@ -78,102 +77,120 @@ Nodes (12): boardLooksCleared(), buildRoiMask(), dartAxisByMidpoints(), DartDete
 
 ### Community 4 - "Community 4"
 Cohesion: 0.27
-Nodes (13): blitAspectFit(), composite(), drawCamTile(), fusedCentroid(), render(), boardToCanonicalPx(), drawCalibrationOverlay(), drawCircleBoardMM() (+5 more)
+Nodes (13): composite(), drawCamTile(), fusedCentroid(), pairwiseSpread(), render(), boardToCanonicalPx(), drawCalibrationOverlay(), drawCircleBoardMM() (+5 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.17
-Nodes (9): camViz(), computeRoundStatus_(), diffThreshold(), lineMergePerpPx(), Pipeline(), resetRound(), roundHits(), roundStatus() (+1 more)
+Cohesion: 0.29
+Nodes (13): Bullseye Zone, Dartboard (cam0), Double Ring Zone, Green Channel Zone Mask, Camera 0 Perspective, Red Channel Zone Mask, Scoring Segments (cam0), Triple Ring Zone (+5 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.24
-Nodes (8): consumeBgRefreshRequest(), consumeResetRequest(), setRoundProgress(), isNumeric(), main(), printUsage(), dartsInRound(), setOnHit()
+Cohesion: 0.33
+Nodes (13): Cam1 Zones Base Image (Nearly Black), Cam1 Elliptical Zone Projection (Perspective), Cam1 Green Zone Center Point, Cam1 Green Zone Inner Ring, Cam1 Green Zone Binary Mask, Cam1 Green Zone Outer Ring, Cam1 Zone Calibration Colored Dots Overlay, Winmau Dartboard (Cam1 View) (+5 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.24
-Nodes (6): boardToImage(), imageToBoard(), loadFromFile(), saveToFile(), drawHud(), main()
+Cohesion: 0.29
+Nodes (8): addHit(), confirm(), dist(), flush(), MultiCamFusion(), reset(), tick(), lookup()
 
 ### Community 8 - "Community 8"
+Cohesion: 0.4
+Nodes (11): Cam2 Zones Base Frame, Binary Zone Mask (White on Black), Bullseye / Center Point, Camera 2 (Cam2), Dartboard (Cam2 Target), Elliptical Zone Rings (Perspective-Corrected), Cam2 Green Zone Detection Mask, Cam2 Dartboard Overlay (Camera View) (+3 more)
+
+### Community 9 - "Community 9"
 Cohesion: 0.31
 Nodes (8): angDiff(), blobMask(), boardPt(), collectBlobs(), run(), toNormalized(), detectAuto(), fromReferencePoints()
 
-### Community 9 - "Community 9"
-Cohesion: 0.25
-Nodes (5): setZoneMap(), main(), FileSource, next(), seek()
-
 ### Community 10 - "Community 10"
-Cohesion: 0.67
-Nodes (1): FrameSource
+Cohesion: 0.24
+Nodes (6): boardToImage(), imageToBoard(), loadFromFile(), saveToFile(), drawHud(), main()
 
 ### Community 11 - "Community 11"
+Cohesion: 0.39
+Nodes (8): camdetect_live (Tool Executable), camstream server (TCP stream), FFmpeg (libavcodec/libavutil/libswscale), Rationale: client StreamReceiver+VideoDecoder reused directly to avoid refactoring client into shared library, Rationale: FFmpeg marked optional so file-mode tools build without FFmpeg headers, StreamReceiver.cpp (client source), Threads (POSIX/system threading), VideoDecoder.cpp (client source)
+
+### Community 12 - "Community 12"
+Cohesion: 0.4
+Nodes (3): FileSource, next(), seek()
+
+### Community 13 - "Community 13"
 Cohesion: 0.67
 Nodes (1): DebugUI()
 
-### Community 12 - "Community 12"
-Cohesion: 1.0
-Nodes (1): ZoneMapper
-
-### Community 13 - "Community 13"
-Cohesion: 1.0
-Nodes (1): Renderer
-
 ### Community 14 - "Community 14"
-Cohesion: 1.0
-Nodes (1): BoardCalibrator
+Cohesion: 0.67
+Nodes (1): FrameSource
 
 ### Community 15 - "Community 15"
 Cohesion: 1.0
-Nodes (1): AutoCalibrator
+Nodes (1): ZoneMapper
 
 ### Community 16 - "Community 16"
 Cohesion: 1.0
-Nodes (1): ZoneMap
+Nodes (1): Renderer
 
 ### Community 17 - "Community 17"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): BoardCalibrator
 
 ### Community 18 - "Community 18"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): AutoCalibrator
 
 ### Community 19 - "Community 19"
 Cohesion: 1.0
+Nodes (1): ZoneMap
+
+### Community 20 - "Community 20"
+Cohesion: 1.0
 Nodes (0): 
 
+### Community 21 - "Community 21"
+Cohesion: 1.0
+Nodes (0): 
+
+## Ambiguous Edges - Review These
+- `cam0 Zones Overlay` → `cam0 Zones Base Mask`  [AMBIGUOUS]
+  cam0_zones.png · relation: shares_data_with
+- `cam0 Zones Base Mask` → `Dartboard (cam0)`  [AMBIGUOUS]
+  cam0_zones.png · relation: conceptually_related_to
+- `Winmau Dartboard (Cam1 View)` → `Cam1 Zones Base Image (Nearly Black)`  [AMBIGUOUS]
+  cam1_zones.png · relation: conceptually_related_to
+- `Cam2 Zones Base Frame` → `Cam2 Green Zone Detection Mask`  [AMBIGUOUS]
+  cam2_zones.png · relation: shares_data_with
+- `Cam2 Zones Base Frame` → `Cam2 Red Zone Detection Mask`  [AMBIGUOUS]
+  cam2_zones.png · relation: shares_data_with
+
 ## Knowledge Gaps
-- **5 isolated node(s):** `ZoneMapper`, `Renderer`, `BoardCalibrator`, `AutoCalibrator`, `ZoneMap`
+- **16 isolated node(s):** `ZoneMapper`, `Renderer`, `BoardCalibrator`, `AutoCalibrator`, `ZoneMap` (+11 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 12`** (2 nodes): `ZoneMapper.hpp`, `ZoneMapper`
+- **Thin community `Community 15`** (2 nodes): `ZoneMapper.hpp`, `ZoneMapper`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 13`** (2 nodes): `Renderer.hpp`, `Renderer`
+- **Thin community `Community 16`** (2 nodes): `Renderer.hpp`, `Renderer`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 14`** (2 nodes): `BoardCalibrator`, `BoardCalibrator.hpp`
+- **Thin community `Community 17`** (2 nodes): `BoardCalibrator`, `BoardCalibrator.hpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 15`** (2 nodes): `AutoCalibrator`, `AutoCalibrator.hpp`
+- **Thin community `Community 18`** (2 nodes): `AutoCalibrator`, `AutoCalibrator.hpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 16`** (2 nodes): `ZoneMap.hpp`, `ZoneMap`
+- **Thin community `Community 19`** (2 nodes): `ZoneMap.hpp`, `ZoneMap`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 17`** (2 nodes): `onSeekTrackbar()`, `debug_viewer.cpp`
+- **Thin community `Community 20`** (1 nodes): `BoardCalibration.hpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 18`** (1 nodes): `BoardCalibration.hpp`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 19`** (1 nodes): `Types.hpp`
+- **Thin community `Community 21`** (1 nodes): `Types.hpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `main()` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 9`, `Community 17`?**
-  _High betweenness centrality (0.279) - this node is a cross-community bridge._
-- **Why does `companionPath()` connect `Community 0` to `Community 9`, `Community 2`, `Community 6`?**
-  _High betweenness centrality (0.206) - this node is a cross-community bridge._
-- **Why does `feedFrame()` connect `Community 1` to `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 9`?**
-  _High betweenness centrality (0.195) - this node is a cross-community bridge._
-- **Are the 28 inferred relationships involving `main()` (e.g. with `loadFromFile()` and `companionPath()`) actually correct?**
-  _`main()` has 28 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 20 inferred relationships involving `main()` (e.g. with `loadFromFile()` and `setOnHit()`) actually correct?**
-  _`main()` has 20 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 6 inferred relationships involving `feedFrame()` (e.g. with `main()` and `main()`) actually correct?**
-  _`feedFrame()` has 6 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 6 inferred relationships involving `composite()` (e.g. with `renderCanonicalBoard()` and `drawHitOnCanonical()`) actually correct?**
-  _`composite()` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **What is the exact relationship between `cam0 Zones Overlay` and `cam0 Zones Base Mask`?**
+  _Edge tagged AMBIGUOUS (relation: shares_data_with) - confidence is low._
+- **What is the exact relationship between `cam0 Zones Base Mask` and `Dartboard (cam0)`?**
+  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
+- **What is the exact relationship between `Winmau Dartboard (Cam1 View)` and `Cam1 Zones Base Image (Nearly Black)`?**
+  _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
+- **What is the exact relationship between `Cam2 Zones Base Frame` and `Cam2 Green Zone Detection Mask`?**
+  _Edge tagged AMBIGUOUS (relation: shares_data_with) - confidence is low._
+- **What is the exact relationship between `Cam2 Zones Base Frame` and `Cam2 Red Zone Detection Mask`?**
+  _Edge tagged AMBIGUOUS (relation: shares_data_with) - confidence is low._
+- **Why does `main()` connect `Community 0` to `Community 2`, `Community 3`, `Community 4`, `Community 10`, `Community 12`?**
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 0` to `Community 3`, `Community 10`, `Community 2`, `Community 4`?**
+  _High betweenness centrality (0.084) - this node is a cross-community bridge._

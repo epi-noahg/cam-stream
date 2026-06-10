@@ -1,24 +1,7 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {
-    "hyperedges": [
-      {
-        "nodes": [
-          "cmakelists_camdetect_calibrate",
-          "cmakelists_camdetect_offline",
-          "cmakelists_camdetect_debug",
-          "cmakelists_camdetect"
-        ],
-        "relation": "shared_static_library_consumers",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "CMakeLists.txt",
-        "source_location": "35-42",
-        "weight": 1.0
-      }
-    ]
-  },
+  "graph": {},
   "nodes": [
     {
       "label": "detect_offline.cpp",
@@ -26,7 +9,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_detect_offline_cpp",
-      "community": 9,
+      "community": 0,
       "norm_label": "detect_offline.cpp"
     },
     {
@@ -35,7 +18,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
       "source_location": "L22",
       "id": "detect_offline_main",
-      "community": 9,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -44,7 +27,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_debug_viewer_cpp",
-      "community": 17,
+      "community": 0,
       "norm_label": "debug_viewer.cpp"
     },
     {
@@ -53,7 +36,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L36",
       "id": "debug_viewer_onseektrackbar",
-      "community": 17,
+      "community": 0,
       "norm_label": "onseektrackbar()"
     },
     {
@@ -62,7 +45,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
       "source_location": "L47",
       "id": "debug_viewer_main",
-      "community": 2,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -71,7 +54,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_live_viewer_cpp",
-      "community": 6,
+      "community": 0,
       "norm_label": "live_viewer.cpp"
     },
     {
@@ -80,7 +63,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
       "source_location": "L38",
       "id": "live_viewer_onsignal",
-      "community": 6,
+      "community": 0,
       "norm_label": "onsignal()"
     },
     {
@@ -89,7 +72,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
       "source_location": "L40",
       "id": "live_viewer_isnumeric",
-      "community": 6,
+      "community": 0,
       "norm_label": "isnumeric()"
     },
     {
@@ -98,7 +81,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
       "source_location": "L48",
       "id": "live_viewer_printusage",
-      "community": 6,
+      "community": 0,
       "norm_label": "printusage()"
     },
     {
@@ -107,7 +90,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp",
       "source_location": "L61",
       "id": "live_viewer_main",
-      "community": 6,
+      "community": 0,
       "norm_label": "main()"
     },
     {
@@ -116,7 +99,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_tools_autocalib_cpp",
-      "community": 0,
+      "community": 2,
       "norm_label": "autocalib.cpp"
     },
     {
@@ -125,7 +108,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L53",
       "id": "autocalib_ontrackbarframe",
-      "community": 0,
+      "community": 2,
       "norm_label": "ontrackbarframe()"
     },
     {
@@ -134,7 +117,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L64",
       "id": "autocalib_ontrackbarthresh",
-      "community": 0,
+      "community": 2,
       "norm_label": "ontrackbarthresh()"
     },
     {
@@ -143,7 +126,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L69",
       "id": "autocalib_onmouse",
-      "community": 0,
+      "community": 2,
       "norm_label": "onmouse()"
     },
     {
@@ -152,7 +135,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L78",
       "id": "autocalib_render",
-      "community": 0,
+      "community": 2,
       "norm_label": "render()"
     },
     {
@@ -161,7 +144,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L117",
       "id": "autocalib_saveall",
-      "community": 0,
+      "community": 2,
       "norm_label": "saveall()"
     },
     {
@@ -170,7 +153,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/autocalib.cpp",
       "source_location": "L143",
       "id": "autocalib_main",
-      "community": 0,
+      "community": 2,
       "norm_label": "main()"
     },
     {
@@ -179,7 +162,7 @@
       "source_file": "tools/calibrate.cpp",
       "source_location": "L1",
       "id": "tools_calibrate_cpp",
-      "community": 7,
+      "community": 10,
       "norm_label": "calibrate.cpp"
     },
     {
@@ -188,7 +171,7 @@
       "source_file": "tools/calibrate.cpp",
       "source_location": "L52",
       "id": "calibrate_onmouse",
-      "community": 7,
+      "community": 10,
       "norm_label": "onmouse()"
     },
     {
@@ -197,7 +180,7 @@
       "source_file": "tools/calibrate.cpp",
       "source_location": "L60",
       "id": "calibrate_ontrackbar",
-      "community": 7,
+      "community": 10,
       "norm_label": "ontrackbar()"
     },
     {
@@ -206,7 +189,7 @@
       "source_file": "tools/calibrate.cpp",
       "source_location": "L71",
       "id": "calibrate_drawhud",
-      "community": 7,
+      "community": 10,
       "norm_label": "drawhud()"
     },
     {
@@ -215,7 +198,7 @@
       "source_file": "tools/calibrate.cpp",
       "source_location": "L147",
       "id": "calibrate_main",
-      "community": 7,
+      "community": 10,
       "norm_label": "main()"
     },
     {
@@ -242,7 +225,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/BoardCalibration.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_boardcalibration_hpp",
-      "community": 18,
+      "community": 20,
       "norm_label": "boardcalibration.hpp"
     },
     {
@@ -251,7 +234,7 @@
       "source_file": "include/camdetect/ZoneMapper.hpp",
       "source_location": "L1",
       "id": "include_camdetect_zonemapper_hpp",
-      "community": 12,
+      "community": 15,
       "norm_label": "zonemapper.hpp"
     },
     {
@@ -260,7 +243,7 @@
       "source_file": "include/camdetect/ZoneMapper.hpp",
       "source_location": "L14",
       "id": "zonemapper_zonemapper",
-      "community": 12,
+      "community": 15,
       "norm_label": "zonemapper"
     },
     {
@@ -269,7 +252,7 @@
       "source_file": "include/camdetect/Renderer.hpp",
       "source_location": "L1",
       "id": "include_camdetect_renderer_hpp",
-      "community": 13,
+      "community": 16,
       "norm_label": "renderer.hpp"
     },
     {
@@ -278,7 +261,7 @@
       "source_file": "include/camdetect/Renderer.hpp",
       "source_location": "L15",
       "id": "renderer_renderer",
-      "community": 13,
+      "community": 16,
       "norm_label": "renderer"
     },
     {
@@ -287,7 +270,7 @@
       "source_file": "include/camdetect/BoardCalibrator.hpp",
       "source_location": "L1",
       "id": "include_camdetect_boardcalibrator_hpp",
-      "community": 14,
+      "community": 17,
       "norm_label": "boardcalibrator.hpp"
     },
     {
@@ -296,7 +279,7 @@
       "source_file": "include/camdetect/BoardCalibrator.hpp",
       "source_location": "L12",
       "id": "boardcalibrator_boardcalibrator",
-      "community": 14,
+      "community": 17,
       "norm_label": "boardcalibrator"
     },
     {
@@ -305,7 +288,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_debugui_hpp",
-      "community": 11,
+      "community": 13,
       "norm_label": "debugui.hpp"
     },
     {
@@ -314,7 +297,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L105",
       "id": "debugui_debugui",
-      "community": 11,
+      "community": 13,
       "norm_label": "debugui()"
     },
     {
@@ -323,7 +306,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/DebugUI.hpp",
       "source_location": "L30",
       "id": "debugui_debugui_debugui",
-      "community": 11,
+      "community": 13,
       "norm_label": ".debugui()"
     },
     {
@@ -332,7 +315,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/AutoCalibrator.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_autocalibrator_hpp",
-      "community": 15,
+      "community": 18,
       "norm_label": "autocalibrator.hpp"
     },
     {
@@ -341,7 +324,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/AutoCalibrator.hpp",
       "source_location": "L26",
       "id": "autocalibrator_autocalibrator",
-      "community": 15,
+      "community": 18,
       "norm_label": "autocalibrator"
     },
     {
@@ -350,7 +333,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Pipeline.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_pipeline_hpp",
-      "community": 5,
+      "community": 0,
       "norm_label": "pipeline.hpp"
     },
     {
@@ -359,7 +342,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L53",
       "id": "pipeline_pipeline",
-      "community": 5,
+      "community": 0,
       "norm_label": "pipeline()"
     },
     {
@@ -368,7 +351,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/MultiCamFusion.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_multicamfusion_hpp",
-      "community": 1,
+      "community": 7,
       "norm_label": "multicamfusion.hpp"
     },
     {
@@ -377,7 +360,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L17",
       "id": "multicamfusion_multicamfusion",
-      "community": 1,
+      "community": 7,
       "norm_label": "multicamfusion()"
     },
     {
@@ -386,7 +369,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/ZoneMap.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_zonemap_hpp",
-      "community": 16,
+      "community": 19,
       "norm_label": "zonemap.hpp"
     },
     {
@@ -395,7 +378,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/ZoneMap.hpp",
       "source_location": "L25",
       "id": "zonemap_zonemap",
-      "community": 16,
+      "community": 19,
       "norm_label": "zonemap"
     },
     {
@@ -404,7 +387,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/include/camdetect/Types.hpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_include_camdetect_types_hpp",
-      "community": 19,
+      "community": 21,
       "norm_label": "types.hpp"
     },
     {
@@ -413,7 +396,7 @@
       "source_file": "include/camdetect/FrameSource.hpp",
       "source_location": "L1",
       "id": "include_camdetect_framesource_hpp",
-      "community": 10,
+      "community": 14,
       "norm_label": "framesource.hpp"
     },
     {
@@ -422,7 +405,7 @@
       "source_file": "include/camdetect/FrameSource.hpp",
       "source_location": "L10",
       "id": "framesource_framesource",
-      "community": 10,
+      "community": 14,
       "norm_label": "framesource"
     },
     {
@@ -431,7 +414,7 @@
       "source_file": "include/camdetect/FrameSource.hpp",
       "source_location": "L12",
       "id": "framesource_framesource_framesource",
-      "community": 10,
+      "community": 14,
       "norm_label": ".framesource()"
     },
     {
@@ -440,7 +423,7 @@
       "source_file": "sources/FileSource.cpp",
       "source_location": "L1",
       "id": "sources_filesource_cpp",
-      "community": 9,
+      "community": 12,
       "norm_label": "filesource.cpp"
     },
     {
@@ -449,7 +432,7 @@
       "source_file": "sources/FileSource.hpp",
       "source_location": "L11",
       "id": "filesource_filesource",
-      "community": 9,
+      "community": 12,
       "norm_label": "filesource"
     },
     {
@@ -458,7 +441,7 @@
       "source_file": "sources/FileSource.cpp",
       "source_location": "L18",
       "id": "filesource_next",
-      "community": 9,
+      "community": 12,
       "norm_label": "next()"
     },
     {
@@ -467,7 +450,7 @@
       "source_file": "sources/FileSource.cpp",
       "source_location": "L28",
       "id": "filesource_seek",
-      "community": 9,
+      "community": 12,
       "norm_label": "seek()"
     },
     {
@@ -476,7 +459,7 @@
       "source_file": "sources/FileSource.hpp",
       "source_location": "L1",
       "id": "sources_filesource_hpp",
-      "community": 9,
+      "community": 12,
       "norm_label": "filesource.hpp"
     },
     {
@@ -485,7 +468,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_zonemap_cpp",
-      "community": 0,
+      "community": 2,
       "norm_label": "zonemap.cpp"
     },
     {
@@ -494,7 +477,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L10",
       "id": "zonemap_idtoresult",
-      "community": 0,
+      "community": 2,
       "norm_label": "idtoresult()"
     },
     {
@@ -503,7 +486,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L31",
       "id": "zonemap_idcolor",
-      "community": 0,
+      "community": 2,
       "norm_label": "idcolor()"
     },
     {
@@ -512,7 +495,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L52",
       "id": "zonemap_companionpath",
-      "community": 0,
+      "community": 2,
       "norm_label": "companionpath()"
     },
     {
@@ -521,7 +504,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L65",
       "id": "zonemap_setlabels",
-      "community": 0,
+      "community": 2,
       "norm_label": "setlabels()"
     },
     {
@@ -530,7 +513,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L71",
       "id": "zonemap_lookup",
-      "community": 0,
+      "community": 2,
       "norm_label": "lookup()"
     },
     {
@@ -539,7 +522,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L81",
       "id": "zonemap_savetofile",
-      "community": 0,
+      "community": 2,
       "norm_label": "savetofile()"
     },
     {
@@ -548,7 +531,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L87",
       "id": "zonemap_loadfromfile",
-      "community": 0,
+      "community": 2,
       "norm_label": "loadfromfile()"
     },
     {
@@ -557,7 +540,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp",
       "source_location": "L99",
       "id": "zonemap_overlay",
-      "community": 0,
+      "community": 2,
       "norm_label": "overlay()"
     },
     {
@@ -566,7 +549,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_pipeline_cpp",
-      "community": 5,
+      "community": 0,
       "norm_label": "pipeline.cpp"
     },
     {
@@ -575,7 +558,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L10",
       "id": "pipeline_fusedcentroid",
-      "community": 1,
+      "community": 0,
       "norm_label": "fusedcentroid()"
     },
     {
@@ -584,7 +567,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L24",
       "id": "pipeline_fusedvotecount",
-      "community": 1,
+      "community": 0,
       "norm_label": "fusedvotecount()"
     },
     {
@@ -593,7 +576,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L61",
       "id": "pipeline_setonhit",
-      "community": 6,
+      "community": 0,
       "norm_label": "setonhit()"
     },
     {
@@ -602,7 +585,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L67",
       "id": "pipeline_setzonemap",
-      "community": 5,
+      "community": 0,
       "norm_label": "setzonemap()"
     },
     {
@@ -611,7 +594,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L74",
       "id": "pipeline_feedframe",
-      "community": 1,
+      "community": 0,
       "norm_label": "feedframe()"
     },
     {
@@ -620,7 +603,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L154",
       "id": "pipeline_watchdogstuckhuman",
-      "community": 1,
+      "community": 0,
       "norm_label": "watchdogstuckhuman()"
     },
     {
@@ -629,7 +612,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L197",
       "id": "pipeline_roundstatus",
-      "community": 5,
+      "community": 0,
       "norm_label": "roundstatus()"
     },
     {
@@ -638,7 +621,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L203",
       "id": "pipeline_computeroundstatus",
-      "community": 5,
+      "community": 0,
       "norm_label": "computeroundstatus_()"
     },
     {
@@ -647,7 +630,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L231",
       "id": "pipeline_resetround",
-      "community": 5,
+      "community": 0,
       "norm_label": "resetround()"
     },
     {
@@ -656,7 +639,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L240",
       "id": "pipeline_setdiffthreshold",
-      "community": 5,
+      "community": 0,
       "norm_label": "setdiffthreshold()"
     },
     {
@@ -665,7 +648,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L246",
       "id": "pipeline_diffthreshold",
-      "community": 5,
+      "community": 0,
       "norm_label": "diffthreshold()"
     },
     {
@@ -674,7 +657,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L252",
       "id": "pipeline_setlinemergeperppx",
-      "community": 5,
+      "community": 0,
       "norm_label": "setlinemergeperppx()"
     },
     {
@@ -683,7 +666,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L258",
       "id": "pipeline_linemergeperppx",
-      "community": 5,
+      "community": 0,
       "norm_label": "linemergeperppx()"
     },
     {
@@ -692,7 +675,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L264",
       "id": "pipeline_roundhits",
-      "community": 5,
+      "community": 0,
       "norm_label": "roundhits()"
     },
     {
@@ -701,7 +684,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L270",
       "id": "pipeline_refreshbackground",
-      "community": 1,
+      "community": 0,
       "norm_label": "refreshbackground()"
     },
     {
@@ -710,7 +693,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L280",
       "id": "pipeline_camviz",
-      "community": 5,
+      "community": 0,
       "norm_label": "camviz()"
     },
     {
@@ -719,7 +702,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
       "source_location": "L287",
       "id": "pipeline_dartsinround",
-      "community": 6,
+      "community": 0,
       "norm_label": "dartsinround()"
     },
     {
@@ -737,7 +720,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_multicamfusion_cpp",
-      "community": 1,
+      "community": 7,
       "norm_label": "multicamfusion.cpp"
     },
     {
@@ -746,7 +729,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L10",
       "id": "multicamfusion_dist",
-      "community": 1,
+      "community": 7,
       "norm_label": "dist()"
     },
     {
@@ -755,7 +738,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L20",
       "id": "multicamfusion_addhit",
-      "community": 1,
+      "community": 7,
       "norm_label": "addhit()"
     },
     {
@@ -764,7 +747,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L35",
       "id": "multicamfusion_tick",
-      "community": 1,
+      "community": 7,
       "norm_label": "tick()"
     },
     {
@@ -773,7 +756,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L42",
       "id": "multicamfusion_flush",
-      "community": 1,
+      "community": 7,
       "norm_label": "flush()"
     },
     {
@@ -782,7 +765,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L48",
       "id": "multicamfusion_confirm",
-      "community": 1,
+      "community": 7,
       "norm_label": "confirm()"
     },
     {
@@ -791,7 +774,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
       "source_location": "L171",
       "id": "multicamfusion_reset",
-      "community": 1,
+      "community": 7,
       "norm_label": "reset()"
     },
     {
@@ -800,7 +783,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_boardcalibrator_cpp",
-      "community": 8,
+      "community": 9,
       "norm_label": "boardcalibrator.cpp"
     },
     {
@@ -809,7 +792,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L9",
       "id": "boardcalibrator_detectauto",
-      "community": 8,
+      "community": 9,
       "norm_label": "detectauto()"
     },
     {
@@ -818,7 +801,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp",
       "source_location": "L18",
       "id": "boardcalibrator_fromreferencepoints",
-      "community": 8,
+      "community": 9,
       "norm_label": "fromreferencepoints()"
     },
     {
@@ -827,7 +810,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_debugui_cpp",
-      "community": 2,
+      "community": 0,
       "norm_label": "debugui.cpp"
     },
     {
@@ -836,7 +819,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L42",
       "id": "debugui_pairwisespread",
-      "community": 2,
+      "community": 4,
       "norm_label": "pairwisespread()"
     },
     {
@@ -854,7 +837,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L68",
       "id": "debugui_blitaspectfit",
-      "community": 4,
+      "community": 0,
       "norm_label": "blitaspectfit()"
     },
     {
@@ -863,7 +846,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L98",
       "id": "debugui_onmousestatic",
-      "community": 2,
+      "community": 0,
       "norm_label": "onmousestatic()"
     },
     {
@@ -872,7 +855,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L123",
       "id": "debugui_updatecam",
-      "community": 2,
+      "community": 0,
       "norm_label": "updatecam()"
     },
     {
@@ -881,7 +864,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L131",
       "id": "debugui_setzonemap",
-      "community": 9,
+      "community": 0,
       "norm_label": "setzonemap()"
     },
     {
@@ -890,7 +873,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L163",
       "id": "debugui_setroundhits",
-      "community": 2,
+      "community": 0,
       "norm_label": "setroundhits()"
     },
     {
@@ -899,7 +882,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L169",
       "id": "debugui_setroundprogress",
-      "community": 6,
+      "community": 0,
       "norm_label": "setroundprogress()"
     },
     {
@@ -908,7 +891,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L176",
       "id": "debugui_setdiffthreshold",
-      "community": 2,
+      "community": 0,
       "norm_label": "setdiffthreshold()"
     },
     {
@@ -917,7 +900,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L182",
       "id": "debugui_setcamdelay",
-      "community": 2,
+      "community": 0,
       "norm_label": "setcamdelay()"
     },
     {
@@ -926,7 +909,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L189",
       "id": "debugui_setroundstatus",
-      "community": 2,
+      "community": 0,
       "norm_label": "setroundstatus()"
     },
     {
@@ -935,7 +918,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L196",
       "id": "debugui_consumeresetrequest",
-      "community": 6,
+      "community": 0,
       "norm_label": "consumeresetrequest()"
     },
     {
@@ -944,7 +927,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L204",
       "id": "debugui_consumebgrefreshrequest",
-      "community": 6,
+      "community": 0,
       "norm_label": "consumebgrefreshrequest()"
     },
     {
@@ -953,7 +936,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L212",
       "id": "debugui_consumestepforward",
-      "community": 2,
+      "community": 0,
       "norm_label": "consumestepforward()"
     },
     {
@@ -962,7 +945,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L220",
       "id": "debugui_consumestepbackward",
-      "community": 2,
+      "community": 0,
       "norm_label": "consumestepbackward()"
     },
     {
@@ -971,7 +954,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L228",
       "id": "debugui_ispaused",
-      "community": 2,
+      "community": 0,
       "norm_label": "ispaused()"
     },
     {
@@ -980,7 +963,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L234",
       "id": "debugui_focusedcam",
-      "community": 2,
+      "community": 0,
       "norm_label": "focusedcam()"
     },
     {
@@ -989,7 +972,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L240",
       "id": "debugui_handleclick",
-      "community": 2,
+      "community": 0,
       "norm_label": "handleclick()"
     },
     {
@@ -1025,7 +1008,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_autocalibrator_cpp",
-      "community": 8,
+      "community": 9,
       "norm_label": "autocalibrator.cpp"
     },
     {
@@ -1034,7 +1017,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L30",
       "id": "autocalibrator_angdiff",
-      "community": 8,
+      "community": 9,
       "norm_label": "angdiff()"
     },
     {
@@ -1043,7 +1026,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L38",
       "id": "autocalibrator_collectblobs",
-      "community": 8,
+      "community": 9,
       "norm_label": "collectblobs()"
     },
     {
@@ -1052,7 +1035,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L62",
       "id": "autocalibrator_blobmask",
-      "community": 8,
+      "community": 9,
       "norm_label": "blobmask()"
     },
     {
@@ -1061,7 +1044,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L74",
       "id": "autocalibrator_tonormalized",
-      "community": 8,
+      "community": 9,
       "norm_label": "tonormalized()"
     },
     {
@@ -1070,7 +1053,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L90",
       "id": "autocalibrator_boardpt",
-      "community": 8,
+      "community": 9,
       "norm_label": "boardpt()"
     },
     {
@@ -1079,7 +1062,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L98",
       "id": "autocalibrator_run",
-      "community": 8,
+      "community": 9,
       "norm_label": "run()"
     },
     {
@@ -1187,7 +1170,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L1",
       "id": "users_noahg_github_cam_stream_detection_src_boardcalibration_cpp",
-      "community": 7,
+      "community": 10,
       "norm_label": "boardcalibration.cpp"
     },
     {
@@ -1196,7 +1179,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L8",
       "id": "boardcalibration_imagetoboard",
-      "community": 7,
+      "community": 10,
       "norm_label": "imagetoboard()"
     },
     {
@@ -1205,7 +1188,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L16",
       "id": "boardcalibration_boardtoimage",
-      "community": 7,
+      "community": 10,
       "norm_label": "boardtoimage()"
     },
     {
@@ -1214,7 +1197,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L24",
       "id": "boardcalibration_savetofile",
-      "community": 7,
+      "community": 10,
       "norm_label": "savetofile()"
     },
     {
@@ -1223,7 +1206,7 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/BoardCalibration.cpp",
       "source_location": "L39",
       "id": "boardcalibration_loadfromfile",
-      "community": 7,
+      "community": 10,
       "norm_label": "loadfromfile()"
     },
     {
@@ -1232,7 +1215,7 @@
       "source_file": "src/ZoneMapper.cpp",
       "source_location": "L1",
       "id": "src_zonemapper_cpp",
-      "community": 1,
+      "community": 7,
       "norm_label": "zonemapper.cpp"
     },
     {
@@ -1241,7 +1224,7 @@
       "source_file": "src/ZoneMapper.cpp",
       "source_location": "L8",
       "id": "zonemapper_lookup",
-      "community": 1,
+      "community": 7,
       "norm_label": "lookup()"
     },
     {
@@ -1324,6 +1307,812 @@
       "id": "renderer_drawloggedtip",
       "community": 4,
       "norm_label": "drawloggedtip()"
+    },
+    {
+      "label": "camdetect (Static Library)",
+      "file_type": "build_config",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 28",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "camdetect (static library)",
+      "id": "cmakelists_camdetect"
+    },
+    {
+      "label": "AutoCalibrator.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 29",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "autocalibrator.cpp",
+      "id": "cmakelists_autocalibrator"
+    },
+    {
+      "label": "BoardCalibration.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 30",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "boardcalibration.cpp",
+      "id": "cmakelists_boardcalibration"
+    },
+    {
+      "label": "BoardCalibrator.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 31",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "boardcalibrator.cpp",
+      "id": "cmakelists_boardcalibrator"
+    },
+    {
+      "label": "DartDetector.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 32",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "dartdetector.cpp",
+      "id": "cmakelists_dartdetector"
+    },
+    {
+      "label": "DebugUI.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 33",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "debugui.cpp",
+      "id": "cmakelists_debugui"
+    },
+    {
+      "label": "MultiCamFusion.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 34",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "multicamfusion.cpp",
+      "id": "cmakelists_multicamfusion"
+    },
+    {
+      "label": "Pipeline.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 35",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "pipeline.cpp",
+      "id": "cmakelists_pipeline"
+    },
+    {
+      "label": "Renderer.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 36",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "renderer.cpp",
+      "id": "cmakelists_renderer"
+    },
+    {
+      "label": "ZoneMap.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 37",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "zonemap.cpp",
+      "id": "cmakelists_zonemap"
+    },
+    {
+      "label": "ZoneMapper.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "zonemapper.cpp",
+      "id": "cmakelists_zonemapper"
+    },
+    {
+      "label": "FileSource.cpp",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "filesource.cpp",
+      "id": "cmakelists_filesource"
+    },
+    {
+      "label": "OpenCV (External Library)",
+      "file_type": "external_dependency",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "opencv (external library)",
+      "id": "cmakelists_opencv"
+    },
+    {
+      "label": "FFmpeg (libavcodec/libavutil/libswscale)",
+      "file_type": "external_dependency",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 20-24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "ffmpeg (libavcodec/libavutil/libswscale)",
+      "id": "cmakelists_ffmpeg"
+    },
+    {
+      "label": "Threads (POSIX/system threading)",
+      "file_type": "external_dependency",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 14",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "threads (posix/system threading)",
+      "id": "cmakelists_threads"
+    },
+    {
+      "label": "camdetect_calibrate (Tool Executable)",
+      "file_type": "build_target",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 50",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "camdetect_calibrate (tool executable)",
+      "id": "cmakelists_camdetect_calibrate"
+    },
+    {
+      "label": "camdetect_autocalib (Tool Executable)",
+      "file_type": "build_target",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "camdetect_autocalib (tool executable)",
+      "id": "cmakelists_camdetect_autocalib"
+    },
+    {
+      "label": "camdetect_offline (Tool Executable)",
+      "file_type": "build_target",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 56",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "camdetect_offline (tool executable)",
+      "id": "cmakelists_camdetect_offline"
+    },
+    {
+      "label": "camdetect_debug (Tool Executable)",
+      "file_type": "build_target",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 59",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 1,
+      "norm_label": "camdetect_debug (tool executable)",
+      "id": "cmakelists_camdetect_debug"
+    },
+    {
+      "label": "camdetect_live (Tool Executable)",
+      "file_type": "build_target",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 70",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "camdetect_live (tool executable)",
+      "id": "cmakelists_camdetect_live"
+    },
+    {
+      "label": "StreamReceiver.cpp (client source)",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 72",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "streamreceiver.cpp (client source)",
+      "id": "cmakelists_streamreceiver"
+    },
+    {
+      "label": "VideoDecoder.cpp (client source)",
+      "file_type": "source_file",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 73",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "videodecoder.cpp (client source)",
+      "id": "cmakelists_videodecoder"
+    },
+    {
+      "label": "camstream server (TCP stream)",
+      "file_type": "external_system",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 62",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "camstream server (tcp stream)",
+      "id": "cmakelists_camstream_server"
+    },
+    {
+      "label": "Rationale: FFmpeg marked optional so file-mode tools build without FFmpeg headers",
+      "file_type": "rationale",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 16-18",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "rationale: ffmpeg marked optional so file-mode tools build without ffmpeg headers",
+      "id": "cmakelists_rationale_ffmpeg_optional"
+    },
+    {
+      "label": "Rationale: client StreamReceiver+VideoDecoder reused directly to avoid refactoring client into shared library",
+      "file_type": "rationale",
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 63-64",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 11,
+      "norm_label": "rationale: client streamreceiver+videodecoder reused directly to avoid refactoring client into shared library",
+      "id": "cmakelists_rationale_client_reuse"
+    },
+    {
+      "label": "cam0 Zones Overlay",
+      "file_type": "image",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "cam0 zones overlay",
+      "id": "cam0_zones_overlay_image"
+    },
+    {
+      "label": "cam0 Zones Green Mask",
+      "file_type": "image",
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "cam0 zones green mask",
+      "id": "cam0_zones_green_image"
+    },
+    {
+      "label": "cam0 Zones Red Mask",
+      "file_type": "image",
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "cam0 zones red mask",
+      "id": "cam0_zones_red_image"
+    },
+    {
+      "label": "cam0 Zones Base Mask",
+      "file_type": "image",
+      "source_file": "cam0_zones.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "cam0 zones base mask",
+      "id": "cam0_zones_base_image"
+    },
+    {
+      "label": "Dartboard (cam0)",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "dartboard (cam0)",
+      "id": "cam0_dartboard"
+    },
+    {
+      "label": "Bullseye Zone",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "bullseye zone",
+      "id": "cam0_bullseye_zone"
+    },
+    {
+      "label": "Scoring Segments (cam0)",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "scoring segments (cam0)",
+      "id": "cam0_scoring_segments"
+    },
+    {
+      "label": "Double Ring Zone",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "double ring zone",
+      "id": "cam0_double_ring"
+    },
+    {
+      "label": "Triple Ring Zone",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "triple ring zone",
+      "id": "cam0_triple_ring"
+    },
+    {
+      "label": "Green Channel Zone Mask",
+      "file_type": "concept",
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "green channel zone mask",
+      "id": "cam0_green_mask"
+    },
+    {
+      "label": "Red Channel Zone Mask",
+      "file_type": "concept",
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "red channel zone mask",
+      "id": "cam0_red_mask"
+    },
+    {
+      "label": "Zone Detection Pipeline (cam0)",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "zone detection pipeline (cam0)",
+      "id": "cam0_zone_detection_pipeline"
+    },
+    {
+      "label": "Camera 0 Perspective",
+      "file_type": "concept",
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 5,
+      "norm_label": "camera 0 perspective",
+      "id": "cam0_perspective"
+    },
+    {
+      "label": "Cam1 Green Zone Binary Mask",
+      "file_type": "image",
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 green zone binary mask",
+      "id": "cam1_zones_green_mask"
+    },
+    {
+      "label": "Cam1 Green Zone Outer Ring",
+      "file_type": "image",
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 green zone outer ring",
+      "id": "cam1_zones_green_outer_ring"
+    },
+    {
+      "label": "Cam1 Green Zone Inner Ring",
+      "file_type": "image",
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 green zone inner ring",
+      "id": "cam1_zones_green_inner_ring"
+    },
+    {
+      "label": "Cam1 Green Zone Center Point",
+      "file_type": "image",
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 green zone center point",
+      "id": "cam1_zones_green_center_dot"
+    },
+    {
+      "label": "Cam1 Zones Overlay Dartboard Photo",
+      "file_type": "image",
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 zones overlay dartboard photo",
+      "id": "cam1_zones_overlay_photo"
+    },
+    {
+      "label": "Winmau Dartboard (Cam1 View)",
+      "file_type": "image",
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "winmau dartboard (cam1 view)",
+      "id": "cam1_zones_overlay_dartboard"
+    },
+    {
+      "label": "Cam1 Zone Calibration Colored Dots Overlay",
+      "file_type": "image",
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 zone calibration colored dots overlay",
+      "id": "cam1_zones_overlay_colored_dots"
+    },
+    {
+      "label": "Cam1 Red Zone Binary Mask",
+      "file_type": "image",
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 red zone binary mask",
+      "id": "cam1_zones_red_mask"
+    },
+    {
+      "label": "Cam1 Red Zone Outer Ring",
+      "file_type": "image",
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 red zone outer ring",
+      "id": "cam1_zones_red_outer_ring"
+    },
+    {
+      "label": "Cam1 Red Zone Inner Ring",
+      "file_type": "image",
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 red zone inner ring",
+      "id": "cam1_zones_red_inner_ring"
+    },
+    {
+      "label": "Cam1 Zones Base Image (Nearly Black)",
+      "file_type": "image",
+      "source_file": "cam1_zones.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 zones base image (nearly black)",
+      "id": "cam1_zones_base"
+    },
+    {
+      "label": "Cam1 Zone Detection System",
+      "file_type": "image",
+      "source_file": "cam1_zones.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 zone detection system",
+      "id": "cam1_zones_zone_system"
+    },
+    {
+      "label": "Cam1 Elliptical Zone Projection (Perspective)",
+      "file_type": "image",
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 6,
+      "norm_label": "cam1 elliptical zone projection (perspective)",
+      "id": "cam1_zones_elliptical_projection"
+    },
+    {
+      "label": "Cam2 Zones Base Frame",
+      "file_type": "image",
+      "source_file": "cam2_zones.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "cam2 zones base frame",
+      "id": "cam2_zones_base_frame"
+    },
+    {
+      "label": "Cam2 Dartboard Overlay (Camera View)",
+      "file_type": "image",
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "cam2 dartboard overlay (camera view)",
+      "id": "cam2_zones_overlay_dartboard"
+    },
+    {
+      "label": "Cam2 Green Zone Detection Mask",
+      "file_type": "image",
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "cam2 green zone detection mask",
+      "id": "cam2_zones_green_mask"
+    },
+    {
+      "label": "Cam2 Red Zone Detection Mask",
+      "file_type": "image",
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "cam2 red zone detection mask",
+      "id": "cam2_zones_red_mask"
+    },
+    {
+      "label": "Dartboard (Cam2 Target)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "dartboard (cam2 target)",
+      "id": "cam2_zones_dartboard"
+    },
+    {
+      "label": "Bullseye / Center Point",
+      "file_type": "concept",
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "bullseye / center point",
+      "id": "cam2_zones_bullseye"
+    },
+    {
+      "label": "Elliptical Zone Rings (Perspective-Corrected)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "elliptical zone rings (perspective-corrected)",
+      "id": "cam2_zones_elliptical_rings"
+    },
+    {
+      "label": "Cam2 Perspective Distortion (Angled View)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "cam2 perspective distortion (angled view)",
+      "id": "cam2_zones_perspective_distortion"
+    },
+    {
+      "label": "Binary Zone Mask (White on Black)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "binary zone mask (white on black)",
+      "id": "cam2_zones_binary_mask"
+    },
+    {
+      "label": "Camera 2 (Cam2)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "camera 2 (cam2)",
+      "id": "cam2_zones_camera2"
+    },
+    {
+      "label": "Zone Boundary Segments (Dashed)",
+      "file_type": "concept",
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 8,
+      "norm_label": "zone boundary segments (dashed)",
+      "id": "cam2_zones_zone_boundary"
     }
   ],
   "links": [
@@ -1343,8 +2132,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/detect_offline.cpp",
-      "source_location": "L33",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
+      "source_location": "L34",
       "weight": 1.0,
       "_src": "detect_offline_main",
       "_tgt": "boardcalibration_loadfromfile",
@@ -1379,8 +2168,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/detect_offline.cpp",
-      "source_location": "L52",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
+      "source_location": "L63",
       "weight": 1.0,
       "_src": "detect_offline_main",
       "_tgt": "pipeline_setonhit",
@@ -1403,8 +2192,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/detect_offline.cpp",
-      "source_location": "L67",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/detect_offline.cpp",
+      "source_location": "L78",
       "weight": 1.0,
       "_src": "detect_offline_main",
       "_tgt": "pipeline_feedframe",
@@ -1439,8 +2228,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L51",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L58",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "boardcalibration_loadfromfile",
@@ -1475,8 +2264,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L78",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L96",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_setonhit",
@@ -1487,8 +2276,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L169",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L104",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_roundhits",
@@ -1523,8 +2312,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L109",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L156",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_feedframe",
@@ -1535,8 +2324,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L131",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L180",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_diffthreshold",
@@ -1547,8 +2336,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L132",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L181",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_setdiffthreshold",
@@ -1559,8 +2348,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L135",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L184",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_linemergeperppx",
@@ -1571,8 +2360,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L136",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L185",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_setlinemergeperppx",
@@ -1584,7 +2373,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
-      "source_location": "L171",
+      "source_location": "L195",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_setcamdelay",
@@ -1595,8 +2384,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L144",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L203",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_resetround",
@@ -1607,8 +2396,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L145",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L204",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "dartdetector_refreshbackground",
@@ -1619,8 +2408,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L149",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L209",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_ispaused",
@@ -1631,8 +2420,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L150",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L210",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_consumestepforward",
@@ -1643,8 +2432,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L151",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L211",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_consumestepbackward",
@@ -1655,8 +2444,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L166",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L234",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_updatecam",
@@ -1667,8 +2456,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L166",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L234",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_camviz",
@@ -1679,8 +2468,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L168",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L238",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_setroundprogress",
@@ -1691,8 +2480,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L168",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L238",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "pipeline_dartsinround",
@@ -1703,8 +2492,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L169",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L239",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_setroundhits",
@@ -1739,8 +2528,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L171",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L243",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_consumeresetrequest",
@@ -1751,8 +2540,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L175",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L246",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_consumebgrefreshrequest",
@@ -1763,8 +2552,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "tools/debug_viewer.cpp",
-      "source_location": "L179",
+      "source_file": "/Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp",
+      "source_location": "L250",
       "weight": 1.0,
       "_src": "debug_viewer_main",
       "_tgt": "debugui_render",
@@ -2726,8 +3515,8 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/DebugUI.cpp",
       "source_location": "L146",
       "weight": 1.0,
-      "_src": "debugui_setzonemap",
-      "_tgt": "zonemap_idcolor",
+      "_src": "zonemap_idcolor",
+      "_tgt": "debugui_setzonemap",
       "source": "zonemap_idcolor",
       "target": "debugui_setzonemap"
     },
@@ -2738,10 +3527,34 @@
       "source_file": "/Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp",
       "source_location": "L670",
       "weight": 1.0,
-      "_src": "autocalibrator_run",
-      "_tgt": "zonemap_setlabels",
+      "_src": "zonemap_setlabels",
+      "_tgt": "autocalibrator_run",
       "source": "zonemap_setlabels",
       "target": "autocalibrator_run"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/MultiCamFusion.cpp",
+      "source_location": "L152",
+      "weight": 1.0,
+      "_src": "zonemap_lookup",
+      "_tgt": "multicamfusion_confirm",
+      "source": "zonemap_lookup",
+      "target": "multicamfusion_confirm"
+    },
+    {
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L878",
+      "weight": 1.0,
+      "_src": "zonemap_lookup",
+      "_tgt": "dartdetector_processframe",
+      "source": "zonemap_lookup",
+      "target": "dartdetector_processframe"
     },
     {
       "relation": "contains",
@@ -3011,8 +3824,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/Pipeline.cpp",
-      "source_location": "L29",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L90",
       "weight": 1.0,
       "_src": "pipeline_feedframe",
       "_tgt": "dartdetector_processframe",
@@ -3023,8 +3836,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/Pipeline.cpp",
-      "source_location": "L32",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L93",
       "weight": 1.0,
       "_src": "pipeline_feedframe",
       "_tgt": "multicamfusion_addhit",
@@ -3036,7 +3849,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
-      "source_location": "L39",
+      "source_location": "L94",
       "weight": 1.0,
       "_src": "pipeline_feedframe",
       "_tgt": "multicamfusion_tick",
@@ -3071,8 +3884,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/Pipeline.cpp",
-      "source_location": "L48",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L234",
       "weight": 1.0,
       "_src": "pipeline_resetround",
       "_tgt": "dartdetector_reset",
@@ -3083,8 +3896,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/Pipeline.cpp",
-      "source_location": "L111",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L297",
       "weight": 1.0,
       "_src": "pipeline_maybeautoreset",
       "_tgt": "dartdetector_boardlookscleared",
@@ -3095,8 +3908,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/Pipeline.cpp",
-      "source_location": "L113",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/Pipeline.cpp",
+      "source_location": "L299",
       "weight": 1.0,
       "_src": "pipeline_maybeautoreset",
       "_tgt": "dartdetector_reset",
@@ -4079,8 +4892,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/DartDetector.cpp",
-      "source_location": "L117",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L365",
       "weight": 1.0,
       "_src": "dartdetector_buildroimask",
       "_tgt": "boardcalibration_boardtoimage",
@@ -4115,8 +4928,8 @@
       "relation": "calls",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
-      "source_file": "src/DartDetector.cpp",
-      "source_location": "L384",
+      "source_file": "/Users/noahg/github/cam-stream/detection/src/DartDetector.cpp",
+      "source_location": "L747",
       "weight": 1.0,
       "_src": "dartdetector_processframe",
       "_tgt": "boardcalibration_imagetoboard",
@@ -4338,22 +5151,1231 @@
       "source": "renderer_drawcircleboardmm",
       "target": "renderer_rendercanonicalboard",
       "confidence_score": 1.0
-    }
-  ],
-  "hyperedges": [
+    },
     {
-      "nodes": [
-        "cmakelists_camdetect_calibrate",
-        "cmakelists_camdetect_offline",
-        "cmakelists_camdetect_debug",
-        "cmakelists_camdetect"
-      ],
-      "relation": "shared_static_library_consumers",
+      "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "CMakeLists.txt",
-      "source_location": "35-42",
-      "weight": 1.0
+      "source_location": "line 29",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_autocalibrator",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_autocalibrator"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 30",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_boardcalibration",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_boardcalibration"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 31",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_boardcalibrator",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_boardcalibrator"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 32",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_dartdetector",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_dartdetector"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 33",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_debugui",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_debugui"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 34",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_multicamfusion",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_multicamfusion"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 35",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_pipeline",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 36",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_renderer",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_renderer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 37",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_zonemap",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_zonemap"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 38",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_zonemapper",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_zonemapper"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 39",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_filesource",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_filesource"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 46",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_opencv",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_opencv"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 51",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_camdetect_calibrate",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_camdetect_calibrate"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 54",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_camdetect_autocalib",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_camdetect_autocalib"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 57",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_camdetect_offline",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_camdetect_offline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 60",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_camdetect_debug",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_camdetect_debug"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 79",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect",
+      "_tgt": "cmakelists_camdetect_live",
+      "source": "cmakelists_camdetect",
+      "target": "cmakelists_camdetect_live"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 29,53",
+      "weight": 1.0,
+      "_src": "cmakelists_autocalibrator",
+      "_tgt": "cmakelists_camdetect_autocalib",
+      "source": "cmakelists_autocalibrator",
+      "target": "cmakelists_camdetect_autocalib"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 30-31",
+      "weight": 1.0,
+      "_src": "cmakelists_boardcalibration",
+      "_tgt": "cmakelists_boardcalibrator",
+      "source": "cmakelists_boardcalibration",
+      "target": "cmakelists_boardcalibrator"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 37-38",
+      "weight": 1.0,
+      "_src": "cmakelists_zonemap",
+      "_tgt": "cmakelists_zonemapper",
+      "source": "cmakelists_zonemap",
+      "target": "cmakelists_zonemapper"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 81",
+      "weight": 1.0,
+      "_src": "cmakelists_ffmpeg",
+      "_tgt": "cmakelists_camdetect_live",
+      "source": "cmakelists_ffmpeg",
+      "target": "cmakelists_camdetect_live"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 16-18",
+      "weight": 1.0,
+      "_src": "cmakelists_ffmpeg",
+      "_tgt": "cmakelists_rationale_ffmpeg_optional",
+      "source": "cmakelists_ffmpeg",
+      "target": "cmakelists_rationale_ffmpeg_optional"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 16-24",
+      "weight": 1.0,
+      "_src": "cmakelists_ffmpeg",
+      "_tgt": "cmakelists_videodecoder",
+      "source": "cmakelists_ffmpeg",
+      "target": "cmakelists_videodecoder"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 82",
+      "weight": 1.0,
+      "_src": "cmakelists_threads",
+      "_tgt": "cmakelists_camdetect_live",
+      "source": "cmakelists_threads",
+      "target": "cmakelists_camdetect_live"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 72",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect_live",
+      "_tgt": "cmakelists_streamreceiver",
+      "source": "cmakelists_camdetect_live",
+      "target": "cmakelists_streamreceiver"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 73",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect_live",
+      "_tgt": "cmakelists_videodecoder",
+      "source": "cmakelists_camdetect_live",
+      "target": "cmakelists_videodecoder"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 62",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect_live",
+      "_tgt": "cmakelists_camstream_server",
+      "source": "cmakelists_camdetect_live",
+      "target": "cmakelists_camstream_server"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 16-18",
+      "weight": 1.0,
+      "_src": "cmakelists_camdetect_live",
+      "_tgt": "cmakelists_rationale_ffmpeg_optional",
+      "source": "cmakelists_camdetect_live",
+      "target": "cmakelists_rationale_ffmpeg_optional"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 63-64",
+      "weight": 1.0,
+      "_src": "cmakelists_streamreceiver",
+      "_tgt": "cmakelists_rationale_client_reuse",
+      "source": "cmakelists_streamreceiver",
+      "target": "cmakelists_rationale_client_reuse"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 62-73",
+      "weight": 1.0,
+      "_src": "cmakelists_streamreceiver",
+      "_tgt": "cmakelists_camstream_server",
+      "source": "cmakelists_streamreceiver",
+      "target": "cmakelists_camstream_server"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CMakeLists.txt",
+      "source_location": "line 63-64",
+      "weight": 1.0,
+      "_src": "cmakelists_videodecoder",
+      "_tgt": "cmakelists_rationale_client_reuse",
+      "source": "cmakelists_videodecoder",
+      "target": "cmakelists_rationale_client_reuse"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_dartboard",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_bullseye_zone",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_bullseye_zone"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_scoring_segments",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_scoring_segments"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_double_ring",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_double_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_triple_ring",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_triple_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_perspective",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_perspective"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_zones_green_image",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_zones_green_image"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_zones_red_image",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_zones_red_image"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "cam0_zones.png",
+      "source_location": null,
+      "weight": 0.2,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_zones_base_image",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_zones_base_image"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam0_zones_overlay_image",
+      "_tgt": "cam0_zone_detection_pipeline",
+      "source": "cam0_zones_overlay_image",
+      "target": "cam0_zone_detection_pipeline"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_green_image",
+      "_tgt": "cam0_green_mask",
+      "source": "cam0_zones_green_image",
+      "target": "cam0_green_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam0_zones_green_image",
+      "_tgt": "cam0_dartboard",
+      "source": "cam0_zones_green_image",
+      "target": "cam0_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_zones_red_image",
+      "_tgt": "cam0_red_mask",
+      "source": "cam0_zones_red_image",
+      "target": "cam0_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam0_zones_red_image",
+      "_tgt": "cam0_dartboard",
+      "source": "cam0_zones_red_image",
+      "target": "cam0_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "cam0_zones.png",
+      "source_location": null,
+      "weight": 0.2,
+      "_src": "cam0_zones_base_image",
+      "_tgt": "cam0_dartboard",
+      "source": "cam0_zones_base_image",
+      "target": "cam0_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam0_dartboard",
+      "_tgt": "cam0_zone_detection_pipeline",
+      "source": "cam0_dartboard",
+      "target": "cam0_zone_detection_pipeline"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_bullseye_zone",
+      "_tgt": "cam0_scoring_segments",
+      "source": "cam0_bullseye_zone",
+      "target": "cam0_scoring_segments"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_scoring_segments",
+      "_tgt": "cam0_double_ring",
+      "source": "cam0_scoring_segments",
+      "target": "cam0_double_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam0_scoring_segments",
+      "_tgt": "cam0_triple_ring",
+      "source": "cam0_scoring_segments",
+      "target": "cam0_triple_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam0_green_mask",
+      "_tgt": "cam0_zone_detection_pipeline",
+      "source": "cam0_green_mask",
+      "target": "cam0_zone_detection_pipeline"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam0_zones_green.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam0_green_mask",
+      "_tgt": "cam0_red_mask",
+      "source": "cam0_green_mask",
+      "target": "cam0_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam0_zones_red.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam0_red_mask",
+      "_tgt": "cam0_zone_detection_pipeline",
+      "source": "cam0_red_mask",
+      "target": "cam0_zone_detection_pipeline"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "cam0_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.75,
+      "_src": "cam0_zone_detection_pipeline",
+      "_tgt": "cam0_perspective",
+      "source": "cam0_zone_detection_pipeline",
+      "target": "cam0_perspective"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_green_outer_ring",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_green_outer_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_green_inner_ring",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_green_inner_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_green_center_dot",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_green_center_dot"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_elliptical_projection",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_elliptical_projection"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_red_mask",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_base",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_base"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_zone_system",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_zone_system"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam1_zones_green_mask",
+      "_tgt": "cam1_zones_overlay_colored_dots",
+      "source": "cam1_zones_green_mask",
+      "target": "cam1_zones_overlay_colored_dots"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_green_outer_ring",
+      "_tgt": "cam1_zones_green_inner_ring",
+      "source": "cam1_zones_green_outer_ring",
+      "target": "cam1_zones_green_inner_ring"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam1_zones_green_outer_ring",
+      "_tgt": "cam1_zones_red_outer_ring",
+      "source": "cam1_zones_green_outer_ring",
+      "target": "cam1_zones_red_outer_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_green_inner_ring",
+      "_tgt": "cam1_zones_green_center_dot",
+      "source": "cam1_zones_green_inner_ring",
+      "target": "cam1_zones_green_center_dot"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam1_zones_green_inner_ring",
+      "_tgt": "cam1_zones_red_inner_ring",
+      "source": "cam1_zones_green_inner_ring",
+      "target": "cam1_zones_red_inner_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_overlay_photo",
+      "_tgt": "cam1_zones_overlay_dartboard",
+      "source": "cam1_zones_overlay_photo",
+      "target": "cam1_zones_overlay_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_overlay_photo",
+      "_tgt": "cam1_zones_overlay_colored_dots",
+      "source": "cam1_zones_overlay_photo",
+      "target": "cam1_zones_overlay_colored_dots"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_overlay_photo",
+      "_tgt": "cam1_zones_zone_system",
+      "source": "cam1_zones_overlay_photo",
+      "target": "cam1_zones_zone_system"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_overlay_dartboard",
+      "_tgt": "cam1_zones_overlay_colored_dots",
+      "source": "cam1_zones_overlay_dartboard",
+      "target": "cam1_zones_overlay_colored_dots"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "cam1_zones.png",
+      "source_location": null,
+      "weight": 0.2,
+      "_src": "cam1_zones_overlay_dartboard",
+      "_tgt": "cam1_zones_base",
+      "source": "cam1_zones_overlay_dartboard",
+      "target": "cam1_zones_base"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam1_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam1_zones_overlay_dartboard",
+      "_tgt": "cam1_zones_elliptical_projection",
+      "source": "cam1_zones_overlay_dartboard",
+      "target": "cam1_zones_elliptical_projection"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam1_zones_overlay.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam1_zones_overlay_colored_dots",
+      "_tgt": "cam1_zones_red_mask",
+      "source": "cam1_zones_overlay_colored_dots",
+      "target": "cam1_zones_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_red_mask",
+      "_tgt": "cam1_zones_red_outer_ring",
+      "source": "cam1_zones_red_mask",
+      "target": "cam1_zones_red_outer_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam1_zones_red_mask",
+      "_tgt": "cam1_zones_red_inner_ring",
+      "source": "cam1_zones_red_mask",
+      "target": "cam1_zones_red_inner_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_red_mask",
+      "_tgt": "cam1_zones_elliptical_projection",
+      "source": "cam1_zones_red_mask",
+      "target": "cam1_zones_elliptical_projection"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam1_zones_red_mask",
+      "_tgt": "cam1_zones_base",
+      "source": "cam1_zones_red_mask",
+      "target": "cam1_zones_base"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam1_zones_red_mask",
+      "_tgt": "cam1_zones_zone_system",
+      "source": "cam1_zones_red_mask",
+      "target": "cam1_zones_zone_system"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam1_zones_red.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam1_zones_red_outer_ring",
+      "_tgt": "cam1_zones_red_inner_ring",
+      "source": "cam1_zones_red_outer_ring",
+      "target": "cam1_zones_red_inner_ring"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "cam1_zones.png",
+      "source_location": null,
+      "weight": 0.7,
+      "_src": "cam1_zones_base",
+      "_tgt": "cam1_zones_zone_system",
+      "source": "cam1_zones_base",
+      "target": "cam1_zones_zone_system"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_base_frame",
+      "_tgt": "cam2_zones_camera2",
+      "source": "cam2_zones_base_frame",
+      "target": "cam2_zones_camera2"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "cam2_zones.png",
+      "source_location": null,
+      "weight": 0.8,
+      "_src": "cam2_zones_base_frame",
+      "_tgt": "cam2_zones_overlay_dartboard",
+      "source": "cam2_zones_base_frame",
+      "target": "cam2_zones_overlay_dartboard"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "cam2_zones.png",
+      "source_location": null,
+      "weight": 0.25,
+      "_src": "cam2_zones_base_frame",
+      "_tgt": "cam2_zones_green_mask",
+      "source": "cam2_zones_base_frame",
+      "target": "cam2_zones_green_mask"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "cam2_zones.png",
+      "source_location": null,
+      "weight": 0.25,
+      "_src": "cam2_zones_base_frame",
+      "_tgt": "cam2_zones_red_mask",
+      "source": "cam2_zones_base_frame",
+      "target": "cam2_zones_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_overlay_dartboard",
+      "_tgt": "cam2_zones_camera2",
+      "source": "cam2_zones_overlay_dartboard",
+      "target": "cam2_zones_camera2"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_overlay_dartboard",
+      "_tgt": "cam2_zones_dartboard",
+      "source": "cam2_zones_overlay_dartboard",
+      "target": "cam2_zones_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_overlay_dartboard",
+      "_tgt": "cam2_zones_perspective_distortion",
+      "source": "cam2_zones_overlay_dartboard",
+      "target": "cam2_zones_perspective_distortion"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_camera2",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_camera2"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_binary_mask",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_binary_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_elliptical_rings",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_elliptical_rings"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_bullseye",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_bullseye"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_red_mask",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_red_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_zone_boundary",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_zone_boundary"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam2_zones_green_mask",
+      "_tgt": "cam2_zones_dartboard",
+      "source": "cam2_zones_green_mask",
+      "target": "cam2_zones_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_camera2",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_camera2"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_binary_mask",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_binary_mask"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_elliptical_rings",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_elliptical_rings"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_bullseye",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_bullseye"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_zone_boundary",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_zone_boundary"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "cam2_zones_red.png",
+      "source_location": null,
+      "weight": 0.85,
+      "_src": "cam2_zones_red_mask",
+      "_tgt": "cam2_zones_dartboard",
+      "source": "cam2_zones_red_mask",
+      "target": "cam2_zones_dartboard"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "cam2_zones_overlay.png",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "cam2_zones_dartboard",
+      "_tgt": "cam2_zones_bullseye",
+      "source": "cam2_zones_dartboard",
+      "target": "cam2_zones_bullseye"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "cam2_zones_green.png",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "cam2_zones_elliptical_rings",
+      "_tgt": "cam2_zones_perspective_distortion",
+      "source": "cam2_zones_elliptical_rings",
+      "target": "cam2_zones_perspective_distortion"
     }
-  ]
+  ],
+  "hyperedges": []
 }
