@@ -679,4 +679,50 @@ AutoCalibrator::Result AutoCalibrator::run(const cv::Mat& frame_bgr,
     return res;
 }
 
+AutoCalibrator::Options AutoCalibrator::tune(const cv::Mat& frame_bgr,
+                                             const Options& base) const
+{
+    const auto score = [](const Result& r) -> double {
+        if (!r.ok) return -1e9;
+        return (r.triples_found + r.doubles_found) * 10.0
+               - static_cast<double>(r.mean_reproj_err_px) * 2.0;
+    };
+
+    Options best = base;
+    double  best_s = score(run(frame_bgr, base));
+
+    // Coarse sweep: ~9×9×5 = 405 calls.
+    for (int ra = 8; ra <= 40; ra += 4) {
+        for (int ga = 6; ga <= 36; ga += 4) {
+            for (int mc = 10; mc <= 28; mc += 4) {
+                Options o    = base;
+                o.red_a_delta   = ra;
+                o.green_a_delta = ga;
+                o.min_chroma    = mc;
+                const double s = score(run(frame_bgr, o));
+                if (s > best_s) { best_s = s; best = o; }
+            }
+        }
+    }
+
+    // Fine sweep ±3 around the coarse winner.
+    const int ra0 = best.red_a_delta;
+    const int ga0 = best.green_a_delta;
+    const int mc0 = best.min_chroma;
+    for (int dra = -3; dra <= 3; ++dra) {
+        for (int dga = -3; dga <= 3; ++dga) {
+            for (int dmc = -2; dmc <= 2; ++dmc) {
+                Options o    = best;
+                o.red_a_delta   = std::max(4, ra0 + dra);
+                o.green_a_delta = std::max(4, ga0 + dga);
+                o.min_chroma    = std::max(6, mc0 + dmc);
+                const double s = score(run(frame_bgr, o));
+                if (s > best_s) { best_s = s; best = o; }
+            }
+        }
+    }
+
+    return best;
+}
+
 } // namespace camdetect

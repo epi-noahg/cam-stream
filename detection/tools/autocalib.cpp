@@ -46,8 +46,9 @@ struct State {
     int                     total_frames {0};
     AutoCalibrator::Options opt;
     AutoCalibrator::Result  result;
-    bool                    dirty {true};   // re-run detection
-    int                     view  {0};      // 0 overlay, 1 masks, 2 original
+    bool                    dirty    {true};   // re-run detection
+    int                     view     {0};      // 0 overlay, 1 masks, 2 original
+    bool                    tuning   {false};  // auto-tune in progress
 };
 
 void onTrackbarFrame(int pos, void* userdata)
@@ -97,7 +98,9 @@ cv::Mat render(const State& st)
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, c, 1, cv::LINE_AA);
     };
 
-    if (r.ok) {
+    if (st.tuning) {
+        line(0, "AUTO-TUNE running...", {0, 200, 255});
+    } else if (r.ok) {
         line(0, "T:" + std::to_string(r.triples_found) + "/20  D:" +
                 std::to_string(r.doubles_found) + "/20  reproj:" +
                 cv::format("%.1fpx", r.mean_reproj_err_px),
@@ -109,7 +112,7 @@ cv::Mat render(const State& st)
     } else {
         line(0, "FAILED: " + r.error, {0, 0, 255});
     }
-    line(3, "a:rerun  o/p:rotate  v:view  r:reset  s:save  q:quit",
+    line(3, "a:rerun  o/p:rotate  v:view  r:reset  t:tune  s:save  q:quit",
          {200, 200, 200});
     return display;
 }
@@ -143,28 +146,31 @@ bool saveAll(const AutoCalibrator::Result& r, const std::string& yml_path,
 int main(int argc, char* argv[])
 {
     std::string input, out_yml;
-    bool        batch = false;
+    bool        batch    = false;
+    bool        autotune = false;
     int         frame_idx = 0;
     int         rotate = 0;
     cv::Point2f st_hint{-1.f, -1.f};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
-        if (a == "--batch")                   batch = true;
-        else if (a == "--frame" && i + 1 < argc) frame_idx = std::stoi(argv[++i]);
+        if (a == "--batch")                       batch    = true;
+        else if (a == "--autotune")               autotune = true;
+        else if (a == "--frame" && i + 1 < argc)  frame_idx = std::stoi(argv[++i]);
         else if (a == "--hint" && i + 2 < argc) {
             st_hint.x = std::stof(argv[++i]);
             st_hint.y = std::stof(argv[++i]);
         }
         else if (a == "--rotate" && i + 1 < argc) rotate = std::stoi(argv[++i]);
-        else if (input.empty())               input = a;
-        else if (out_yml.empty())             out_yml = a;
+        else if (input.empty())                   input = a;
+        else if (out_yml.empty())                 out_yml = a;
     }
     if (input.empty() || out_yml.empty()) {
         std::cerr << "Usage: " << argv[0]
                   << " <video|image> <out_calib.yml> [--batch] [--frame N]"
-                  << " [--hint X Y] [--rotate K]\n"
-                  << "  --hint X Y  pixel inside sector 20 (orientation)\n"
-                  << "  --rotate K  rotate sector assignment by K\n";
+                  << " [--hint X Y] [--rotate K] [--autotune]\n"
+                  << "  --hint X Y   pixel inside sector 20 (orientation)\n"
+                  << "  --rotate K   rotate sector assignment by K\n"
+                  << "  --autotune   sweep colour thresholds for best result\n";
         return 1;
     }
 
@@ -191,6 +197,13 @@ int main(int argc, char* argv[])
     const AutoCalibrator calibrator;
 
     if (batch) {
+        if (autotune) {
+            std::cout << "[autocalib] auto-tuning colour thresholds...\n";
+            st.opt = calibrator.tune(st.base_frame, st.opt);
+            std::cout << "[autocalib] best params: red_a=" << st.opt.red_a_delta
+                      << " green_a=" << st.opt.green_a_delta
+                      << " chroma=" << st.opt.min_chroma << '\n';
+        }
         st.result = calibrator.run(st.base_frame, st.opt);
         if (!st.result.ok) {
             std::cerr << "[autocalib] FAILED: " << st.result.error << '\n';
@@ -220,15 +233,18 @@ int main(int argc, char* argv[])
                            std::max(1, st.total_frames - 1),
                            onTrackbarFrame, &st);
     // Colour threshold tuning, for tricky lighting.
-    cv::createTrackbar("red a*",  WINDOW, nullptr, 60, onTrackbarThresh, &st);
+    cv::createTrackbar("red a*",   WINDOW, nullptr, 60, onTrackbarThresh, &st);
     cv::createTrackbar("green a*", WINDOW, nullptr, 60, onTrackbarThresh, &st);
+    cv::createTrackbar("chroma",   WINDOW, nullptr, 60, onTrackbarThresh, &st);
     cv::setTrackbarPos("red a*",   WINDOW, st.opt.red_a_delta);
     cv::setTrackbarPos("green a*", WINDOW, st.opt.green_a_delta);
+    cv::setTrackbarPos("chroma",   WINDOW, st.opt.min_chroma);
 
     while (true) {
-        if (st.dirty) {
+        if (st.dirty && !st.tuning) {
             st.opt.red_a_delta   = std::max(4, cv::getTrackbarPos("red a*",   WINDOW));
             st.opt.green_a_delta = std::max(4, cv::getTrackbarPos("green a*", WINDOW));
+            st.opt.min_chroma    = std::max(6, cv::getTrackbarPos("chroma",   WINDOW));
             st.result = calibrator.run(st.base_frame, st.opt);
             st.dirty  = false;
             if (!st.result.ok)
@@ -246,6 +262,21 @@ int main(int argc, char* argv[])
             st.opt.sector20_offset = 0;
             st.opt.sector20_hint   = {-1.f, -1.f};
             st.dirty = true;
+        }
+        if (key == 't') {
+            st.tuning = true;
+            cv::imshow(WINDOW, render(st));
+            cv::waitKey(1);
+            std::cout << "[autocalib] auto-tuning colour thresholds...\n";
+            st.opt = calibrator.tune(st.base_frame, st.opt);
+            std::cout << "[autocalib] best: red_a=" << st.opt.red_a_delta
+                      << " green_a=" << st.opt.green_a_delta
+                      << " chroma=" << st.opt.min_chroma << '\n';
+            cv::setTrackbarPos("red a*",   WINDOW, st.opt.red_a_delta);
+            cv::setTrackbarPos("green a*", WINDOW, st.opt.green_a_delta);
+            cv::setTrackbarPos("chroma",   WINDOW, st.opt.min_chroma);
+            st.tuning = false;
+            st.dirty  = true;
         }
         if (key == 's') {
             if (!st.result.ok) {

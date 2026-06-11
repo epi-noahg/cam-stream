@@ -39,6 +39,7 @@ public:
         /// Optional pixel the user clicked anywhere inside sector 20.
         /// (-1,-1) = unset, use auto orientation.
         cv::Point2f sector20_hint {-1.f, -1.f};
+
     };
 
     struct Result {
@@ -58,6 +59,12 @@ public:
 
     Result run(const cv::Mat& frame_bgr, const Options& opt) const;
     Result run(const cv::Mat& frame_bgr) const { return run(frame_bgr, Options{}); }
+
+    /// Sweep colour-threshold parameters to maximise ring-segment count and
+    /// minimise reprojection error.  Returns the best Options found.
+    /// Keeps sector20_hint / sector20_offset / use_ocr_orientation unchanged.
+    Options tune(const cv::Mat& frame_bgr, const Options& base) const;
+    Options tune(const cv::Mat& frame_bgr) const { return tune(frame_bgr, Options{}); }
 };
 
 } // namespace camdetect
