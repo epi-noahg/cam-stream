@@ -180,6 +180,13 @@ void DebugUI::setRoundStatus(const std::string& message, int phase_index)
     round_phase_      = phase_index;
 }
 
+void DebugUI::setExtraPanel(std::string header, std::vector<std::string> lines)
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    extra_header_ = std::move(header);
+    extra_lines_  = std::move(lines);
+}
+
 bool DebugUI::consumeResetRequest()
 {
     std::lock_guard<std::mutex> lk(mtx_);
@@ -210,6 +217,14 @@ bool DebugUI::consumeStepBackward()
     bool v = step_backward_;
     step_backward_ = false;
     return v;
+}
+
+int DebugUI::consumeKey()
+{
+    std::lock_guard<std::mutex> lk(mtx_);
+    int k = last_key_;
+    last_key_ = 0;
+    return k;
 }
 
 bool DebugUI::isPaused() const
@@ -597,6 +612,13 @@ void DebugUI::composite(cv::Mat& out) const
     y += 4;
     putDivider();
 
+    if (!extra_lines_.empty()) {
+        putHeader(extra_header_.empty() ? "EXTRA" : extra_header_);
+        for (const auto& l : extra_lines_) putLine(l, TEXT_PRIMARY, 0.42);
+        y += 4;
+        putDivider();
+    }
+
     putHeader("CONTROLS");
     putLine("  click       zoom cam",   TEXT_DIM);
     putLine("  space       play/pause", TEXT_DIM);
@@ -627,6 +649,7 @@ bool DebugUI::render()
     const bool is_right = (raw == 83)  || (raw == 2555904) || (raw == 63235) || (raw == 65363);
 
     std::lock_guard<std::mutex> lk(mtx_);
+    last_key_ = ascii;
     if (ascii == 'q' || ascii == 27)               return false;
     if (ascii == 'r')                              reset_requested_      = true;
     if (ascii == 'b')                              bg_refresh_requested_ = true;

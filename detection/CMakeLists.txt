@@ -59,6 +59,12 @@ target_link_libraries(camdetect_offline PRIVATE camdetect)
 add_executable(camdetect_debug tools/debug_viewer.cpp)
 target_link_libraries(camdetect_debug PRIVATE camdetect)
 
+add_executable(camdetect_annotate tools/annotate.cpp)
+target_link_libraries(camdetect_annotate PRIVATE camdetect)
+
+add_executable(camdetect_runtest tools/run_test.cpp)
+target_link_libraries(camdetect_runtest PRIVATE camdetect)
+
 # ── Live mode: connects to the camstream server TCP stream ───────────────────
 # Reuses the client's StreamReceiver + VideoDecoder source files directly so we
 # don't have to refactor the client into a shared library.

@@ -1,0 +1,160 @@
+%YAML:1.0
+---
+fps: 30
+offsets:
+   - 5
+   - 0
+   - 11
+videos:
+   - "/Users/noahg/github/cam-stream/detection/../client/cam0_20260531_162213.mp4"
+   - "/Users/noahg/github/cam-stream/detection/../client/cam1_20260531_162213.mp4"
+   - "/Users/noahg/github/cam-stream/detection/../client/cam2_20260531_162213.mp4"
+calibs:
+   - "/Users/noahg/github/cam-stream/detection/cam0.yml"
+   - "/Users/noahg/github/cam-stream/detection/cam1.yml"
+   - "/Users/noahg/github/cam-stream/detection/cam2.yml"
+events:
+   -
+      frame: 406
+      type: dart
+      zone: "20"
+      score: 20
+   -
+      frame: 479
+      type: dart
+      zone: "19"
+      score: 19
+   -
+      frame: 551
+      type: dart
+      zone: D15
+      score: 30
+   -
+      frame: 601
+      type: human_begin
+   -
+      frame: 645
+      type: human_end
+   -
+      frame: 646
+      type: clear
+   -
+      frame: 793
+      type: dart
+      zone: "11"
+      score: 11
+   -
+      frame: 857
+      type: dart
+      zone: "7"
+      score: 7
+   -
+      frame: 919
+      type: dart
+      zone: T2
+      score: 6
+   -
+      frame: 996
+      type: human_begin
+   -
+      frame: 1042
+      type: human_end
+   -
+      frame: 1043
+      type: clear
+   -
+      frame: 1241
+      type: dart
+      zone: T5
+      score: 15
+   -
+      frame: 1306
+      type: dart
+      zone: "5"
+      score: 5
+   -
+      frame: 1377
+      type: dart
+      zone: T20
+      score: 60
+   -
+      frame: 1456
+      type: human_begin
+   -
+      frame: 1505
+      type: human_end
+   -
+      frame: 1506
+      type: clear
+   -
+      frame: 1671
+      type: dart
+      zone: "20"
+      score: 20
+   -
+      frame: 1739
+      type: dart
+      zone: T20
+      score: 60
+   -
+      frame: 1807
+      type: dart
+      zone: "12"
+      score: 12
+   -
+      frame: 1910
+      type: human_begin
+   -
+      frame: 1970
+      type: human_end
+   -
+      frame: 1971
+      type: clear
+   -
+      frame: 2148
+      type: dart
+      zone: "5"
+      score: 5
+   -
+      frame: 2223
+      type: dart
+      zone: "25"
+      score: 25
+   -
+      frame: 2298
+      type: dart
+      zone: "19"
+      score: 19
+   -
+      frame: 2379
+      type: human_begin
+   -
+      frame: 2425
+      type: human_end
+   -
+      frame: 2426
+      type: clear
+   -
+      frame: 2598
+      type: dart
+      zone: "2"
+      score: 2
+   -
+      frame: 2675
+      type: dart
+      zone: "15"
+      score: 15
+   -
+      frame: 2753
+      type: dart
+      zone: "18"
+      score: 18
+   -
+      frame: 2833
+      type: human_begin
+   -
+      frame: 2880
+      type: human_end
+   -
+      frame: 2881
+      type: clear

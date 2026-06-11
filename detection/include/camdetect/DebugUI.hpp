@@ -54,6 +54,10 @@ public:
     /// Set the high-level round phase + message shown to the player.
     void setRoundStatus(const std::string& message, int phase_index);
 
+    /// Extra host-tool section in the info panel (e.g. annotation state).
+    /// Hidden while @p lines is empty.
+    void setExtraPanel(std::string header, std::vector<std::string> lines);
+
     /// Render one frame.  @returns false if the user requested to quit.
     bool render();
 
@@ -63,6 +67,9 @@ public:
     bool consumeStepForward();
     /// True once per press of ',' / 'p' / LEFT arrow.
     bool consumeStepBackward();
+    /// Last ascii key pressed in render() (0 if none since the previous
+    /// call).  Lets host tools layer extra shortcuts on top of the built-ins.
+    int  consumeKey();
     bool isPaused() const;
 
     /// Currently focused cam (-1 = grid view, 0..N-1 = zoomed on that cam).
@@ -91,6 +98,9 @@ private:
     std::array<int, NUM_CAMS>                cam_delays_       {{0, 0, 0}};
     std::string                              round_status_msg_;
     int                                      round_phase_      {0};
+    std::string                              extra_header_;
+    std::vector<std::string>                 extra_lines_;
+    int                                      last_key_         {0};
 
     // Precomputed zone-overlay layers (from setZoneMap).
     std::array<cv::Mat, NUM_CAMS>            zone_color_;   // CV_8UC3 tint
