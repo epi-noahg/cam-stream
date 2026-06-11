@@ -40,6 +40,10 @@ struct RoundStatus {
 class Pipeline {
 public:
     using HitCallback = std::function<void(const FusedHit&)>;
+    /// Fired when late camera votes refine an ALREADY-emitted hit (position
+    /// and possibly zone).  The hit keeps its original timestamp, so
+    /// consumers can locate the entry to amend.
+    using HitUpdateCallback = std::function<void(const FusedHit&)>;
 
     // 1.0s window (~30 frames @ 30fps): wide enough that even a slow cam
     // (whose mask noise needs the full STABLE_FRAMES_REQUIRED to settle
@@ -52,6 +56,7 @@ public:
                       double fusion_window_seconds = 1.0);
 
     void setOnHit(HitCallback cb);
+    void setOnHitUpdated(HitUpdateCallback cb);
 
     /// Attach a pixel-accurate zone map (AutoCalibrator output) to one
     /// camera's detector.  Call before the first feedFrame() ideally; safe
@@ -96,6 +101,7 @@ private:
     std::array<std::unique_ptr<DartDetector>, NUM_CAMS> detectors_;
     MultiCamFusion                                      fusion_;
     HitCallback                                         on_hit_;
+    HitUpdateCallback                                   on_hit_updated_;
     int                                                 darts_in_round_{0};
     double                                              fusion_clock_{-1.0};
     std::vector<FusedHit>                               round_hits_;

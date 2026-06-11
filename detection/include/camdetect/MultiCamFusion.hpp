@@ -45,6 +45,14 @@ public:
     /// Force-close the current window (shutdown / board-clear).
     std::optional<FusedHit> flush();
 
+    /// Fuse an arbitrary set of per-cam votes into one FusedHit: cluster the
+    /// mutually-consistent votes under their anisotropic error models, solve
+    /// the weighted least-squares crossing for the position, and run the
+    /// probability-weighted zone vote.  Stateless — also used by Pipeline to
+    /// RE-fuse a committed hit with late votes from cameras that had not
+    /// reported that dart yet.
+    static std::optional<FusedHit> fuseVotes(const std::vector<DartHit>& votes);
+
     void reset();
 
     bool hasPending() const { return first_ts_ >= 0.0; }

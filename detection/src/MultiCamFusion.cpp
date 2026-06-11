@@ -7,11 +7,79 @@
 namespace camdetect {
 
 namespace {
-float dist(const cv::Point2f& a, const cv::Point2f& b)
+
+/// Board-space error covariance of one camera's tip estimate: loose along
+/// the dart's projected axis (mask truncation slides the tip up the shaft),
+/// tight across it (the axis fit is pixel-accurate).  Falls back to an
+/// isotropic sigma_mm ball when the hit carries no axis information.
+cv::Matx22f covOf(const DartHit& h)
 {
-    const cv::Point2f d = a - b;
-    return std::sqrt(d.x * d.x + d.y * d.y);
+    const float ux = h.axis_board.x, uy = h.axis_board.y;
+    if (ux * ux + uy * uy < 0.25f) {
+        const float s2 = std::max(h.sigma_mm, 0.5f) * std::max(h.sigma_mm, 0.5f);
+        return {s2, 0.f, 0.f, s2};
+    }
+    const float vx = -uy, vy = ux;
+    const float sa2 = h.sigma_along_mm  * h.sigma_along_mm;
+    const float sc2 = h.sigma_across_mm * h.sigma_across_mm;
+    return {sa2*ux*ux + sc2*vx*vx, sa2*ux*uy + sc2*vx*vy,
+            sa2*ux*uy + sc2*vx*vy, sa2*uy*uy + sc2*vy*vy};
 }
+
+float mahaSq(const cv::Point2f& d, const cv::Matx22f& S)
+{
+    const cv::Matx22f Si = S.inv();
+    return d.x * (Si(0,0)*d.x + Si(0,1)*d.y) +
+           d.y * (Si(1,0)*d.x + Si(1,1)*d.y);
+}
+
+/// Two votes describe the same physical tip when their displacement is
+/// explainable by each camera's tip slide ALONG its dart's projected axis:
+/// mask truncation slides the estimate toward the tail, shadows and axis
+/// overshoot slide it past the point — but neither mechanism moves it
+/// sideways.  So
+///
+///     a.xy − b.xy  =  s_a·axis_a − s_b·axis_b ,   |s| ≤ cap
+///
+/// must have a solution with both slide amounts bounded by what each cam's
+/// silhouette quality makes plausible.  A full Mahalanobis ellipse with the
+/// same sigmas is far too permissive — junk detections pass it from random
+/// directions and then corrupt the crossing.
+float slideCap(const DartHit& h)
+{
+    return std::min(2.f * h.sigma_along_mm + 10.f, 30.f);
+}
+
+bool consistent(const DartHit& a, const DartHit& b)
+{
+    const cv::Point2f d  = a.board_xy - b.board_xy;
+    const cv::Point2f ua = a.axis_board;
+    const cv::Point2f ub = b.axis_board;
+
+    // Hits without axis info (legacy / degenerate): isotropic fallback.
+    if (ua.dot(ua) < 0.25f || ub.dot(ub) < 0.25f)
+        return std::sqrt(d.dot(d)) <
+               3.f * (std::max(a.sigma_mm, 1.f) + std::max(b.sigma_mm, 1.f));
+
+    const float cap_a = slideCap(a);
+    const float cap_b = slideCap(b);
+    const float cross = ua.x * ub.y - ua.y * ub.x;
+
+    if (std::abs(cross) < 0.17f) {
+        // Near-parallel axes: project on the common axis; the perpendicular
+        // residual must be explained by the across-axis noise.
+        const float s     = d.dot(ua);
+        const cv::Point2f r = d - s * ua;
+        const float tol   = 3.f * (a.sigma_across_mm + b.sigma_across_mm);
+        return std::sqrt(r.dot(r)) <= tol && std::abs(s) <= cap_a + cap_b;
+    }
+
+    // d = s_a·ua − s_b·ub  →  exact 2×2 solve.
+    const float s_a = (d.x * (-ub.y) + ub.x * d.y) / (-cross);
+    const float s_b = (ua.x * d.y - ua.y * d.x)    / (-cross);
+    return std::abs(s_a) <= cap_a && std::abs(s_b) <= cap_b;
+}
+
 } // anon
 
 MultiCamFusion::MultiCamFusion(double window_seconds)
@@ -47,24 +115,18 @@ std::optional<FusedHit> MultiCamFusion::flush()
 
 std::optional<FusedHit> MultiCamFusion::confirm()
 {
-    // Indices of the cameras that voted in this window.
-    std::array<int, NUM_CAMS> idx{};
-    int n = 0;
-    for (int i = 0; i < NUM_CAMS; ++i)
-        if (pending_[i]) idx[n++] = i;
+    std::vector<DartHit> votes;
+    votes.reserve(NUM_CAMS);
+    for (auto& p : pending_)
+        if (p) votes.push_back(*p);
+    reset();
+    return fuseVotes(votes);
+}
 
-    if (n < MIN_CAMS_FOR_CONFIRM) {   // lone camera → unconfirmed, drop
-        reset();
-        return std::nullopt;
-    }
-
-    // Per-cam positional weight: inverse variance.  Used to combine AGREEING
-    // estimates within a cluster — there, a cam whose sigma says "I can place
-    // this tip within 1 mm" rightly outweighs a 5 mm cam 25:1.
-    auto posWeight = [](const DartHit& h) {
-        const float s = std::max(h.sigma_mm, 0.5f);
-        return 1.f / (s * s);
-    };
+std::optional<FusedHit> MultiCamFusion::fuseVotes(const std::vector<DartHit>& votes)
+{
+    const int n = static_cast<int>(votes.size());
+    if (n < MIN_CAMS_FOR_CONFIRM) return std::nullopt;
 
     // Off-board skepticism.  Tip mis-picks (axis overshoot, shadows, flights,
     // wrong-end selection) systematically land OUTWARD, past the rim; the
@@ -77,8 +139,8 @@ std::optional<FusedHit> MultiCamFusion::confirm()
                          h.board_xy.y * h.board_xy.y) > board::DOUBLE_OUTER;
     };
     bool any_onboard = false;
-    for (int a = 0; a < n; ++a)
-        if (!offBoard(*pending_[idx[a]])) any_onboard = true;
+    for (const auto& v : votes)
+        if (!offBoard(v)) any_onboard = true;
 
     constexpr float OFFBOARD_DOUBT = 0.15f;
 
@@ -100,6 +162,11 @@ std::optional<FusedHit> MultiCamFusion::confirm()
             (std::max(h.sigma_mm, 0.5f) * static_cast<float>(M_SQRT2)));
         float w = h.shape_q * (0.5f + 0.5f * rel);
         if (any_onboard && offBoard(h)) w *= OFFBOARD_DOUBT;
+        // Cross-cam support: peers that can see the claimed spot but show
+        // no foreground there make this detection a likely shadow/ghost.
+        if (h.support_peers > 0)
+            w *= 0.5f + 0.5f * static_cast<float>(h.support_cams) /
+                              static_cast<float>(h.support_peers);
         return w;
     };
 
@@ -111,12 +178,10 @@ std::optional<FusedHit> MultiCamFusion::confirm()
         return w;
     };
 
-    // Largest spatially-coherent cluster: for each vote count how many votes
-    // (incl. itself) lie within AGREEMENT_RADIUS_MM; the densest seeds it.
-    // Ties broken by the summed detection TRUST of the cluster: when cameras
-    // tell contradictory stories we must pick the one most likely to be a
-    // real dart, and a spurious detection (shadow, fragment) can be both
-    // pixel-precise and clear of wires while being plain wrong.
+    // Largest cluster of mutually-explainable votes, seeded greedily: for
+    // each vote count how many votes (incl. itself) are consistent with it
+    // under the anisotropic error models; the densest seeds it.  Ties broken
+    // by summed detection trust.
     int   best_seed   = -1;
     int   best_count  = 0;
     float best_seed_w = -1.f;
@@ -124,11 +189,9 @@ std::optional<FusedHit> MultiCamFusion::confirm()
         int   count = 0;
         float w_sum = 0.f;
         for (int b = 0; b < n; ++b) {
-            if (dist(pending_[idx[a]]->board_xy,
-                     pending_[idx[b]]->board_xy) > AGREEMENT_RADIUS_MM)
-                continue;
+            if (!consistent(votes[a], votes[b])) continue;
             ++count;
-            w_sum += seedTrust(*pending_[idx[b]]);
+            w_sum += seedTrust(votes[b]);
         }
         if (count > best_count ||
             (count == best_count && w_sum > best_seed_w)) {
@@ -137,54 +200,51 @@ std::optional<FusedHit> MultiCamFusion::confirm()
             best_seed_w = w_sum;
         }
     }
+    if (best_count < MIN_CAMS_FOR_CONFIRM) return std::nullopt;
 
-    if (best_count < MIN_CAMS_FOR_CONFIRM) {  // nothing usable, drop
-        reset();
-        return std::nullopt;
+    std::vector<int> members;
+    for (int b = 0; b < n; ++b)
+        if (consistent(votes[best_seed], votes[b])) members.push_back(b);
+
+    // ── Fused position: information-weighted least squares ────────────────
+    // Each camera contributes its inverse covariance; the solution is the
+    // point that best satisfies every cam's tight ACROSS-axis constraint —
+    // i.e. the crossing of the cams' axis lines.  A camera that slid 30 mm
+    // up its own shaft still pulls the solution onto its line sideways,
+    // exactly where its information actually is.
+    cv::Matx22f W_sum = cv::Matx22f::zeros();
+    cv::Vec2f   Wx_sum{0.f, 0.f};
+    for (int m : members) {
+        const cv::Matx22f W = covOf(votes[m]).inv();
+        W_sum  = W_sum + W;
+        Wx_sum = Wx_sum + W * cv::Vec2f(votes[m].board_xy.x,
+                                        votes[m].board_xy.y);
     }
+    const cv::Matx22f C_fused = W_sum.inv();
+    const cv::Vec2f   xv      = C_fused * Wx_sum;
+    const cv::Point2f centroid{xv[0], xv[1]};
 
-    // ── Fused position: inverse-variance weighted mean over the cluster ────
-    std::array<bool, NUM_CAMS> in_cluster{};
-    cv::Point2f weighted_sum{0.f, 0.f};
-    float       w_sum = 0.f;
-    for (int b = 0; b < n; ++b) {
-        if (dist(pending_[idx[best_seed]]->board_xy,
-                 pending_[idx[b]]->board_xy) > AGREEMENT_RADIUS_MM) continue;
-        in_cluster[idx[b]] = true;
-        const float w = posWeight(*pending_[idx[b]]);
-        weighted_sum.x += pending_[idx[b]]->board_xy.x * w;
-        weighted_sum.y += pending_[idx[b]]->board_xy.y * w;
-        w_sum          += w;
+    // Fused 1-sigma: worst direction of the fused covariance, inflated when
+    // the members' residuals exceed what their error models promised
+    // (mean Mahalanobis residual should be ≈ 2 for 2-dof observations).
+    const float tr   = C_fused(0,0) + C_fused(1,1);
+    const float det  = C_fused(0,0)*C_fused(1,1) - C_fused(0,1)*C_fused(1,0);
+    const float disc = std::sqrt(std::max(0.f, tr*tr - 4.f*det));
+    float sigma_fused = std::sqrt(std::max(0.25f, (tr + disc) * 0.5f));
+    if (members.size() >= 2) {
+        float r_sum = 0.f;
+        for (int m : members)
+            r_sum += mahaSq(votes[m].board_xy - centroid, covOf(votes[m]));
+        const float r_mean = r_sum / static_cast<float>(members.size());
+        if (r_mean > 2.f) sigma_fused *= std::sqrt(r_mean * 0.5f);
     }
-    const cv::Point2f centroid{weighted_sum.x / w_sum, weighted_sum.y / w_sum};
-
-    // Max pairwise spread within the cluster (parallax / agreement indicator).
-    float spread = 0.f;
-    for (int a = 0; a < NUM_CAMS; ++a) {
-        if (!in_cluster[a]) continue;
-        for (int b = a + 1; b < NUM_CAMS; ++b) {
-            if (!in_cluster[b]) continue;
-            spread = std::max(spread,
-                              dist(pending_[a]->board_xy, pending_[b]->board_xy));
-        }
-    }
-
-    // Fused sigma: 1/√Σw is the textbook combined uncertainty when the cams'
-    // errors are independent and honestly modelled.  When the observed spread
-    // exceeds what the sigmas predict, the model is too optimistic somewhere
-    // (calibration bias, wrong tip) — trust the evidence and inflate.
-    const float sigma_fused = std::max(1.f / std::sqrt(w_sum), spread * 0.5f);
 
     // ── Zone: probability-weighted vote ────────────────────────────────────
-    // Every cluster cam votes for its pixel-accurate label with its
-    // voteWeight (= confidence — P(label correct), wires, lens distortion and
-    // view angle priced in — times off-board doubt).  The fused centroid
-    // votes too, through the
-    // geometric lookup, weighted by ITS chance of being right — high when
-    // the cams agree tightly and the centroid sits clear of any boundary —
-    // and discounted because the homography projection ignores the real
-    // wires.  One confident well-placed camera therefore beats both a shaky
-    // camera AND a centroid that was dragged near a wire by parallax.
+    // Every member cam votes for its pixel-accurate label with its
+    // voteWeight.  The fused position votes too, through the geometric
+    // lookup — but ONLY when it comes from a genuine multi-cam crossing: a
+    // single-cam "centroid" is the same measurement twice and would just
+    // inflate that cam's own confidence.
     struct Cand {
         ZoneResult zr;
         float      weight   {0.f};   // Σ vote weights for this label
@@ -203,19 +263,27 @@ std::optional<FusedHit> MultiCamFusion::confirm()
         cands[n_cands++] = {zr, p, 1.f - p};
     };
 
-    for (int i = 0; i < NUM_CAMS; ++i)
-        if (in_cluster[i])
-            addVote({pending_[i]->zone, pending_[i]->score},
-                    voteWeight(*pending_[i]));
+    for (int m : members)
+        addVote({votes[m].zone, votes[m].score}, voteWeight(votes[m]));
 
-    {
-        constexpr float CENTROID_DISCOUNT = 0.75f;
+    // The crossing votes only to ARBITRATE between disagreeing label reads.
+    // When every member read the same zone off its pixel-accurate map, that
+    // unanimity outranks a geometric lookup at the fused point: near the
+    // bull a few mm of leftover calibration bias in the crossing must not
+    // override three agreeing cameras.
+    bool unanimous = true;
+    for (size_t i = 1; i < members.size(); ++i)
+        if (votes[members[i]].zone != votes[members[0]].zone)
+            unanimous = false;
+
+    if (members.size() >= 2 && !unanimous) {
+        constexpr float CROSSING_DISCOUNT = 0.9f;
         const ZoneResult zr_c     = ZoneMapper::lookup(centroid);
         const float      margin_c = ZoneMapper::boundaryMarginMM(centroid);
         const float      p_c      = std::erf(
             margin_c / (std::max(sigma_fused, 0.5f) *
                         static_cast<float>(M_SQRT2)));
-        addVote(zr_c, p_c * CENTROID_DISCOUNT);
+        addVote(zr_c, p_c * CROSSING_DISCOUNT);
     }
 
     const Cand* winner  = &cands[0];
@@ -239,11 +307,11 @@ std::optional<FusedHit> MultiCamFusion::confirm()
     f.board_xy   = centroid;
     f.sigma_mm   = sigma_fused;
     f.confidence = std::clamp(p_right * consensus, 0.f, 1.f);
-    f.timestamp  = first_ts_;
-    for (int i = 0; i < NUM_CAMS; ++i)
-        if (in_cluster[i]) f.per_cam[i] = *pending_[i];
-
-    reset();
+    f.timestamp  = votes[members.front()].timestamp;
+    for (int m : members) {
+        f.timestamp = std::min(f.timestamp, votes[m].timestamp);
+        f.per_cam[votes[m].cam_id] = votes[m];
+    }
     return f;
 }
 

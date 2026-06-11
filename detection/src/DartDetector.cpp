@@ -3,11 +3,59 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
 namespace camdetect {
 
 namespace {
+
+bool traceEnabled()
+{
+    static const bool on = [] {
+        const char* v = std::getenv("CAMDETECT_TRACE");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
+#define CAMTRACE(...) do { if (traceEnabled()) { \
+    std::fprintf(stderr, __VA_ARGS__); std::fputc('\n', stderr); } } while (0)
+
+/// CAMDETECT_DUMP=<dir> writes an annotated crop of every emitted hit there:
+/// mask edges (green), claimed dart region (blue), axis (yellow), tip (red).
+const char* dumpDir()
+{
+    static const char* dir = std::getenv("CAMDETECT_DUMP");
+    return (dir && dir[0]) ? dir : nullptr;
+}
+
+void dumpEmit(const cv::Mat& frame, const cv::Mat& mask,
+              const cv::Mat& region, const cv::Point2f& a,
+              const cv::Point2f& b, const cv::Point2f& tip,
+              int cam_id, double timestamp, const std::string& zone)
+{
+    const char* dir = dumpDir();
+    if (!dir) return;
+    cv::Mat vis = frame.clone();
+    if (!region.empty()) vis.setTo(cv::Scalar(255, 120, 0), region);
+    cv::Mat edges;
+    cv::morphologyEx(mask, edges, cv::MORPH_GRADIENT,
+                     cv::getStructuringElement(cv::MORPH_RECT, {3, 3}));
+    vis.setTo(cv::Scalar(0, 255, 0), edges);
+    cv::line(vis, a, b, {0, 255, 255}, 1, cv::LINE_AA);
+    cv::circle(vis, tip, 6, {0, 0, 255}, 2, cv::LINE_AA);
+
+    cv::Rect roi(cvRound(tip.x) - 220, cvRound(tip.y) - 220, 440, 440);
+    roi &= cv::Rect(0, 0, vis.cols, vis.rows);
+    char path[512];
+    std::snprintf(path, sizeof(path), "%s/f%04d_cam%d_%s.png", dir,
+                  static_cast<int>(timestamp * 30 + 0.5), cam_id,
+                  zone.c_str());
+    if (!roi.empty()) cv::imwrite(path, vis(roi));
+}
 
 constexpr float MIN_BLOB_AREA       =    80.f;
 constexpr float MAX_BLOB_AREA       = 40000.f;  // dart from close cam can be big
@@ -386,6 +434,7 @@ void DartDetector::refreshBackground()
 void DartDetector::reset()
 {
     stable_frames_           = 0;
+    candidate_gap_           = 0;
     quiet_frames_            = 0;
     jitter_sq_sum_           = 0.f;
     jitter_n_                = 0;
@@ -394,6 +443,7 @@ void DartDetector::reset()
     last_tip_pixel_          = {};
     last_viz_                = {};
     logged_tips_px_.clear();
+    committed_regions_.release();
     clean_frames_            = 0;
     human_seen_              = false;
     consecutive_small_       = 0;
@@ -407,6 +457,23 @@ void DartDetector::reset()
 bool DartDetector::boardLooksCleared() const
 {
     return warmup_done_ && clean_frames_ > CLEAN_FRAMES_FOR_RESET;
+}
+
+bool DartDetector::cumSupportValid() const
+{
+    return warmup_done_ && cum_mask_clean_ && !latest_cum_mask_.empty();
+}
+
+bool DartDetector::hasForegroundNear(const cv::Point2f& px,
+                                     float              radius_px) const
+{
+    if (latest_cum_mask_.empty()) return false;
+    const int r = cvRound(radius_px);
+    cv::Rect roi(cvRound(px.x) - r, cvRound(px.y) - r, 2 * r + 1, 2 * r + 1);
+    roi &= cv::Rect(0, 0, latest_cum_mask_.cols, latest_cum_mask_.rows);
+    if (roi.empty()) return false;
+    // A handful of speckle pixels shouldn't count as a witness.
+    return cv::countNonZero(latest_cum_mask_(roi)) >= 20;
 }
 
 std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
@@ -465,6 +532,12 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     const bool use_throw_bg = !throw_bg_lab_.empty();
     cv::Mat mask       = buildMask(use_throw_bg ? throw_bg_lab_ : bg_lab_);
     cv::Mat human_mask = use_throw_bg ? buildMask(bg_lab_) : mask;
+
+    // Keep the cumulative mask queryable by peers (cross-cam support).
+    // Flagged clean only once we know no human is occluding the board —
+    // set further down, after the huge-blob gating has run.
+    latest_cum_mask_ = human_mask;
+    cum_mask_clean_  = false;
 
     // The user-facing MASK view shows the dart-detection mask: that's the
     // cleaner per-throw view, and it's what determines BBs and tip picks.
@@ -609,6 +682,10 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     }
 
     if (huge_now) {
+        if (huge_contour && (static_cast<int>(timestamp * 30) % 30) == 0)
+            CAMTRACE("[trace] t=%.2f cam%d HUGE area=%.0f static=%d",
+                     timestamp, cam_id_,
+                     cv::contourArea(*huge_contour), static_big_frames_);
         human_seen_             = true;
         consecutive_small_      = 0;
         has_candidate_          = false;
@@ -625,15 +702,26 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     // total-fg high indefinitely — but if no single contour is human-sized,
     // there's clearly no person standing there.
     if (human_seen_) {
+        // Only chroma-divergent blobs count as "human still here".  After
+        // the player walks off, auto-exposure / shadow drift can leave a
+        // luma-only blob well above HUMAN_PRESENT_AREA for many seconds —
+        // without the artifact filter the detector waits forever and the
+        // whole next round is thrown away blind.
         float largest_now = 0.f;
-        for (const auto& c : human_contours)
-            largest_now = std::max(largest_now,
-                                   static_cast<float>(cv::contourArea(c)));
+        for (const auto& c : human_contours) {
+            const float area = static_cast<float>(cv::contourArea(c));
+            if (area <= HUMAN_PRESENT_AREA) continue;
+            if (isLightingArtifact(c))      continue;
+            largest_now = std::max(largest_now, area);
+        }
         const bool human_blob_present = (largest_now > HUMAN_PRESENT_AREA);
         if (human_blob_present) consecutive_small_ = 0;
         else                    ++consecutive_small_;
 
         if (consecutive_small_ < POST_HUMAN_QUIET_FRAMES) {
+            if ((static_cast<int>(timestamp * 30) % 30) == 0)
+                CAMTRACE("[trace] t=%.2f cam%d POST-HUMAN largest=%.0f small=%d",
+                         timestamp, cam_id_, largest_now, consecutive_small_);
             last_viz_.has_detection = false;
             last_viz_.state         = DetectorState::HumanBlob;
             return std::nullopt;
@@ -671,6 +759,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             lab.copyTo(bg_lab_);
             throw_bg_lab_.release();           // next round detects against the fresh bg
             logged_tips_px_.clear();
+            committed_regions_.release();
             stable_frames_          = 0;
             has_candidate_          = false;
             human_seen_             = false;
@@ -688,6 +777,9 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         human_seen_        = false;
         consecutive_small_ = 0;
     }
+
+    // No human in frame from here on — the cumulative mask is trustworthy.
+    cum_mask_clean_ = true;
 
     // ── Adaptive bg updates ────────────────────────────────────────────────
     //
@@ -710,16 +802,24 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         cv::accumulateWeighted(lab, throw_bg_lab_, BG_UPDATE_ALPHA, update_mask);
     }
 
-    const int fg_pixels = cv::countNonZero(mask);
+    // Board-clean must be judged against the EMPTY-BOARD reference
+    // (human_mask), never the per-throw mask: the latter goes blank right
+    // after every commit (the dart is burned into throw_bg_lab_), which
+    // would auto-reset the round after every single dart.  The cumulative
+    // mask keeps every dart of the throw visible until they are physically
+    // removed.
+    const int fg_pixels = cv::countNonZero(human_mask);
     if (fg_pixels < CLEAN_FG_PIXELS) ++clean_frames_;
     else                              clean_frames_ = 0;
+    last_viz_.fg_px_cumulative = fg_pixels;
+    last_viz_.clean_frames     = clean_frames_;
 
-    constexpr float LOGGED_MATCH_PX = 18.f;
     const std::vector<cv::Point>* best = nullptr;
     float                         best_area = 0.f;
     Endpoints                     best_ep{};
     cv::Point2f                   best_tip{}, best_board_xy{};
     cv::Point2f                   best_dir{};
+    cv::Mat                       best_region;
 
     // Union dart-band region across ALL elongated contours (including darts
     // we've already logged) so the debug UI can draw a hitbox around every
@@ -770,15 +870,23 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         const float r_mm = std::sqrt(board_xy.x*board_xy.x + board_xy.y*board_xy.y);
         if (r_mm > MAX_BOARD_RADIUS_MM) continue;
 
-        // Skip if this tip matches an already-logged dart
-        bool is_logged = false;
-        for (const auto& lt : logged_tips_px_) {
-            const cv::Point2f d = tip - lt;
-            if (d.x*d.x + d.y*d.y < LOGGED_MATCH_PX*LOGGED_MATCH_PX) {
-                is_logged = true; break;
+        // Ghost check against the committed darts' individual regions.  A
+        // tip-distance test can't work here: players aim at one spot, so a
+        // real second dart can land 10-15 mm from the first.  What separates
+        // a new dart from a ghost (committed dart settling / lighting shift)
+        // is WHERE its mask pixels live: a ghost's region lies almost
+        // entirely on top of the committed region, a new dart's is mostly
+        // fresh material.
+        if (!committed_regions_.empty()) {
+            const int cand_px = cv::countNonZero(scratch_region);
+            if (cand_px > 0) {
+                cv::Mat overlap;
+                cv::bitwise_and(scratch_region, committed_regions_, overlap);
+                const float frac = static_cast<float>(cv::countNonZero(overlap)) /
+                                   static_cast<float>(cand_px);
+                if (frac > GHOST_OVERLAP_FRAC) continue;
             }
         }
-        if (is_logged) continue;
 
         if (area > best_area) {
             best          = &c;
@@ -787,6 +895,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             best_tip      = tip;
             best_board_xy = board_xy;
             best_dir      = dir;
+            best_region   = scratch_region.clone();
         }
     }
 
@@ -798,11 +907,16 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
 
     if (!best) {
         ++quiet_frames_;
-        has_candidate_ = false;
-        stable_frames_ = 0;
+        // Keep the stability window alive through short mask dropouts.
+        if (!has_candidate_ || ++candidate_gap_ > CANDIDATE_GAP_GRACE) {
+            has_candidate_ = false;
+            stable_frames_ = 0;
+            candidate_gap_ = 0;
+        }
         return std::nullopt;
     }
-    quiet_frames_ = 0;
+    quiet_frames_  = 0;
+    candidate_gap_ = 0;
     last_viz_.state = DetectorState::Normal;
 
     // Tail = the other endpoint
@@ -849,6 +963,21 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     logged_tips_px_.push_back(best_tip);
     if (static_cast<int>(logged_tips_px_.size()) > MAX_LOGGED_TIPS)
         logged_tips_px_.erase(logged_tips_px_.begin());
+
+    // Record this dart's individual region (dilated) so later frames can
+    // tell its ghosts apart from a genuinely new dart landing next to it.
+    if (!best_region.empty()) {
+        cv::Mat dilated;
+        const cv::Mat ker = cv::getStructuringElement(
+            cv::MORPH_ELLIPSE,
+            {2 * COMMITTED_REGION_DILATE_PX + 1,
+             2 * COMMITTED_REGION_DILATE_PX + 1});
+        cv::dilate(best_region, dilated, ker);
+        if (committed_regions_.empty())
+            committed_regions_ = dilated;
+        else
+            cv::bitwise_or(committed_regions_, dilated, committed_regions_);
+    }
     stable_frames_ = 0;
     has_candidate_ = false;
     const float jitter_sq_sum = jitter_sq_sum_;   // consumed by the confidence
@@ -937,6 +1066,48 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
                     (std::max(sigma_mm, 0.5f) * static_cast<float>(M_SQRT2));
     const float zone_reliability = std::erf(z);
 
+    // ── Anisotropic error model ────────────────────────────────────────────
+    // Across the dart's image axis the tip is pinned by the axis fit
+    // (~BASE_TIP_NOISE_PX); along it, mask truncation can slide the estimate
+    // tens of pixels up the shaft, the more so the worse the silhouette.
+    // Propagate both directions through the local homography Jacobian.
+    cv::Point2f hit_axis_board{0.f, 1.f};
+    float       hit_sigma_along_mm  = 25.f;
+    float       hit_sigma_across_mm = 3.f;
+    {
+        cv::Point2f dir_img = best_dir;
+        const float n = std::sqrt(dir_img.x*dir_img.x + dir_img.y*dir_img.y);
+        if (n > 1e-6f) dir_img *= 1.f / n;
+        const cv::Point2f perp_img{-dir_img.y, dir_img.x};
+
+        const cv::Matx22f J = calib_.localJacobian(best_tip);
+        const cv::Vec2f along_b  = J * cv::Vec2f(dir_img.x,  dir_img.y);
+        const cv::Vec2f across_b = J * cv::Vec2f(perp_img.x, perp_img.y);
+        const float along_scale  = std::sqrt(along_b.dot(along_b));
+        const float across_scale = std::sqrt(across_b.dot(across_b));
+
+        constexpr float ALONG_BASE_PX  = 12.f;  // irreducible truncation risk
+        constexpr float ALONG_SHAPE_PX = 40.f;  // worst-case extra when blobby
+        const float sigma_along_px =
+            ALONG_BASE_PX + jitter_px + (1.f - shape_q) * ALONG_SHAPE_PX;
+        const float sigma_across_px = BASE_TIP_NOISE_PX + jitter_px;
+
+        if (along_scale > 1e-6f)
+            hit_axis_board = {along_b[0] / along_scale,
+                              along_b[1] / along_scale};
+
+        hit_sigma_along_mm  = std::max(2.f,
+            (along_scale  > 0.f ? along_scale  : scale[1]) * sigma_along_px);
+        // Floor at the residual calibration bias: even a perfect axis fit
+        // doesn't place the board-space line better than the homography
+        // does, and crossing two lines AMPLIFIES any offset between them.
+        hit_sigma_across_mm = std::max(2.5f,
+            (across_scale > 0.f ? across_scale : scale[0]) * sigma_across_px);
+    }
+
+    dumpEmit(frame, mask, best_region, best_ep.a, best_ep.b, best_tip,
+             cam_id_, timestamp, zr.label);
+
     DartHit hit{};
     hit.cam_id          = cam_id_;
     hit.board_xy        = best_board_xy;
@@ -949,6 +1120,9 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     hit.view_q          = std::clamp(DEFAULT_MM_PER_PX / scale[1], 0.f, 1.f);
     hit.confidence      = std::clamp(zone_reliability * shape_q, 0.01f, 1.f);
     hit.timestamp       = timestamp;
+    hit.axis_board      = hit_axis_board;
+    hit.sigma_along_mm  = hit_sigma_along_mm;
+    hit.sigma_across_mm = hit_sigma_across_mm;
     return hit;
 }
 

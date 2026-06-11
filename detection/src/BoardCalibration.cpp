@@ -23,9 +23,9 @@ cv::Point2f BoardCalibration::boardToImage(const cv::Point2f& p) const
     return out.front();
 }
 
-cv::Vec2f BoardCalibration::localScaleMmPerPx(const cv::Point2f& px) const
+cv::Matx22f BoardCalibration::localJacobian(const cv::Point2f& px) const
 {
-    if (homography_img_to_board.empty()) return {0.f, 0.f};
+    if (homography_img_to_board.empty()) return cv::Matx22f::zeros();
 
     // Central differences with a 2 px step — large enough to be numerically
     // clean on a CV_64F homography, small enough to stay local.
@@ -41,6 +41,15 @@ cv::Vec2f BoardCalibration::localScaleMmPerPx(const cv::Point2f& px) const
     const float c = (out[0].y - out[1].y) / (2.f * H);   // dYb/dxi
     const float b = (out[2].x - out[3].x) / (2.f * H);   // dXb/dyi
     const float d = (out[2].y - out[3].y) / (2.f * H);   // dYb/dyi
+    return {a, b,
+            c, d};
+}
+
+cv::Vec2f BoardCalibration::localScaleMmPerPx(const cv::Point2f& px) const
+{
+    if (homography_img_to_board.empty()) return {0.f, 0.f};
+    const cv::Matx22f J = localJacobian(px);
+    const float a = J(0,0), b = J(0,1), c = J(1,0), d = J(1,1);
 
     // Singular values of [[a,b],[c,d]] via the eigenvalues of JᵀJ.
     const float tr  = a*a + b*b + c*c + d*d;

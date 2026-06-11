@@ -34,6 +34,13 @@ struct BoardCalibration {
     /// conversion for distances.  Returns {0,0} when not calibrated.
     cv::Vec2f localScaleMmPerPx(const cv::Point2f& px) const;
 
+    /// Full 2×2 Jacobian d(board_mm)/d(pixel) at @p px, by central finite
+    /// differences.  Maps a small pixel-space displacement to its board-space
+    /// displacement — the directional version of localScaleMmPerPx, needed to
+    /// propagate an anisotropic tip error (large along the dart's image axis,
+    /// small across it) into board coordinates.  Zero matrix when invalid.
+    cv::Matx22f localJacobian(const cv::Point2f& px) const;
+
     bool saveToFile(const std::string& path) const;
     bool loadFromFile(const std::string& path);
 };

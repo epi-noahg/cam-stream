@@ -129,6 +129,18 @@ int main(int argc, char* argv[])
         r.confidence = h.confidence;
         hits.push_back(std::move(r));
     });
+    // Late votes can refine an already-emitted hit (same timestamp): amend
+    // the recorded entry so the assertion sees the final zone, exactly as a
+    // live scoreboard would correct itself.
+    pipeline.setOnHitUpdated([&](const FusedHit& h) {
+        const int frame = static_cast<int>(h.timestamp * fps + 0.5);
+        for (auto& r : hits) {
+            if (r.frame != frame) continue;
+            r.zone       = h.zone;
+            r.score      = h.score;
+            r.confidence = h.confidence;
+        }
+    });
 
     // ── Replay with the spec's per-cam offsets, master-clock timestamps ─────
     int min_total_frames = INT32_MAX;

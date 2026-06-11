@@ -50,6 +50,11 @@ struct DetectorViz {
     cv::Mat                  dart_region;
     std::vector<cv::Point2f> logged_tips_px;
     DetectorState            state        {DetectorState::Warmup};
+    /// Diagnostics for the round-reset logic: foreground pixel count against
+    /// the empty-board reference, and how many consecutive frames it has
+    /// been below the clean threshold.
+    int                      fg_px_cumulative {0};
+    int                      clean_frames     {0};
 };
 
 /// A dart hit reported by one camera, in board coordinates (mm).
@@ -85,6 +90,26 @@ struct DartHit {
     float       view_q          {0.f};
     float       confidence      {0.f};
     double      timestamp {0.0};
+
+    /// Anisotropic error model of board_xy, for fusion.  Tip mislocalisation
+    /// is dominated by mask truncation ALONG the dart's image axis (the part
+    /// of the dart crossing dark sectors drops out of the mask, so the tip
+    /// estimate slides up the shaft) while the axis fit nails the
+    /// PERPENDICULAR direction to a couple of pixels.  Propagated to board
+    /// space, each camera therefore constrains the tip tightly across
+    /// `axis_board` and loosely along it; crossing several cameras'
+    /// constraints recovers the precise point even when each individual
+    /// estimate slid along its own axis.
+    cv::Point2f axis_board      {0.f, 0.f};  // unit vector, tip→tail
+    float       sigma_along_mm  {25.f};
+    float       sigma_across_mm {3.f};
+
+    /// Cross-camera support: a dart physically present at board_xy must show
+    /// up as foreground in the OTHER cams' cumulative masks at the projected
+    /// pixel; a shadow / reflection / ghost detection has no such backing.
+    /// Filled by Pipeline (the detector can't see its peers).
+    int         support_cams  {0};   // peers with foreground at the spot
+    int         support_peers {0};   // peers whose mask was usable
 };
 
 /// The single hit obtained by fusing votes from all cameras.
