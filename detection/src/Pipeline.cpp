@@ -6,21 +6,6 @@ namespace camdetect {
 
 namespace {
 
-// Centroid of the per-cam projections inside a FusedHit (skips empty slots).
-cv::Point2f fusedCentroid(const FusedHit& h)
-{
-    cv::Point2f sum{0.f, 0.f};
-    int n = 0;
-    for (int i = 0; i < NUM_CAMS; ++i) {
-        if (h.per_cam[i].cam_id < 0) continue;
-        sum.x += h.per_cam[i].board_xy.x;
-        sum.y += h.per_cam[i].board_xy.y;
-        ++n;
-    }
-    if (n == 0) return {0.f, 0.f};
-    return {sum.x / n, sum.y / n};
-}
-
 int fusedVoteCount(const FusedHit& h)
 {
     int n = 0;
@@ -101,7 +86,7 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
                 // dropped — addresses the "wrong cam wins because it
                 // emitted first" pathology.
                 bool is_dup            = false;
-                const cv::Point2f cur  = fusedCentroid(*fused);
+                const cv::Point2f cur  = fused->board_xy;
                 const int new_votes    = fusedVoteCount(*fused);
                 const float new_conf   = fused->confidence;
                 for (auto& prev : round_hits_) {
@@ -121,7 +106,7 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
                         break;
                     }
 
-                    const cv::Point2f p  = fusedCentroid(prev);
+                    const cv::Point2f p  = prev.board_xy;
                     const float       dx = cur.x - p.x;
                     const float       dy = cur.y - p.y;
                     const float       d2 = dx * dx + dy * dy;

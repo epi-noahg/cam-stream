@@ -64,7 +64,20 @@ int main(int argc, char* argv[])
         std::cout << "[hit] t=" << h.timestamp
                   << " zone=" << h.zone
                   << " score=" << h.score
-                  << " conf=" << h.confidence << '\n';
+                  << " conf=" << h.confidence
+                  << " sigma=" << h.sigma_mm << "mm\n";
+        for (const auto& c : h.per_cam) {
+            if (c.cam_id < 0) continue;
+            std::cout << "      cam" << c.cam_id
+                      << " zone=" << c.zone
+                      << " conf=" << c.confidence
+                      << " sigma=" << c.sigma_mm << "mm"
+                      << " margin=" << c.zone_margin_mm << "mm"
+                      << " shape=" << c.shape_q
+                      << " view=" << c.view_q
+                      << " tip=(" << c.tip_pixel.x << ',' << c.tip_pixel.y << ')'
+                      << " mm=(" << c.board_xy.x << ',' << c.board_xy.y << ")\n";
+        }
     });
 
     // Simple round-robin replay; deeper sync (timestamps from PTS) once needed.

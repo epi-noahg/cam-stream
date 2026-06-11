@@ -1,5 +1,7 @@
 #include "camdetect/ZoneMap.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <map>
 #include <opencv2/imgcodecs.hpp>
@@ -76,6 +78,36 @@ ZoneResult ZoneMap::lookup(const cv::Point2f& px) const
         x < 0 || y < 0 || x >= labels_.cols || y >= labels_.rows)
         return {"MISS", 0};
     return idToResult(labels_.at<uint16_t>(y, x));
+}
+
+float ZoneMap::boundaryDistancePx(const cv::Point2f& px,
+                                  float max_search_px) const
+{
+    const int cx = cvRound(px.x);
+    const int cy = cvRound(px.y);
+    if (labels_.empty() ||
+        cx < 0 || cy < 0 || cx >= labels_.cols || cy >= labels_.rows)
+        return max_search_px;
+
+    const uint16_t center = labels_.at<uint16_t>(cy, cx);
+    const int      R      = static_cast<int>(std::ceil(max_search_px));
+    const int x0 = std::max(0, cx - R), x1 = std::min(labels_.cols - 1, cx + R);
+    const int y0 = std::max(0, cy - R), y1 = std::min(labels_.rows - 1, cy + R);
+
+    // One dart per call — a brute-force window scan (~(2R)² label reads) is
+    // plenty fast and has no failure modes.
+    float best2 = max_search_px * max_search_px;
+    for (int y = y0; y <= y1; ++y) {
+        const auto* row = labels_.ptr<uint16_t>(y);
+        const float dy  = static_cast<float>(y - cy);
+        for (int x = x0; x <= x1; ++x) {
+            if (row[x] == center) continue;
+            const float dx = static_cast<float>(x - cx);
+            const float d2 = dx * dx + dy * dy;
+            if (d2 < best2) best2 = d2;
+        }
+    }
+    return std::sqrt(best2);
 }
 
 bool ZoneMap::saveToFile(const std::string& png_path) const

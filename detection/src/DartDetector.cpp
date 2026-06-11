@@ -387,6 +387,8 @@ void DartDetector::reset()
 {
     stable_frames_           = 0;
     quiet_frames_            = 0;
+    jitter_sq_sum_           = 0.f;
+    jitter_n_                = 0;
     has_candidate_           = false;
     emitted_                 = false;
     last_tip_pixel_          = {};
@@ -814,14 +816,25 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     last_viz_.board_xy      = best_board_xy;
     last_viz_.has_detection = true;
 
-    // Stability tracking
+    // Stability tracking.  The accumulated per-frame tip movement over the
+    // stable window doubles as a measured pixel-noise estimate for the
+    // confidence model below.
     if (has_candidate_) {
         const cv::Point2f d = best_tip - last_tip_pixel_;
         const float movement = std::sqrt(d.x*d.x + d.y*d.y);
-        if (movement < TIP_STABILITY_PX) ++stable_frames_;
-        else                              stable_frames_ = 1;
+        if (movement < TIP_STABILITY_PX) {
+            ++stable_frames_;
+            jitter_sq_sum_ += movement * movement;
+            ++jitter_n_;
+        } else {
+            stable_frames_ = 1;
+            jitter_sq_sum_ = 0.f;
+            jitter_n_      = 0;
+        }
     } else {
         stable_frames_ = 1;
+        jitter_sq_sum_ = 0.f;
+        jitter_n_      = 0;
     }
     last_tip_pixel_ = best_tip;
     has_candidate_  = true;
@@ -838,6 +851,10 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         logged_tips_px_.erase(logged_tips_px_.begin());
     stable_frames_ = 0;
     has_candidate_ = false;
+    const float jitter_sq_sum = jitter_sq_sum_;   // consumed by the confidence
+    const int   jitter_n      = jitter_n_;        // model below, then cleared
+    jitter_sq_sum_ = 0.f;
+    jitter_n_      = 0;
 
     // ── Snap the ENTIRE board into throw_bg_lab_ ──────────────────────────
     // The whole-frame snap goes to throw_bg_lab_ (used only for new-dart
@@ -852,38 +869,86 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     static_big_frames_     = 0;
     has_prev_big_centroid_ = false;
 
-    // ── Confidence: based on dart-shape quality, NOT board radius ─────────
-    // The old `1 - r/2R` formula systematically rewarded cams whose tip
-    // projected nearer to the bullseye — even when the tip was wrong (e.g.
-    // wrong endpoint picked, or dart still mid-flight with a long streak).
+    // ── Confidence model ───────────────────────────────────────────────────
+    // The per-cam confidence is an estimate of P(this cam's zone label is
+    // correct), assembled from three independent observations:
     //
-    //   aspect_q   ∝ length / mid-width — penalises blob-like masks
-    //   tip_sharp  ∝ 1 - tip-width / mid-width — penalises blunt or noisy ends
+    //  1. SHAPE — is the mask actually dart-like?
+    //       aspect_q  ∝ length / mid-width   (penalises blob-like masks)
+    //       tip_sharp ∝ 1 - tip-width / mid-width  (penalises blunt ends —
+    //                   typically a wrong-endpoint pick or an end-on view)
     //
-    // A real dart at rest sits at aspect ~6-12 and tip much narrower than mid
-    // → near 1.0.  A mid-flight or fragment-shaped mask → much lower.
+    //  2. GEOMETRY — how well-placed is this camera for THIS board spot?
+    //     The local homography Jacobian at the tip converts pixel error to
+    //     board error: a head-on cam sits at ~0.5 mm/px everywhere, a
+    //     grazing-angle cam can exceed 3 mm/px in its depth direction.
+    //     Combined with the measured tip jitter this yields sigma_mm, the
+    //     1-sigma positional uncertainty of board_xy.  Shape doubt inflates
+    //     it further (a blobby mask means the tip itself is suspect, beyond
+    //     frame-to-frame jitter).
+    //
+    //  3. MARGIN — how far is the tip from the nearest wire?  Pixel-accurate
+    //     via the ZoneMap when available (lens distortion included),
+    //     geometric otherwise.
+    //
+    // confidence = erf(margin / (sigma·√2)) — the probability that a Gaussian
+    // positional error of sigma_mm leaves the zone label unchanged —
+    // attenuated by shape_q.  A cam that sees the dart perfectly AND from a
+    // good angle AND well clear of wires scores ~1; any weak link drags it
+    // down proportionally.
     const float length  = static_cast<float>(cv::norm(best_ep.a - best_ep.b));
     const float w_mid   = std::max(1.f, best_ep.width_mid);
     const float aspect  = length / w_mid;
     const bool  a_was_tip = (best_tip.x == best_ep.a.x &&
                              best_tip.y == best_ep.a.y);
     const float tip_w   = a_was_tip ? best_ep.width_a : best_ep.width_b;
-    const float aspect_q   = std::clamp(aspect / 8.f,            0.3f, 1.f);
-    const float tip_sharp  = std::clamp(1.f - tip_w / w_mid,     0.3f, 1.f);
+    const float aspect_q   = std::clamp(aspect / 8.f,            0.2f, 1.f);
+    const float tip_sharp  = std::clamp(1.f - tip_w / w_mid,     0.2f, 1.f);
+    const float shape_q    = std::clamp(aspect_q * tip_sharp,    0.05f, 1.f);
+
+    // Local mm-per-pixel scale at the tip ({min, max} singular values).
+    constexpr float DEFAULT_MM_PER_PX = 0.6f;   // ~uncalibrated fallback
+    cv::Vec2f scale = calib_.localScaleMmPerPx(best_tip);
+    if (scale[1] <= 0.f) scale = {DEFAULT_MM_PER_PX, DEFAULT_MM_PER_PX};
+
+    // Measured tip noise: RMS frame-to-frame movement over the stable window
+    // plus an irreducible localisation floor (mask quantisation, blur).
+    constexpr float BASE_TIP_NOISE_PX = 1.5f;
+    const float jitter_px =
+        jitter_n > 0 ? std::sqrt(jitter_sq_sum / jitter_n) : 0.f;
+    const float sigma_mm =
+        scale[1] * (BASE_TIP_NOISE_PX + jitter_px) * (2.f - shape_q);
 
     // Pixel-accurate zone map beats the homography projection when present:
     // the label is read at the tip pixel itself, so wires / fisheye are
-    // already accounted for.
-    const ZoneResult zr = zone_map_.empty()
-        ? ZoneMapper::lookup(best_board_xy)
-        : zone_map_.lookup(best_tip);
+    // already accounted for.  Same source for the margin; px→mm uses the
+    // conservative (min) scale.
+    ZoneResult zr;
+    float      zone_margin_mm;
+    if (!zone_map_.empty()) {
+        zr             = zone_map_.lookup(best_tip);
+        zone_margin_mm = zone_map_.boundaryDistancePx(best_tip) * scale[0];
+    } else {
+        zr             = ZoneMapper::lookup(best_board_xy);
+        zone_margin_mm = ZoneMapper::boundaryMarginMM(best_board_xy);
+    }
+
+    const float z = zone_margin_mm /
+                    (std::max(sigma_mm, 0.5f) * static_cast<float>(M_SQRT2));
+    const float zone_reliability = std::erf(z);
+
     DartHit hit{};
-    hit.cam_id     = cam_id_;
-    hit.board_xy   = best_board_xy;
-    hit.zone       = zr.label;
-    hit.score      = zr.value;
-    hit.confidence = std::clamp(aspect_q * tip_sharp, 0.3f, 1.f);
-    hit.timestamp  = timestamp;
+    hit.cam_id          = cam_id_;
+    hit.board_xy        = best_board_xy;
+    hit.tip_pixel       = best_tip;
+    hit.zone            = zr.label;
+    hit.score           = zr.value;
+    hit.sigma_mm        = sigma_mm;
+    hit.zone_margin_mm  = zone_margin_mm;
+    hit.shape_q         = shape_q;
+    hit.view_q          = std::clamp(DEFAULT_MM_PER_PX / scale[1], 0.f, 1.f);
+    hit.confidence      = std::clamp(zone_reliability * shape_q, 0.01f, 1.f);
+    hit.timestamp       = timestamp;
     return hit;
 }
 

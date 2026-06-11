@@ -23,6 +23,17 @@ struct BoardCalibration {
     cv::Point2f imageToBoard(const cv::Point2f& p) const;
     cv::Point2f boardToImage(const cv::Point2f& p) const;
 
+    /// Local image→board scale at pixel @p px: the {min, max} singular values
+    /// of the 2×2 Jacobian of the homography mapping, in mm per pixel
+    /// (computed by central finite differences).
+    ///
+    /// `max` answers "how many mm does board_xy move for 1 px of tip error in
+    /// the worst direction" — large for cameras seeing the board at a grazing
+    /// angle, so it directly quantifies viewing-geometry quality at that spot.
+    /// `min` is the best-direction scale, useful as a conservative px→mm
+    /// conversion for distances.  Returns {0,0} when not calibrated.
+    cv::Vec2f localScaleMmPerPx(const cv::Point2f& px) const;
+
     bool saveToFile(const std::string& path) const;
     bool loadFromFile(const std::string& path);
 };

@@ -70,6 +70,8 @@ private:
 
     int                               stable_frames_  {0};
     int                               quiet_frames_   {0};
+    float                             jitter_sq_sum_  {0.f};  // Σ movement² over the stable window
+    int                               jitter_n_       {0};
     cv::Point2f                       last_tip_pixel_ {};
     bool                              has_candidate_  {false};
     bool                              emitted_        {false};   // suppress dupes

@@ -49,6 +49,13 @@ public:
     /// Zone at an image pixel.  Out-of-bounds → MISS.
     ZoneResult lookup(const cv::Point2f& px) const;
 
+    /// Distance (px) from @p px to the nearest pixel with a DIFFERENT zone
+    /// id — i.e. how far the tip sits from the closest wire, as seen by this
+    /// camera, lens distortion included.  Capped at @p max_search_px (also
+    /// returned when the map is empty or @p px is out of bounds).
+    float boundaryDistancePx(const cv::Point2f& px,
+                             float max_search_px = 40.f) const;
+
     bool saveToFile(const std::string& png_path) const;
     bool loadFromFile(const std::string& png_path);
 

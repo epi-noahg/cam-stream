@@ -53,12 +53,37 @@ struct DetectorViz {
 };
 
 /// A dart hit reported by one camera, in board coordinates (mm).
+///
+/// Beyond the position and label, each hit carries an honest estimate of how
+/// trustworthy this camera's observation is, so fusion can weight cameras by
+/// what they actually see instead of treating them as equals:
+///
+///   sigma_mm   1-sigma positional uncertainty of board_xy.  Derived from the
+///              local homography scale at the tip pixel (a grazing-angle cam
+///              maps 1 px of tip error to many mm of board error), the tip
+///              jitter observed during the stability window, and the shape
+///              quality.  Small sigma == this camera has a good view of THIS
+///              dart at THIS spot.
+///   zone_margin_mm  distance from the tip to the nearest scoring boundary
+///              (wire / ring edge).  A dart in the middle of single-20 keeps
+///              its label even with 5 mm of error; one grazing a wire doesn't.
+///   shape_q    silhouette quality [0..1]: elongation + tip sharpness.  Low
+///              when the mask is blob-like, fragmented or seen end-on.
+///   view_q     viewing-geometry quality [0..1] at the tip (informational;
+///              already folded into sigma_mm).
+///   confidence P(zone label is correct) ~= erf(margin / (sigma*sqrt(2)))
+///              attenuated by shape_q.  THE per-cam score used for voting.
 struct DartHit {
     int         cam_id    {-1};
     cv::Point2f board_xy  {};        // mm, origin = bullseye, +y = sector 20
+    cv::Point2f tip_pixel {};        // tip in image coordinates
     std::string zone      {};        // "T20", "D5", "20", "Bull", "25", "MISS"
     int         score     {0};
-    float       confidence{0.f};
+    float       sigma_mm        {10.f};
+    float       zone_margin_mm  {0.f};
+    float       shape_q         {0.f};
+    float       view_q          {0.f};
+    float       confidence      {0.f};
     double      timestamp {0.0};
 };
 
@@ -67,6 +92,8 @@ struct FusedHit {
     std::string                           zone;
     int                                   score      {0};
     float                                 confidence {0.f};
+    cv::Point2f                           board_xy   {};   // fused position, mm
+    float                                 sigma_mm   {10.f}; // fused 1-sigma, mm
     std::array<DartHit, NUM_CAMS>         per_cam    {};
     double                                timestamp  {0.0};
 };

@@ -51,19 +51,6 @@ float pairwiseSpread(const FusedHit& h)
     return spread;
 }
 
-cv::Point2f fusedCentroid(const FusedHit& h)
-{
-    cv::Point2f sum{0.f, 0.f};
-    int n = 0;
-    for (int i = 0; i < NUM_CAMS; ++i) {
-        if (h.per_cam[i].cam_id < 0) continue;
-        sum += cv::Point2f(h.per_cam[i].board_xy.x, h.per_cam[i].board_xy.y);
-        ++n;
-    }
-    if (n == 0) return {0.f, 0.f};
-    return {sum.x / n, sum.y / n};
-}
-
 // Aspect-fit `src` into `dst_roi` of `out`.  Letterboxes with `pad_col`.
 void blitAspectFit(cv::Mat& out, const cv::Rect& dst_roi, const cv::Mat& src,
                    const cv::Scalar& pad_col)
@@ -451,7 +438,7 @@ void DebugUI::composite(cv::Mat& out) const
     for (size_t i = 0; i < round_hits_.size(); ++i) {
         const auto& h = round_hits_[i];
         const cv::Scalar col = DART_COLORS[std::min<size_t>(i, 2)];
-        const cv::Point2f xy = fusedCentroid(h);
+        const cv::Point2f xy = h.board_xy;
         const std::string lbl = "#" + std::to_string(i + 1) + " " + h.zone;
         Renderer::drawHitOnCanonical(board, xy, col, lbl);
         if (static_cast<int>(i) == best_idx) {
@@ -594,7 +581,8 @@ void DebugUI::composite(cv::Mat& out) const
         std::ostringstream s;
         s << "  #" << (i + 1) << "  " << h.zone
           << "   c=" << std::fixed << std::setprecision(2) << h.confidence
-          << "  sp=" << std::setprecision(1) << pairwiseSpread(h) << "mm";
+          << "  s=" << std::setprecision(1) << h.sigma_mm << "mm"
+          << "  sp=" << pairwiseSpread(h) << "mm";
         putLine(s.str(), col);
     }
     if (round_hits_.empty()) putLine("  (waiting...)", TEXT_FAINT);

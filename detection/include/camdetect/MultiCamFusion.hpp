@@ -15,6 +15,14 @@ namespace camdetect {
 /// in a window, clusters them spatially, and confirms a fused hit once at
 /// least MIN_CAMS_FOR_CONFIRM cameras have voted.
 ///
+/// Fusion is uncertainty-weighted end to end: the position is the
+/// inverse-variance mean of the per-cam estimates (each cam's sigma_mm
+/// encodes its viewing angle, tip jitter and shape quality), and the zone is
+/// a probability-weighted vote between the cams' pixel-accurate labels and
+/// the geometric lookup at the fused centroid.  A camera with a clean,
+/// well-angled view of the dart therefore dominates one squinting along the
+/// dart's axis, instead of all cams counting equally.
+///
 /// Policy: a single camera vote is sufficient to emit (with lower confidence).
 /// We still wait out the window in case other cameras catch the same dart a
 /// few frames later — but if they don't, we commit with what we have.
