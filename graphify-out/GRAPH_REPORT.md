@@ -1,7 +1,7 @@
 # Graph Report - /Users/noahg/github/cam-stream  (2026-06-13)
 
 ## Corpus Check
-- 49 files · ~108,280 words
+- 49 files · ~112,923 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -51,8 +51,8 @@
   /Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp → /Users/noahg/github/cam-stream/detection/src/Pipeline.cpp
 - `main()` --calls--> `setLineMergePerpPx()`  [INFERRED]
   /Users/noahg/github/cam-stream/detection/tools/debug_viewer.cpp → /Users/noahg/github/cam-stream/detection/src/Pipeline.cpp
-- `processFrame()` --calls--> `boundaryDistancePx()`  [INFERRED]
-  /Users/noahg/github/cam-stream/detection/src/DartDetector.cpp → /Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp
+- `boundaryDistancePx()` --calls--> `processFrame()`  [INFERRED]
+  /Users/noahg/github/cam-stream/detection/src/ZoneMap.cpp → /Users/noahg/github/cam-stream/detection/src/DartDetector.cpp
 - `detectAuto()` --calls--> `run()`  [INFERRED]
   /Users/noahg/github/cam-stream/detection/src/BoardCalibrator.cpp → /Users/noahg/github/cam-stream/detection/src/AutoCalibrator.cpp
 
