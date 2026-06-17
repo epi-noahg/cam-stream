@@ -116,6 +116,9 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
                                    {"status", g.status},
                                    {"winnerId", g.winnerId.has_value()
                                         ? json(*g.winnerId) : json(nullptr)},
+                                   {"winnerNickname", g.winnerNickname},
+                                   {"players", g.players},
+                                   {"startingScore", g.startingScore},
                                    {"finishedAt", g.finishedAt}});
             ws_.sendTo(id, json{{"type", "history"}, {"games", arr}}.dump());
         } else {

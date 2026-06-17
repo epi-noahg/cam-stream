@@ -46,6 +46,9 @@ struct GameSummary {
     std::string mode;
     std::string status;
     std::optional<int> winnerId;
+    std::string winnerNickname;
+    std::string players;        ///< participant nicknames, comma-separated
+    int         startingScore {0};
     std::string finishedAt;
 };
 

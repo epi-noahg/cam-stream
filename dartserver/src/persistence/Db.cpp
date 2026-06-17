@@ -325,8 +325,13 @@ std::vector<GameSummary> Db::recentGames(int limit) {
     std::vector<GameSummary> out;
     sqlite3_stmt* st = nullptr;
     if (sqlite3_prepare_v2(db_,
-        "SELECT id,mode,status,winnerId,COALESCE(finishedAt,'') "
-        "FROM game ORDER BY id DESC LIMIT ?;", -1, &st, nullptr) == SQLITE_OK) {
+        "SELECT g.id, g.mode, g.status, g.winnerId, COALESCE(g.finishedAt,''), "
+        "       COALESCE(w.nickname,''), COALESCE(g.startingScore,0), "
+        "       (SELECT group_concat(p.nickname, ', ') "
+        "          FROM game_participant gp JOIN player p ON p.id=gp.playerId "
+        "         WHERE gp.gameId=g.id) "
+        "FROM game g LEFT JOIN player w ON w.id=g.winnerId "
+        "ORDER BY g.id DESC LIMIT ?;", -1, &st, nullptr) == SQLITE_OK) {
         sqlite3_bind_int(st, 1, limit);
         while (sqlite3_step(st) == SQLITE_ROW) {
             GameSummary g;
@@ -335,7 +340,11 @@ std::vector<GameSummary> Db::recentGames(int limit) {
             g.status = reinterpret_cast<const char*>(sqlite3_column_text(st, 2));
             if (sqlite3_column_type(st, 3) != SQLITE_NULL)
                 g.winnerId = sqlite3_column_int(st, 3);
-            g.finishedAt = reinterpret_cast<const char*>(sqlite3_column_text(st, 4));
+            g.finishedAt     = reinterpret_cast<const char*>(sqlite3_column_text(st, 4));
+            g.winnerNickname = reinterpret_cast<const char*>(sqlite3_column_text(st, 5));
+            g.startingScore  = sqlite3_column_int(st, 6);
+            if (sqlite3_column_type(st, 7) != SQLITE_NULL)
+                g.players = reinterpret_cast<const char*>(sqlite3_column_text(st, 7));
             out.push_back(std::move(g));
         }
     }
