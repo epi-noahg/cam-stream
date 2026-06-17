@@ -9,8 +9,12 @@
 
 #include "sources/FileSource.hpp"
 
+#include <opencv2/imgproc.hpp>
+
+#include <algorithm>
 #include <chrono>
 #include <cctype>
+#include <cstdint>
 #include <iostream>
 
 namespace dart::detect {
@@ -127,60 +131,154 @@ void DetectionService::stop() {
     if (status_thread_.joinable()) status_thread_.join();
 }
 
-// Interleaved lockstep replay: read one frame from each source per tick and
-// feed it with a shared timestamp (tick / fps) so multi-cam fusion groups
-// votes by physical time, exactly like the live path.  Optionally paced at the
-// video frame rate (so darts appear at a realistic cadence on the tablet) and
-// optionally looped for continuous testing.
+// Interleaved lockstep replay with transport controls (pause / step / seek)
+// driven by the optional control window on the Mac.
+//
+//   • Frames are fed to the pipeline with a MONOTONIC timestamp (a feed
+//     counter / fps) so multi-cam fusion groups votes by physical time even
+//     after a backward seek.
+//   • `replay_pos_` tracks the display position (can jump on seek).
+//   • A seek refreshes the background + resets the round so scrubbing never
+//     injects a spurious dart into the game.
+//   • Playback is paced at the video fps (skipped while stepping).
 void DetectionService::feedLoopReplay_() {
     using clock = std::chrono::steady_clock;
 
-    do {
-        std::array<std::unique_ptr<camdetect::FileSource>, NUM_CAMS> srcs;
-        double fps = cfg_.fps > 0 ? cfg_.fps : 30.0;
-        bool ok = true;
-        for (int c = 0; c < NUM_CAMS; ++c) {
-            srcs[c] = std::make_unique<camdetect::FileSource>(cfg_.videoPaths[c]);
-            if (!srcs[c]->isOpen()) {
-                std::cerr << "[replay] cannot open " << cfg_.videoPaths[c] << "\n";
-                ok = false;
-                break;
-            }
-            if (srcs[c]->fps() > 0) fps = srcs[c]->fps();
-            if (cfg_.offsets[c] > 0) srcs[c]->seek(cfg_.offsets[c]);
+    std::array<std::unique_ptr<camdetect::FileSource>, NUM_CAMS> srcs;
+    double fps = cfg_.fps > 0 ? cfg_.fps : 30.0;
+    int total = INT32_MAX;
+    for (int c = 0; c < NUM_CAMS; ++c) {
+        srcs[c] = std::make_unique<camdetect::FileSource>(cfg_.videoPaths[c]);
+        if (!srcs[c]->isOpen()) {
+            std::cerr << "[replay] cannot open " << cfg_.videoPaths[c] << "\n";
+            running_ = false;
+            return;
         }
-        if (!ok) { running_ = false; return; }
+        if (srcs[c]->fps() > 0) fps = srcs[c]->fps();
+        total = std::min(total, srcs[c]->totalFrames() - cfg_.offsets[c]);
+    }
+    replay_total_ = std::max(0, total);
 
-        const auto wall_start = clock::now();
-        cv::Mat frame;
-        double ts_unused = 0.0;
-        for (long tick = 0; running_; ++tick) {
-            bool any = false;
-            const double ts = tick / fps;
-            for (int c = 0; c < NUM_CAMS; ++c) {
-                if (srcs[c]->next(frame, ts_unused)) {
-                    pipeline_->feedFrame(c, frame, ts);
-                    any = true;
-                }
-            }
-            if (!any) break;  // all sources exhausted
+    auto seekAll = [&](int tick) {
+        for (int c = 0; c < NUM_CAMS; ++c) srcs[c]->seek(cfg_.offsets[c] + tick);
+    };
+    seekAll(0);
 
-            if (cfg_.realtime) {  // pace to wall clock (no-op if we're behind)
-                std::this_thread::sleep_until(
-                    wall_start + std::chrono::duration_cast<clock::duration>(
-                                     std::chrono::duration<double>(ts)));
-            }
-        }
+    int  pos        = 0;     // display position
+    long feed_count = 0;     // monotonic, for fusion timestamps
+    auto wall_start = clock::now();
+    long played     = 0;     // frames since last pacing reset
 
-        if (running_ && cfg_.loop) {
-            std::cout << "[replay] loop\n";
-            pipeline_->resetRound();
+    cv::Mat frame;
+    double ts_unused = 0.0;
+
+    while (running_) {
+        // ── Seek request ────────────────────────────────────────────────
+        const int target = seek_target_.exchange(-1);
+        if (target >= 0) {
+            pos = std::max(0, target);
+            seekAll(pos);
             pipeline_->refreshBackground();
+            pipeline_->resetRound();
+            wall_start = clock::now();
+            played = 0;
         }
-    } while (running_ && cfg_.loop);
 
-    if (running_) finished_ = true;  // natural end (not a stop())
+        // ── Pause (unless a step was requested) ─────────────────────────
+        bool doStep = false;
+        if (step_.load() > 0) { step_.fetch_sub(1); doStep = true; }
+        if (paused_.load() && !doStep) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            continue;
+        }
+
+        // ── Feed one tick ───────────────────────────────────────────────
+        const double ts = feed_count / fps;
+        std::array<cv::Mat, NUM_CAMS> snap;
+        bool any = false;
+        for (int c = 0; c < NUM_CAMS; ++c) {
+            if (srcs[c]->next(frame, ts_unused)) {
+                pipeline_->feedFrame(c, frame, ts);
+                snap[c] = frame.clone();
+                any = true;
+            }
+        }
+
+        if (!any) {  // end of video
+            if (cfg_.loop) {
+                seekAll(0); pos = 0;
+                pipeline_->refreshBackground();
+                pipeline_->resetRound();
+                wall_start = clock::now(); played = 0;
+                continue;
+            }
+            paused_ = true;            // hold on last frame, allow scrub-back
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            continue;
+        }
+
+        {
+            std::lock_guard<std::mutex> lk(display_mtx_);
+            display_frames_ = snap;
+        }
+        ++feed_count;
+        ++pos;
+        replay_pos_ = pos;
+
+        if (cfg_.realtime && !doStep) {  // pace to wall clock (playing only)
+            ++played;
+            std::this_thread::sleep_until(
+                wall_start + std::chrono::duration_cast<clock::duration>(
+                                 std::chrono::duration<double>(played / fps)));
+        }
+    }
+
+    if (running_) finished_ = true;
     std::cout << "[replay] finished\n";
+}
+
+// ── Replay transport controls ───────────────────────────────────────────────
+void DetectionService::replayTogglePause() { paused_ = !paused_.load(); }
+
+void DetectionService::replayStep(int frames) {
+    paused_ = true;
+    step_.fetch_add(std::max(1, frames));
+}
+
+void DetectionService::replaySeek(int frameTick) {
+    seek_target_ = std::max(0, frameTick);
+}
+
+bool DetectionService::replaySnapshot(cv::Mat& out, int maxWidth) const {
+    std::array<cv::Mat, NUM_CAMS> frames;
+    {
+        std::lock_guard<std::mutex> lk(display_mtx_);
+        for (int c = 0; c < NUM_CAMS; ++c)
+            if (!display_frames_[c].empty()) frames[c] = display_frames_[c];
+    }
+    // Stack available cams horizontally at a common height.
+    int h = 0;
+    for (const auto& f : frames) if (!f.empty()) h = std::max(h, f.rows);
+    if (h == 0) return false;
+
+    std::vector<cv::Mat> tiles;
+    for (const auto& f : frames) {
+        if (f.empty()) continue;
+        cv::Mat t;
+        if (f.rows != h) {
+            const double s = static_cast<double>(h) / f.rows;
+            cv::resize(f, t, cv::Size(static_cast<int>(f.cols * s), h));
+        } else {
+            t = f;
+        }
+        tiles.push_back(t);
+    }
+    cv::hconcat(tiles, out);
+    if (maxWidth > 0 && out.cols > maxWidth) {
+        const double s = static_cast<double>(maxWidth) / out.cols;
+        cv::resize(out, out, cv::Size(maxWidth, static_cast<int>(out.rows * s)));
+    }
+    return true;
 }
 
 void DetectionService::feedLoopCamera_(int cam_id) {

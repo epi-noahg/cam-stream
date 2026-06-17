@@ -19,6 +19,8 @@
 #include "game/GameManager.hpp"
 #include "game/GameTypes.hpp"
 
+#include <opencv2/core.hpp>
+
 #include <array>
 #include <atomic>
 #include <functional>
@@ -78,6 +80,18 @@ public:
     void resetRound();
     void refreshBackground();
 
+    // ── Replay transport (only meaningful in --replay mode) ──────────────
+    // Drive playback from a local control window on the Mac.
+    void replayTogglePause();
+    void replayStep(int frames = 1);   ///< feed N frames then pause
+    void replaySeek(int frameTick);    ///< jump to an absolute position
+    bool replayPaused() const { return paused_.load(); }
+    int  replayPos() const    { return replay_pos_.load(); }
+    int  replayTotal() const  { return replay_total_.load(); }
+    /// Compose the latest fed frames into one image (scaled to maxWidth).
+    /// False if no frame is available yet.
+    bool replaySnapshot(cv::Mat& out, int maxWidth) const;
+
 private:
     void feedLoopReplay_();
     void feedLoopCamera_(int cam_id);
@@ -93,6 +107,15 @@ private:
     std::atomic<bool>                  running_ {false};
     std::atomic<bool>                  finished_ {false};
     BoardStatusCallback                on_status_;
+
+    // Replay transport state (driven by the control window).
+    std::atomic<bool>                  paused_ {false};
+    std::atomic<int>                   step_ {0};
+    std::atomic<int>                   seek_target_ {-1};
+    std::atomic<int>                   replay_pos_ {0};
+    std::atomic<int>                   replay_total_ {0};
+    mutable std::mutex                 display_mtx_;
+    std::array<cv::Mat, NUM_CAMS>      display_frames_;
 
     mutable std::mutex                 status_mtx_;
     BoardStatus                        last_status_;

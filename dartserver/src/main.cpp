@@ -16,6 +16,10 @@
 #include "game/GameManager.hpp"
 #include "persistence/Db.hpp"
 
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+
 #include <atomic>
 #include <csignal>
 #include <cstdlib>
@@ -33,8 +37,54 @@ void onSignal(int) { g_running = false; }
 void usage(const char* p) {
     std::cerr
         << "Usage:\n"
-        << "  " << p << " --replay v0 v1 v2 cam0.yml cam1.yml cam2.yml\n"
-        << "  " << p << " --live [dev0 dev1 dev2] cam0.yml cam1.yml cam2.yml\n";
+        << "  " << p << " --replay v0 v1 v2 cam0.yml cam1.yml cam2.yml [--loop] [--offsets a,b,c] [--window]\n"
+        << "  " << p << " --live [dev0 dev1 dev2] cam0.yml cam1.yml cam2.yml\n"
+        << "  --window  show a local pause/play/scrub control window (replay only)\n";
+}
+
+// Trackbar drag → seek. Ignore tiny diffs so our own setTrackbarPos (used to
+// reflect playback progress) doesn't feed back into a seek loop.
+void onTrackbar(int pos, void* userdata) {
+    auto* det = static_cast<detect::DetectionService*>(userdata);
+    int d = pos - det->replayPos();
+    if (d < 0) d = -d;
+    if (d > 1) det->replaySeek(pos);
+}
+
+// Local control window (Mac). Runs on the main thread (macOS HighGUI rule).
+void runReplayWindow(detect::DetectionService& det) {
+    const std::string win = "dartserver - replay";
+    cv::namedWindow(win, cv::WINDOW_AUTOSIZE);
+    const int total = det.replayTotal() > 0 ? det.replayTotal() : 1;
+    cv::createTrackbar("pos", win, nullptr, total, onTrackbar, &det);
+    std::cout << "[replay] window controls: space=play/pause  d=step  "
+                 "a=-1  j=-1s  l=+1s  q=quit\n";
+
+    while (g_running) {
+        cv::Mat montage;
+        if (det.replaySnapshot(montage, 1100)) {
+            const int pos = det.replayPos();
+            const std::string label =
+                (det.replayPaused() ? "PAUSE  " : "PLAY   ") +
+                std::to_string(pos) + " / " + std::to_string(det.replayTotal());
+            cv::putText(montage, label, {12, 30}, cv::FONT_HERSHEY_SIMPLEX, 0.9,
+                        {0, 255, 0}, 2);
+            cv::imshow(win, montage);
+            cv::setTrackbarPos("pos", win, pos < total ? pos : total);
+        }
+        const int key = cv::waitKey(30) & 0xFF;
+        switch (key) {
+            case ' ': det.replayTogglePause(); break;
+            case 'd': det.replayStep(1); break;
+            case 'a': det.replaySeek(det.replayPos() - 1); break;
+            case 'l': det.replaySeek(det.replayPos() + 30); break;
+            case 'j': det.replaySeek(det.replayPos() - 30); break;
+            case 'q':
+            case 27: g_running = false; break;
+            default: break;
+        }
+    }
+    cv::destroyAllWindows();
 }
 } // namespace
 
@@ -44,11 +94,14 @@ int main(int argc, char** argv) {
 
     detect::DetectionService::Config cfg;
 
-    // Split flags from positional args. Flags: --loop, --offsets a,b,c.
+    // Split flags from positional args. Flags: --loop, --offsets a,b,c, --window.
+    bool showWindow = false;
     std::vector<std::string> pos;
     for (std::size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--loop") {
             cfg.loop = true;
+        } else if (args[i] == "--window") {
+            showWindow = true;
         } else if (args[i] == "--offsets" && i + 1 < args.size()) {
             const std::string& o = args[++i];   // "a,b,c"
             std::size_t p = 0;
@@ -110,10 +163,15 @@ int main(int argc, char** argv) {
     ws.start();
     det.start();
 
-    // Stay alive until Ctrl+C even after a replay finishes, so the tablet
-    // remains connected and can review / correct the final state.
-    while (g_running)
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    if (cfg.replay && showWindow) {
+        // Local transport window on the Mac (main thread for macOS HighGUI).
+        runReplayWindow(det);
+    } else {
+        // Stay alive until Ctrl+C even after a replay finishes, so the tablet
+        // remains connected and can review / correct the final state.
+        while (g_running)
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
 
     std::cout << "[main] shutting down...\n";
     det.stop();
