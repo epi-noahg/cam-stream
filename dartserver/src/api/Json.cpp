@@ -53,6 +53,7 @@ json gameStateToJson(const game::GameState& s,
             {"nickname", p.nickname},
             {"score", p.score},
             {"legsWon", p.legsWon},
+            {"team", p.team},
             {"throws", throws},
         });
     }
@@ -117,6 +118,37 @@ json dartDetectedToJson(const game::Throw& t, const game::ThrowMeta& m,
     };
 }
 
+game::GameState gameStateFromJson(const json& j) {
+    game::GameState s;
+    s.options = optionsFromJson(j.value("options", json::object()));
+    s.players.clear();
+    for (const auto& pj : j.value("players", json::array())) {
+        game::PlayerState p;
+        p.id       = pj.value("id", 0);
+        p.nickname = pj.value("nickname", std::string{});
+        p.score    = pj.value("score", s.options.startingScore);
+        p.legsWon  = pj.value("legsWon", 0);
+        p.team     = pj.value("team", 0);
+        for (const auto& tj : pj.value("throws", json::array()))
+            p.throws.push_back(throwFromJson(tj));
+        s.players.push_back(std::move(p));
+    }
+    s.currentIndex = j.value("currentIndex", 0);
+    s.dartIndex    = j.value("dartIndex", 0);
+    s.turns.clear();
+    for (const auto& turn : j.value("turns", json::array())) {
+        std::vector<game::Throw> t;
+        for (const auto& tj : turn) t.push_back(throwFromJson(tj));
+        s.turns.push_back(std::move(t));
+    }
+    if (s.turns.empty()) s.turns.push_back({});
+    if (j.contains("winner") && !j["winner"].is_null())
+        s.winner = j["winner"].get<int>();
+    s.finishedPlayers = j.value("finishedPlayers", std::vector<int>{});
+    s.gameOver = j.value("gameOver", false);
+    return s;
+}
+
 game::OptionsX01 optionsFromJson(const json& j) {
     game::OptionsX01 o;
     if (j.is_null()) return o;
@@ -138,6 +170,7 @@ std::vector<game::PlayerState> playersFromJson(const json& j) {
         game::PlayerState ps;
         ps.id       = p.value("id", autoId);
         ps.nickname = p.value("nickname", std::string("P") + std::to_string(ps.id));
+        ps.team     = p.value("team", 0);
         players.push_back(std::move(ps));
         ++autoId;
     }

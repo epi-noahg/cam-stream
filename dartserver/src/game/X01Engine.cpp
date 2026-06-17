@@ -44,22 +44,41 @@ bool playerFinished(const GameState& s, int id) {
     return false;
 }
 
+/// Keep teammates of @p actingId in sync (shared team score + legsWon). No-op
+/// for solo players (team == 0).
+void propagateTeam(GameState& ns, int actingId) {
+    const PlayerState* a = nullptr;
+    for (const PlayerState& p : ns.players) if (p.id == actingId) { a = &p; break; }
+    if (!a || a->team == 0) return;
+    const int team = a->team, score = a->score, legs = a->legsWon;
+    for (PlayerState& p : ns.players)
+        if (p.id != actingId && p.team == team) { p.score = score; p.legsWon = legs; }
+}
+
 } // namespace
 
 ApplyResult applyThrow(const GameState& state, const Throw& thr) {
     const OptionsX01& opts = state.options;
     const PlayerState& player = state.players[state.currentIndex];
+    const int actingId = player.id;
+
+    // Propagate the acting player's shared score/legs to teammates on the way
+    // out, so all return paths keep a team consistent.
+    auto ret = [&](GameState ns, bool bust, bool finished) -> ApplyResult {
+        propagateTeam(ns, actingId);
+        return {std::move(ns), bust, finished};
+    };
 
     // Player already finished → ignore the throw entirely.
     if (playerFinished(state, player.id))
-        return {state, false, false};
+        return ret(state, false, false);
 
     // Throw already flagged bust → record for history, no score change.
     if (thr.bust) {
         GameState ns = state;
         ns.players[state.currentIndex].throws.push_back(thr);
         ns.dartIndex = state.dartIndex + 1;
-        return {ns, true, false};
+        return ret(std::move(ns), true, false);
     }
 
     const int hitValue = thr.hitValue();
@@ -75,7 +94,7 @@ ApplyResult applyThrow(const GameState& state, const Throw& thr) {
         GameState ns = state;
         ns.players[state.currentIndex].throws.push_back(thr);
         ns.dartIndex = state.dartIndex + 1;
-        return {ns, false, false};
+        return ret(std::move(ns), false, false);
     }
 
     const bool bust = !opts.allowBust && isBust(player.score, hitValue, thr, opts);
@@ -103,7 +122,7 @@ ApplyResult applyThrow(const GameState& state, const Throw& thr) {
         ns.currentIndex = findNextActivePlayer(
             state, (state.currentIndex + 1) % static_cast<int>(state.players.size()));
         ns.dartIndex = 0;
-        return {ns, true, false};
+        return ret(std::move(ns), true, false);
     }
 
     // Normal scoring.
@@ -143,7 +162,7 @@ ApplyResult applyThrow(const GameState& state, const Throw& thr) {
         else                   ns.turns.push_back({thr});
     }
 
-    return {ns, false, finished};
+    return ret(std::move(ns), false, finished);
 }
 
 GameState recalculateFromTurns(const GameState& state) {

@@ -41,6 +41,13 @@ struct LeaderboardRow {
     double      averageScore {0.0};
 };
 
+struct SavedGameRow {
+    std::string id;
+    std::string players;       ///< comma-separated nicknames
+    int         startingScore {0};
+    std::string updatedAt;
+};
+
 struct GameSummary {
     int         id {0};
     std::string mode;
@@ -78,6 +85,17 @@ public:
     std::vector<PlayerRow>      listPlayers();
     std::vector<LeaderboardRow> leaderboard(int limit = 10);
     std::vector<GameSummary>    recentGames(int limit = 20);
+
+    // ── Resumable in-progress games ──────────────────────────────────────
+    /// Insert or update an in-progress game (state = serialized GameState JSON).
+    void saveGame(const std::string& id, const std::string& stateJson,
+                  const std::string& players, int startingScore);
+    /// In-progress games, most recent first.
+    std::vector<SavedGameRow> listSavedGames(int limit = 20);
+    /// Serialized state JSON for a saved game, or empty.
+    std::string loadGameState(const std::string& id);
+    /// Drop a saved game (e.g. once finished).
+    void deleteSavedGame(const std::string& id);
 
 private:
     bool exec_(const std::string& sql);

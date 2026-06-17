@@ -16,6 +16,14 @@ void Dispatcher::wire() {
     // ── Outbound: authoritative state → all clients ─────────────────────
     gm_.setOnChanged([this](const dart::game::GameState& s) {
         ws_.broadcast(gameStateToJson(s, gm_.currentCheckout()).dump());
+        // Persist the in-progress game so it can be resumed later.
+        if (db_ && !s.players.empty()) {
+            std::string players;
+            for (const auto& p : s.players)
+                players += (players.empty() ? "" : ", ") + p.nickname;
+            const json st = gameStateToJson(s, std::nullopt)["state"];
+            db_->saveGame(gm_.gameId(), st.dump(), players, s.options.startingScore);
+        }
     });
     gm_.setOnDetected([this](const dart::game::Throw& t,
                              const dart::game::ThrowMeta& m, int dartIndex) {
@@ -28,6 +36,7 @@ void Dispatcher::wire() {
     if (db_)
         gm_.setOnGameOver([this](const dart::game::GameState& s) {
             db_->recordFinishedGame(s);
+            db_->deleteSavedGame(gm_.gameId());  // no longer resumable
         });
 
     // ── Inbound ─────────────────────────────────────────────────────────
@@ -119,6 +128,24 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
                                    {"winRate", r.winRate},
                                    {"averageScore", r.averageScore}});
             ws_.sendTo(id, json{{"type", "leaderboard"}, {"leaderboard", arr}}.dump());
+        } else if (type == "get_saved_games") {
+            json arr = json::array();
+            if (db_)
+                for (const auto& g : db_->listSavedGames(20))
+                    arr.push_back({{"id", g.id}, {"players", g.players},
+                                   {"startingScore", g.startingScore},
+                                   {"updatedAt", g.updatedAt}});
+            ws_.sendTo(id, json{{"type", "saved_games"}, {"games", arr}}.dump());
+        } else if (type == "resume_game") {
+            const std::string gid = j.value("id", std::string{});
+            std::string stateStr = db_ ? db_->loadGameState(gid) : std::string{};
+            if (stateStr.empty()) { ack(false, "partie introuvable"); }
+            else {
+                try {
+                    gm_.loadState(gameStateFromJson(json::parse(stateStr)), gid);
+                    ack(true);
+                } catch (const std::exception& e) { ack(false, e.what()); }
+            }
         } else if (type == "get_history") {
             json arr = json::array();
             if (db_)

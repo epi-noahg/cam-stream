@@ -52,11 +52,16 @@ struct OptionsX01 {
 };
 
 /// Per-player state within a match.
+///
+/// `team` groups players sharing a single score (real team X01).  0 means
+/// "solo" — the player is their own team.  Teammates always share `score` and
+/// `legsWon`; each keeps an individual throw history.
 struct PlayerState {
     int                id       {0};
     std::string        nickname;
     int                score    {0};
     int                legsWon  {0};
+    int                team     {0};
     std::vector<Throw> throws;
 };
 

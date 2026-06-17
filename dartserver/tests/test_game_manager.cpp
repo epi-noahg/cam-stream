@@ -79,6 +79,44 @@ void testCheckoutExposed() {
     CHECK(co->size() == 1 && (*co)[0].multiplier == 2 && (*co)[0].value == 20);
 }
 
+// Teams P0,P2 = team 1 ; P1,P3 = team 2 — share score within a team.
+void setupTeams(GameManager& m, int startingScore) {
+    OptionsX01 opts;
+    opts.startingScore = startingScore;
+    opts.outType = InOutType::Double;
+    opts.legs = 1;
+    opts.teams = 2;
+    std::vector<PlayerState> players = {
+        {0, "A", startingScore, 0, 1, {}},
+        {1, "B", startingScore, 0, 2, {}},
+        {2, "C", startingScore, 0, 1, {}},
+        {3, "D", startingScore, 0, 2, {}},
+    };
+    m.createGame(std::move(players), opts);
+}
+
+void testTeamSharedScore() {
+    GameManager m; setupTeams(m, 501);
+    m.recordManualThrow(T(20, 3));   // P0 (team1): -60 -> 441
+    GameState s = m.snapshot();
+    CHECK(s.players[0].score == 441);
+    CHECK(s.players[2].score == 441);   // teammate shares the team score
+    CHECK(s.players[1].score == 501);   // other team untouched
+    CHECK(s.players[3].score == 501);
+    CHECK(s.currentIndex == 0);         // still P0's turn (dart 2 of 3)
+}
+
+void testTeamFinish() {
+    GameManager m; setupTeams(m, 40);
+    m.recordManualThrow(T(20, 2));   // P0 D20 = 40 -> team1 finishes
+    GameState s = m.snapshot();
+    CHECK(s.players[0].score == 0);
+    CHECK(s.players[2].score == 0);     // teammate shares
+    CHECK(s.gameOver);                  // only team2 remains
+    CHECK(s.winner.has_value() && s.winner.value() == 0);
+    CHECK(s.finishedPlayers.size() == 4);
+}
+
 } // namespace
 
 int main() {
@@ -86,6 +124,8 @@ int main() {
     testCorrectionRecomputes();
     testUndo();
     testCheckoutExposed();
+    testTeamSharedScore();
+    testTeamFinish();
 
     if (g_failures == 0) std::cout << "All GameManager tests passed.\n";
     else std::cerr << g_failures << " check(s) failed.\n";

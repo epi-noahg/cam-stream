@@ -62,6 +62,13 @@ CREATE TABLE IF NOT EXISTS player_stats (
     doubleCount  INTEGER NOT NULL DEFAULT 0,
     total180s    INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS saved_game (
+    id            TEXT PRIMARY KEY,
+    state         TEXT NOT NULL,
+    players       TEXT,
+    startingScore INTEGER,
+    updatedAt     TEXT NOT NULL DEFAULT (datetime('now'))
+);
 )SQL";
 
 } // namespace
@@ -289,6 +296,72 @@ int Db::recordFinishedGame(const dart::game::GameState& s) {
 
     exec_("COMMIT;");
     return gameId;
+}
+
+void Db::saveGame(const std::string& id, const std::string& stateJson,
+                  const std::string& players, int startingScore) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    if (!db_) return;
+    sqlite3_stmt* st = nullptr;
+    if (sqlite3_prepare_v2(db_,
+        "INSERT INTO saved_game(id,state,players,startingScore,updatedAt) "
+        "VALUES(?,?,?,?,datetime('now')) "
+        "ON CONFLICT(id) DO UPDATE SET state=excluded.state, "
+        "players=excluded.players, startingScore=excluded.startingScore, "
+        "updatedAt=datetime('now');", -1, &st, nullptr) != SQLITE_OK) return;
+    sqlite3_bind_text(st, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st, 2, stateJson.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st, 3, players.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(st, 4, startingScore);
+    sqlite3_step(st);
+    sqlite3_finalize(st);
+}
+
+std::vector<SavedGameRow> Db::listSavedGames(int limit) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    std::vector<SavedGameRow> out;
+    sqlite3_stmt* st = nullptr;
+    if (sqlite3_prepare_v2(db_,
+        "SELECT id,COALESCE(players,''),COALESCE(startingScore,0),updatedAt "
+        "FROM saved_game ORDER BY updatedAt DESC LIMIT ?;", -1, &st, nullptr) == SQLITE_OK) {
+        sqlite3_bind_int(st, 1, limit);
+        while (sqlite3_step(st) == SQLITE_ROW) {
+            SavedGameRow r;
+            r.id            = reinterpret_cast<const char*>(sqlite3_column_text(st, 0));
+            r.players       = reinterpret_cast<const char*>(sqlite3_column_text(st, 1));
+            r.startingScore = sqlite3_column_int(st, 2);
+            r.updatedAt     = reinterpret_cast<const char*>(sqlite3_column_text(st, 3));
+            out.push_back(std::move(r));
+        }
+    }
+    sqlite3_finalize(st);
+    return out;
+}
+
+std::string Db::loadGameState(const std::string& id) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    std::string out;
+    sqlite3_stmt* st = nullptr;
+    if (sqlite3_prepare_v2(db_, "SELECT state FROM saved_game WHERE id=?;", -1,
+                           &st, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(st, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(st) == SQLITE_ROW)
+            out = reinterpret_cast<const char*>(sqlite3_column_text(st, 0));
+    }
+    sqlite3_finalize(st);
+    return out;
+}
+
+void Db::deleteSavedGame(const std::string& id) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    if (!db_) return;
+    sqlite3_stmt* st = nullptr;
+    if (sqlite3_prepare_v2(db_, "DELETE FROM saved_game WHERE id=?;", -1,
+                           &st, nullptr) == SQLITE_OK) {
+        sqlite3_bind_text(st, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_step(st);
+    }
+    sqlite3_finalize(st);
 }
 
 std::vector<PlayerRow> Db::listPlayers() {

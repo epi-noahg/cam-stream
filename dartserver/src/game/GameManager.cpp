@@ -3,8 +3,16 @@
 #include "X01Engine.hpp"
 #include "Checkout.hpp"
 
+#include <chrono>
+
 namespace dart::game {
 namespace {
+
+std::string makeGameId() {
+    const auto now = std::chrono::system_clock::now().time_since_epoch();
+    return "g" + std::to_string(
+        std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+}
 
 bool contains(const std::vector<int>& v, int id) {
     for (int x : v) if (x == id) return true;
@@ -16,10 +24,17 @@ const PlayerState* findById(const GameState& s, int id) {
     return nullptr;
 }
 
-std::vector<int> activePlayerIds(const GameState& s) {
+/// Team identity: solo players (team 0) are their own team.
+int teamKey(const PlayerState& p) { return p.team == 0 ? -(p.id + 1) : p.team; }
+
+/// Distinct team keys among players that haven't finished.
+std::vector<int> activeTeamKeys(const GameState& s) {
     std::vector<int> out;
-    for (const PlayerState& p : s.players)
-        if (!contains(s.finishedPlayers, p.id)) out.push_back(p.id);
+    for (const PlayerState& p : s.players) {
+        if (contains(s.finishedPlayers, p.id)) continue;
+        const int k = teamKey(p);
+        if (!contains(out, k)) out.push_back(k);
+    }
     return out;
 }
 
@@ -52,6 +67,7 @@ void GameManager::createGame(std::vector<PlayerState> players,
         state_.gameOver = false;
         history_.clear();
         has_game_ = true;
+        game_id_ = makeGameId();
         copy = state_;
     }
     if (on_changed_) on_changed_(copy);  // outside the lock (callbacks may re-enter)
@@ -60,6 +76,25 @@ void GameManager::createGame(std::vector<PlayerState> players,
 bool GameManager::hasGame() const {
     std::lock_guard<std::mutex> lk(mtx_);
     return has_game_;
+}
+
+std::string GameManager::gameId() const {
+    std::lock_guard<std::mutex> lk(mtx_);
+    return game_id_;
+}
+
+void GameManager::loadState(GameState state, const std::string& id) {
+    GameState copy;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
+        state_ = std::move(state);
+        if (state_.turns.empty()) state_.turns.push_back({});
+        history_.clear();
+        has_game_ = true;
+        game_id_ = id;
+        copy = state_;
+    }
+    if (on_changed_) on_changed_(copy);
 }
 
 void GameManager::pushHistoryLocked_() {
@@ -79,17 +114,24 @@ void GameManager::recordThrowLocked_(const Throw& thr) {
     GameState ns = std::move(res.state);
 
     if (res.finished && !contains(ns.finishedPlayers, playerId)) {
-        ns.finishedPlayers.push_back(playerId);
-
+        // The whole team finishes together.
         const PlayerState* fp = findById(ns, playerId);
+        const int finishedTeam = fp ? teamKey(*fp) : 0;
+        for (const PlayerState& p : ns.players)
+            if (teamKey(p) == finishedTeam && !contains(ns.finishedPlayers, p.id))
+                ns.finishedPlayers.push_back(p.id);
+
         if (!ns.winner.has_value() && fp && fp->legsWon >= ns.options.legs)
             ns.winner = playerId;
 
-        const std::vector<int> remaining = activePlayerIds(ns);
-        if (remaining.size() <= 1) {
+        // Game is over when at most one team is still in.
+        const std::vector<int> remainingTeams = activeTeamKeys(ns);
+        if (remainingTeams.size() <= 1) {
             ns.gameOver = true;
-            if (remaining.size() == 1 && !contains(ns.finishedPlayers, remaining[0]))
-                ns.finishedPlayers.push_back(remaining[0]);
+            if (remainingTeams.size() == 1)
+                for (const PlayerState& p : ns.players)
+                    if (teamKey(p) == remainingTeams[0] && !contains(ns.finishedPlayers, p.id))
+                        ns.finishedPlayers.push_back(p.id);
             if (!ns.winner.has_value() && !ns.finishedPlayers.empty())
                 ns.winner = ns.finishedPlayers[0];
         } else if (contains(ns.finishedPlayers,

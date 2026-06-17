@@ -48,6 +48,10 @@ public:
     // ── Lifecycle ────────────────────────────────────────────────────────
     void createGame(std::vector<PlayerState> players, const OptionsX01& opts);
     bool hasGame() const;
+    /// Stable id of the current match (for resumable persistence).
+    std::string gameId() const;
+    /// Replace the live match with a previously saved state (resume).
+    void loadState(GameState state, const std::string& id);
 
     // ── Commands (mutating) ──────────────────────────────────────────────
     /// Manual throw from the UI (full confidence).
@@ -74,6 +78,7 @@ private:
     GameState              state_;
     std::vector<GameState> history_;        // for undo (bounded)
     bool                   has_game_ {false};
+    std::string            game_id_;
     StateCallback          on_changed_;
     DetectedCallback       on_detected_;
     StateCallback          on_game_over_;

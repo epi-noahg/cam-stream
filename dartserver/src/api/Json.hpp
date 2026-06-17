@@ -34,6 +34,10 @@ json boardStatusToJson(const detect::BoardStatus& b);
 json dartDetectedToJson(const game::Throw& t, const game::ThrowMeta& m,
                         int dartIndex, long throwId);
 
+/// Parse a serialized GameState (the `state` object of a game_state message)
+/// back into a GameState — used to resume a saved game.
+game::GameState gameStateFromJson(const json& j);
+
 // ── parse (client → server) ─────────────────────────────────────────────────
 game::OptionsX01 optionsFromJson(const json& j);
 /// Parse a list of {id, nickname} players.  Missing ids are auto-assigned.
