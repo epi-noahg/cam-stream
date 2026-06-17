@@ -59,6 +59,16 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
         if (!err.empty()) a["error"] = err;
         ws_.sendTo(id, a.dump());
     };
+    auto pushPlayers = [&] {
+        json arr = json::array();
+        if (db_)
+            for (const auto& p : db_->listPlayers())
+                arr.push_back({{"id", p.id}, {"nickname", p.nickname},
+                               {"totalGames", p.totalGames},
+                               {"totalWins", p.totalWins},
+                               {"totalLosses", p.totalLosses}});
+        ws_.sendTo(id, json{{"type", "players"}, {"players", arr}}.dump());
+    };
 
     try {
         if (type == "create_game") {
@@ -86,18 +96,19 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
             ack(true);
         } else if (type == "create_player") {
             int pid = db_ ? db_->upsertPlayer(j.value("nickname", std::string{})) : -1;
-            ws_.sendTo(id, json{{"type", "player_created"}, {"id", pid},
-                                {"nickname", j.value("nickname", std::string{})}}.dump());
+            pushPlayers();
             ack(pid >= 0, pid >= 0 ? "" : "no database");
+        } else if (type == "rename_player") {
+            bool ok = db_ && db_->renamePlayer(j.at("id").get<int>(),
+                                               j.value("nickname", std::string{}));
+            pushPlayers();
+            ack(ok, ok ? "" : "renommage impossible (nom déjà pris ?)");
+        } else if (type == "delete_player") {
+            bool ok = db_ && db_->deletePlayer(j.at("id").get<int>());
+            pushPlayers();
+            ack(ok);
         } else if (type == "get_players") {
-            json arr = json::array();
-            if (db_)
-                for (const auto& p : db_->listPlayers())
-                    arr.push_back({{"id", p.id}, {"nickname", p.nickname},
-                                   {"totalGames", p.totalGames},
-                                   {"totalWins", p.totalWins},
-                                   {"totalLosses", p.totalLosses}});
-            ws_.sendTo(id, json{{"type", "players"}, {"players", arr}}.dump());
+            pushPlayers();
         } else if (type == "get_leaderboard") {
             json arr = json::array();
             if (db_)

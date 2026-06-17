@@ -116,6 +116,26 @@ int Db::upsertPlayer(const std::string& nickname) {
     return static_cast<int>(sqlite3_last_insert_rowid(db_));
 }
 
+bool Db::renamePlayer(int id, const std::string& nickname) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    if (!db_ || nickname.empty()) return false;
+    sqlite3_stmt* st = nullptr;
+    if (sqlite3_prepare_v2(db_, "UPDATE player SET nickname=? WHERE id=?;", -1,
+                           &st, nullptr) != SQLITE_OK) return false;
+    sqlite3_bind_text(st, 1, nickname.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(st, 2, id);
+    const int rc = sqlite3_step(st);  // UNIQUE conflict -> not SQLITE_DONE
+    sqlite3_finalize(st);
+    return rc == SQLITE_DONE && sqlite3_changes(db_) > 0;
+}
+
+bool Db::deletePlayer(int id) {
+    std::lock_guard<std::mutex> lk(mtx_);
+    if (!db_) return false;
+    exec_("DELETE FROM player_stats WHERE playerId=" + std::to_string(id) + ";");
+    return exec_("DELETE FROM player WHERE id=" + std::to_string(id) + ";");
+}
+
 int Db::recordFinishedGame(const dart::game::GameState& s) {
     std::lock_guard<std::mutex> lk(mtx_);
     if (!db_ || s.players.empty()) return -1;

@@ -63,6 +63,12 @@ public:
     /// Find a player by nickname, creating them if absent.  Returns id or -1.
     int upsertPlayer(const std::string& nickname);
 
+    /// Rename a player. False if the new nickname is already taken.
+    bool renamePlayer(int id, const std::string& nickname);
+
+    /// Delete a player (and their stats row). Historical games are kept.
+    bool deletePlayer(int id);
+
     /// Persist a finished match (game + participants + turns + throws) and
     /// update per-player aggregates/stats.  Players are matched by nickname.
     /// Returns the new game id, or -1 on failure.
