@@ -1,5 +1,9 @@
 client/build
 server/build
 detection/build
+dartserver/build
+dartserver.db
+dartserver.db-shm
+dartserver.db-wal
 .DS_Store
 detection/.cache/clangd/index

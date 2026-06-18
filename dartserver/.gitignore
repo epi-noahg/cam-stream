@@ -1,0 +1,5 @@
+build/
+.cache/
+dartserver.db
+dartserver.db-*
+compile_commands.json
