@@ -22,10 +22,14 @@ const char*       inOutToString(game::InOutType t);
 game::InOutType   inOutFromString(const std::string& s);
 const char*       scoringToString(game::ScoringMode m);
 game::ScoringMode scoringFromString(const std::string& s);
+const char*       gameModeToString(game::GameMode m);
+game::GameMode    gameModeFromString(const std::string& s);
 
 // ── serialize ───────────────────────────────────────────────────────────────
 json throwToJson(const game::Throw& t);
 json optionsToJson(const game::OptionsX01& o);
+/// Serialize the options block for whichever mode @p s is running.
+json optionsToJson(const game::GameState& s);
 json gameStateToJson(const game::GameState& s,
                      const std::optional<std::vector<game::Throw>>& checkout);
 json boardStatusToJson(const detect::BoardStatus& b);
@@ -40,6 +44,9 @@ game::GameState gameStateFromJson(const json& j);
 
 // ── parse (client → server) ─────────────────────────────────────────────────
 game::OptionsX01 optionsFromJson(const json& j);
+/// Parse the create_game `options` object into a full GameConfig, reading
+/// `mode` and the matching option fields (defaults to X01).
+game::GameConfig configFromJson(const json& j);
 /// Parse a list of {id, nickname} players.  Missing ids are auto-assigned.
 std::vector<game::PlayerState> playersFromJson(const json& j);
 game::Throw      throwFromJson(const json& j);

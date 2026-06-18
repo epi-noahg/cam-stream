@@ -31,6 +31,15 @@ struct ThrowMeta {
     std::string zone;                 // raw detector label, e.g. "T20"
 };
 
+/// Everything needed to start a match.  Only the option block matching `mode`
+/// is consulted; the others keep their defaults.
+struct GameConfig {
+    GameMode          mode {GameMode::X01};
+    OptionsX01        x01;
+    OptionsCricket    cricket;
+    OptionsRoundClock roundClock;
+};
+
 class GameManager {
 public:
     using StateCallback = std::function<void(const GameState&)>;
@@ -46,6 +55,8 @@ public:
     void setOnGameOver(StateCallback cb)  { on_game_over_ = std::move(cb); }
 
     // ── Lifecycle ────────────────────────────────────────────────────────
+    void createGame(std::vector<PlayerState> players, const GameConfig& cfg);
+    /// Convenience overload for the common X01 case.
     void createGame(std::vector<PlayerState> players, const OptionsX01& opts);
     bool hasGame() const;
     /// Stable id of the current match (for resumable persistence).

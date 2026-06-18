@@ -19,6 +19,8 @@ enable_testing()
 # ─────────────────────────────────────────────────────────────────────────────
 add_library(dartgame STATIC
     src/game/X01Engine.cpp
+    src/game/CricketEngine.cpp
+    src/game/RoundClockEngine.cpp
     src/game/Checkout.cpp
     src/game/GameManager.cpp
 )
@@ -35,6 +37,14 @@ add_test(NAME x01_engine COMMAND test_x01)
 add_executable(test_game_manager tests/test_game_manager.cpp)
 target_link_libraries(test_game_manager PRIVATE dartgame)
 add_test(NAME game_manager COMMAND test_game_manager)
+
+add_executable(test_cricket tests/test_cricket.cpp)
+target_link_libraries(test_cricket PRIVATE dartgame)
+add_test(NAME cricket_engine COMMAND test_cricket)
+
+add_executable(test_roundclock tests/test_roundclock.cpp)
+target_link_libraries(test_roundclock PRIVATE dartgame)
+add_test(NAME round_clock_engine COMMAND test_roundclock)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # dartdetect — bridges the camdetect Pipeline to the game.  Pulls in OpenCV and

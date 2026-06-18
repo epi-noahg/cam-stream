@@ -22,7 +22,10 @@ void Dispatcher::wire() {
             for (const auto& p : s.players)
                 players += (players.empty() ? "" : ", ") + p.nickname;
             const json st = gameStateToJson(s, std::nullopt)["state"];
-            db_->saveGame(gm_.gameId(), st.dump(), players, s.options.startingScore);
+            // startingScore is only a display hint; meaningful for X01 only.
+            const int hint = s.mode == dart::game::GameMode::X01
+                                 ? s.options.startingScore : 0;
+            db_->saveGame(gm_.gameId(), st.dump(), players, hint);
         }
     });
     gm_.setOnDetected([this](const dart::game::Throw& t,
@@ -82,7 +85,7 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
     try {
         if (type == "create_game") {
             gm_.createGame(playersFromJson(j.value("players", json::array())),
-                           optionsFromJson(j.value("options", json::object())));
+                           configFromJson(j.value("options", json::object())));
             ack(true);
         } else if (type == "manual_throw") {
             gm_.recordManualThrow(throwFromJson(j));
