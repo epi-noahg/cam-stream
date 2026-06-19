@@ -1,0 +1,161 @@
+// Prisma ORM – Modélisation GoDarts (SQLite local)
+// Cette version utilise SQLite pour éviter l’installation de Postgres ou Docker.
+
+///////////////////////////////////////////////////////////
+/// Générateur & Datasource
+///////////////////////////////////////////////////////////
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+///////////////////////////////////////////////////////////
+/// Énumérations & types
+///////////////////////////////////////////////////////////
+
+enum GameMode {
+  X01 // 301 / 501 / 701…
+  CRICKET
+  AROUND_THE_CLOCK
+}
+
+enum GameStatus {
+  WAITING      // En attente de joueurs
+  IN_PROGRESS  // Partie en cours
+  PAUSED       // Partie mise en pause
+  FINISHED     // Partie terminée
+  ABANDONED    // Partie abandonnée
+}
+
+enum BadgeType {
+  TRIPLE_TWENTY_HAT_TRICK  // 3 triple 20 dans le même tour
+  DOUBLE_OUT_FINISH        // Finir avec un double
+  HIGH_FINISH             // Finir avec plus de 100 points
+  PERFECT_LEG             // Leg en 9 fléchettes
+  CONSISTENT_SCORER       // 5 tours consécutifs > 40 points
+  BULL_MASTER            // 3 bulls dans le même tour
+  COMEBACK_KING          // Gagner après avoir été dernier
+}
+
+///////////////////////////////////////////////////////////
+/// Modèles principaux
+///////////////////////////////////////////////////////////
+
+model Player {
+  id           Int               @id @default(autoincrement())
+  nickname     String            @unique
+  email        String?           @unique
+  avatar       String?           // URL ou path vers l'avatar
+  totalGames   Int               @default(0)
+  totalWins    Int               @default(0)
+  totalLosses  Int               @default(0)
+  bestFinish   Int?              // Meilleur checkout
+  createdAt    DateTime          @default(now())
+  lastActiveAt DateTime          @default(now())
+  // Relations
+  participants GameParticipant[]
+  badges       PlayerBadge[]
+  stats        PlayerStats?
+  wonGames     Game[]            @relation("GameWinner")
+}
+
+model GameParticipant {
+  id       Int    @id @default(autoincrement())
+  game     Game   @relation(fields: [gameId], references: [id])
+  gameId   Int
+  player   Player @relation(fields: [playerId], references: [id])
+  playerId Int
+  team     Int    @default(1) // 1 = aucun team, >1 = n° de l’équipe
+  order    Int // ordre de passage
+  // Relations
+  turns    Turn[]
+
+  @@unique([gameId, playerId])
+}
+
+model Game {
+  id            Int               @id @default(autoincrement())
+  mode          GameMode
+  status        GameStatus        @default(WAITING)
+  startingScore Int?              // pour X01
+  doubleOut     Boolean           @default(false)
+  doubleIn      Boolean           @default(false)
+  currentState  String?           // JSON sérialisé de l'état du jeu
+  winnerId      Int?              // ID du gagnant
+  winnerRank    Json?             // Classement final des joueurs
+  pausedAt      DateTime?         // Quand la partie a été mise en pause
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  finishedAt    DateTime?
+  // Relations
+  participants  GameParticipant[]
+  turns         Turn[]
+  winner        Player?           @relation("GameWinner", fields: [winnerId], references: [id])
+}
+
+model Turn {
+  id            Int             @id @default(autoincrement())
+  game          Game            @relation(fields: [gameId], references: [id])
+  gameId        Int
+  participant   GameParticipant @relation(fields: [participantId], references: [id])
+  participantId Int
+  orderInGame   Int // index du tour dans la partie
+  createdAt     DateTime        @default(now())
+  // Relations
+  throws        Throw[]
+}
+
+model Throw {
+  id         Int      @id @default(autoincrement())
+  turn       Turn     @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  turnId     Int
+  value      Int // 0-20, 25, 50
+  multiplier Int      @default(1) // 1 = simple, 2 = double, 3 = triple
+  createdAt  DateTime @default(now())
+}
+
+///////////////////////////////////////////////////////////
+/// Modèles pour badges et statistiques
+///////////////////////////////////////////////////////////
+
+model PlayerBadge {
+  id        Int       @id @default(autoincrement())
+  player    Player    @relation(fields: [playerId], references: [id])
+  playerId  Int
+  type      BadgeType
+  earnedAt  DateTime  @default(now())
+  gameId    Int?      // ID de la partie où le badge a été obtenu
+  metadata  Json?     // Données supplémentaires sur l'achievement
+
+  @@unique([playerId, type])
+}
+
+model PlayerStats {
+  id                    Int      @id @default(autoincrement())
+  player                Player   @relation(fields: [playerId], references: [id])
+  playerId              Int      @unique
+  // Statistiques générales
+  averageScore          Float    @default(0)    // Moyenne des scores par fléchette
+  totalThrows           Int      @default(0)    // Nombre total de fléchettes lancées
+  totalScore            Int      @default(0)    // Score total accumulé
+  // Statistiques de précision
+  bull50Count           Int      @default(0)    // Nombre de bulls (50)
+  bull25Count           Int      @default(0)    // Nombre de bulls (25)
+  tripleCount           Int      @default(0)    // Nombre de triples
+  doubleCount           Int      @default(0)    // Nombre de doubles
+  // Checkout statistics
+  checkoutAttempts      Int      @default(0)    // Tentatives de checkout
+  checkoutSuccess       Int      @default(0)    // Checkouts réussis
+  averageCheckoutScore  Float    @default(0)    // Score moyen des checkouts
+  // Séries
+  bestThreeDartAverage  Float    @default(0)    // Meilleure moyenne sur 3 fléchettes
+  longest180Series      Int      @default(0)    // Plus longue série de 180
+  total180s             Int      @default(0)    // Nombre total de 180
+  // Mise à jour
+  updatedAt            DateTime @updatedAt
+}
