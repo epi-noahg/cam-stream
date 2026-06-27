@@ -4,18 +4,23 @@
 #include "camdetect/Pipeline.hpp"
 #include "camdetect/Types.hpp"
 #include "camdetect/ZoneMap.hpp"
+#include "camdetect/AutoCalibrator.hpp"
 
 #include "CameraCapture.hpp"   // server/src — shared via include path
 
 #include "sources/FileSource.hpp"
 
 #include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <cctype>
 #include <cstdint>
 #include <iostream>
+#include <array>
+#include <filesystem>
+#include <vector>
 
 namespace dart::detect {
 
@@ -46,7 +51,62 @@ struct DetectionService::LiveCams {
     std::array<std::unique_ptr<camstream::CameraCapture>, NUM_CAMS> caps;
 };
 
+// ── Pending auto-calib results (per camera), kept out of the header ──────────
+// Produced by runAutoCalib(), consumed by saveCalibration().
+struct DetectionService::PendingCalibs {
+    struct Slot {
+        bool                        valid {false};
+        camdetect::BoardCalibration calib;
+        camdetect::ZoneMap          zoneMap;
+        cv::Mat                     frame;
+    };
+    std::array<Slot, NUM_CAMS> slots;
+};
+
 namespace {
+// Base64 (standard alphabet, padded) for embedding JPEGs in JSON messages.
+std::string base64(const std::vector<uchar>& data) {
+    static constexpr char tbl[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve((data.size() + 2) / 3 * 4);
+    std::size_t i = 0;
+    for (; i + 3 <= data.size(); i += 3) {
+        const std::uint32_t n = (std::uint32_t(data[i]) << 16) |
+                                (std::uint32_t(data[i + 1]) << 8) | data[i + 2];
+        out.push_back(tbl[(n >> 18) & 63]);
+        out.push_back(tbl[(n >> 12) & 63]);
+        out.push_back(tbl[(n >> 6) & 63]);
+        out.push_back(tbl[n & 63]);
+    }
+    if (i < data.size()) {
+        const bool two = (i + 1 < data.size());
+        std::uint32_t n = std::uint32_t(data[i]) << 16;
+        if (two) n |= std::uint32_t(data[i + 1]) << 8;
+        out.push_back(tbl[(n >> 18) & 63]);
+        out.push_back(tbl[(n >> 12) & 63]);
+        out.push_back(two ? tbl[(n >> 6) & 63] : '=');
+        out.push_back('=');
+    }
+    return out;
+}
+
+// Encode a BGR frame as a base64 JPEG, scaled so its width <= maxWidth.
+std::string encodeJpegBase64(const cv::Mat& frame, int maxWidth) {
+    if (frame.empty()) return {};
+    cv::Mat small = frame;
+    if (maxWidth > 0 && frame.cols > maxWidth) {
+        const double s = static_cast<double>(maxWidth) / frame.cols;
+        cv::resize(frame, small,
+                   cv::Size(maxWidth, static_cast<int>(frame.rows * s)));
+    }
+    std::vector<uchar> buf;
+    if (!cv::imencode(".jpg", small, buf,
+                      {cv::IMWRITE_JPEG_QUALITY, 80}))
+        return {};
+    return base64(buf);
+}
+
 CamReady mapState(camdetect::DetectorState s) {
     switch (s) {
         case camdetect::DetectorState::Warmup:    return CamReady::Warmup;
@@ -67,7 +127,8 @@ const char* phaseStr(camdetect::RoundPhase p) {
 }
 } // namespace
 
-DetectionService::DetectionService(dart::game::GameManager& gm) : gm_(gm) {}
+DetectionService::DetectionService(dart::game::GameManager& gm)
+    : gm_(gm), pending_(std::make_unique<PendingCalibs>()) {}
 DetectionService::~DetectionService() { stop(); }
 
 bool DetectionService::init(const Config& cfg) {
@@ -290,6 +351,9 @@ void DetectionService::feedLoopCamera_(int cam_id) {
         const double ts = std::chrono::duration<double>(
             std::chrono::steady_clock::now() - session_start).count();
         pipeline_->feedFrame(rf.cam_id, rf.bgr, ts);
+        // Retain the latest frame for snapshots + auto-calibration.
+        std::lock_guard<std::mutex> lk(display_mtx_);
+        display_frames_[rf.cam_id] = rf.bgr.clone();
     });
     live_->caps[cam_id] = std::move(cap);
 }
@@ -336,6 +400,130 @@ void DetectionService::resetRound() {
 
 void DetectionService::refreshBackground() {
     if (pipeline_) pipeline_->refreshBackground();
+}
+
+// ── Calibration ─────────────────────────────────────────────────────────────
+bool DetectionService::latestFrame_(int cam, cv::Mat& out) const {
+    if (cam < 0 || cam >= NUM_CAMS) return false;
+    std::lock_guard<std::mutex> lk(display_mtx_);
+    if (display_frames_[cam].empty()) return false;
+    out = display_frames_[cam].clone();
+    return true;
+}
+
+std::vector<CalibCamInfo> DetectionService::calibrationInfo() const {
+    namespace fs = std::filesystem;
+    std::vector<CalibCamInfo> out;
+    out.reserve(NUM_CAMS);
+    for (int c = 0; c < NUM_CAMS; ++c) {
+        CalibCamInfo info;
+        info.camId     = c;
+        info.calibPath = cfg_.calibPaths[c];
+        info.zonesPath = camdetect::ZoneMap::companionPath(cfg_.calibPaths[c]);
+        camdetect::BoardCalibration cal;
+        if (cal.loadFromFile(info.calibPath) && cal.isValid()) {
+            info.hasCalib       = true;
+            info.width          = cal.image_width;
+            info.height         = cal.image_height;
+            info.orientationDeg = cal.orientation_deg;
+            info.diffThreshold  = cal.diff_threshold;
+        }
+        std::error_code ec;
+        info.hasZones = fs::exists(info.zonesPath, ec);
+        out.push_back(std::move(info));
+    }
+    return out;
+}
+
+std::string DetectionService::cameraSnapshotJpeg(int cam, int maxWidth) const {
+    cv::Mat f;
+    if (!latestFrame_(cam, f)) return {};
+    return encodeJpegBase64(f, maxWidth);
+}
+
+AutoCalibOutcome DetectionService::runAutoCalib(int cam,
+                                               const AutoCalibOptions& opt) {
+    AutoCalibOutcome out;
+    cv::Mat frame;
+    if (!latestFrame_(cam, frame)) {
+        out.error = "no camera frame yet";
+        return out;
+    }
+
+    camdetect::AutoCalibrator::Options aco;
+    aco.red_a_delta     = opt.redADelta;
+    aco.green_a_delta   = opt.greenADelta;
+    aco.min_chroma      = opt.minChroma;
+    aco.sector20_offset = opt.sector20Offset;
+    if (opt.sector20HintX >= 0.f && opt.sector20HintY >= 0.f)
+        aco.sector20_hint = {opt.sector20HintX * frame.cols,
+                             opt.sector20HintY * frame.rows};
+
+    const camdetect::AutoCalibrator calibrator;
+    if (opt.autotune) aco = calibrator.tune(frame, aco);
+    const camdetect::AutoCalibrator::Result r = calibrator.run(frame, aco);
+
+    out.redADelta   = aco.red_a_delta;
+    out.greenADelta = aco.green_a_delta;
+    out.minChroma   = aco.min_chroma;
+    out.ok          = r.ok;
+    out.warning     = r.warning;
+    if (!r.ok) {
+        out.error = r.error;
+        std::lock_guard<std::mutex> lk(pending_mtx_);
+        pending_->slots[cam].valid = false;
+        return out;
+    }
+    out.triplesFound    = r.triples_found;
+    out.doublesFound    = r.doubles_found;
+    out.meanReprojErrPx = r.mean_reproj_err_px;
+    out.overlayBase64   = encodeJpegBase64(r.zone_map.overlay(frame), 640);
+
+    std::lock_guard<std::mutex> lk(pending_mtx_);
+    auto& slot   = pending_->slots[cam];
+    slot.valid   = true;
+    slot.calib   = r.calibration;
+    slot.zoneMap = r.zone_map;
+    slot.frame   = frame;
+    return out;
+}
+
+bool DetectionService::saveCalibration(int cam, std::string& err) {
+    if (cam < 0 || cam >= NUM_CAMS) { err = "invalid camera"; return false; }
+
+    camdetect::BoardCalibration calib;
+    camdetect::ZoneMap          zoneMap;
+    {
+        std::lock_guard<std::mutex> lk(pending_mtx_);
+        auto& slot = pending_->slots[cam];
+        if (!slot.valid) {
+            err = "no scan to save (run an auto-scan first)";
+            return false;
+        }
+        calib   = slot.calib;
+        zoneMap = slot.zoneMap;
+    }
+
+    const std::string ymlPath   = cfg_.calibPaths[cam];
+    const std::string zonesPath = camdetect::ZoneMap::companionPath(ymlPath);
+    if (!calib.saveToFile(ymlPath)) {
+        err = "cannot write " + ymlPath;
+        return false;
+    }
+    if (!zoneMap.saveToFile(zonesPath)) {
+        err = "cannot write " + zonesPath;
+        return false;
+    }
+
+    // Hot-swap into the running pipeline so the new calibration is used now.
+    if (pipeline_) {
+        pipeline_->setCalibration(cam, calib);
+        pipeline_->setZoneMap(cam, std::move(zoneMap));
+    }
+
+    std::lock_guard<std::mutex> lk(pending_mtx_);
+    pending_->slots[cam].valid = false;
+    return true;
 }
 
 } // namespace dart::detect

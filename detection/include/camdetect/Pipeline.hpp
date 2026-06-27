@@ -63,6 +63,13 @@ public:
     /// at any time.
     void setZoneMap(int cam_id, ZoneMap zm);
 
+    /// Replace one camera's board calibration at runtime.  Recreates that
+    /// camera's detector (its background re-learns over the next frames), so
+    /// any zone map must be re-attached afterwards via setZoneMap().  Safe to
+    /// call concurrently with feedFrame().  Used by the calibration UI to
+    /// apply a fresh AutoCalibrator result without restarting the server.
+    void setCalibration(int cam_id, BoardCalibration calib);
+
     /// Push one decoded BGR frame from camera @p cam_id (0..NUM_CAMS-1).
     void feedFrame(int cam_id, const cv::Mat& frame, double timestamp);
 

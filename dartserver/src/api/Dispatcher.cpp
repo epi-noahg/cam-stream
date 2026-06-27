@@ -162,6 +162,34 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
                                    {"startingScore", g.startingScore},
                                    {"finishedAt", g.finishedAt}});
             ws_.sendTo(id, json{{"type", "history"}, {"games", arr}}.dump());
+        } else if (type == "get_calibration") {
+            ws_.sendTo(id, calibrationToJson(det_.calibrationInfo(),
+                                             det_.isReplay()).dump());
+        } else if (type == "get_camera_snapshot") {
+            const int maxW = j.value("maxWidth", 480);
+            json arr = json::array();
+            auto addCam = [&](int c) {
+                std::string b64 = det_.cameraSnapshotJpeg(c, maxW);
+                if (!b64.empty()) arr.push_back({{"camId", c}, {"jpeg", b64}});
+            };
+            if (j.contains("cam")) addCam(j.at("cam").get<int>());
+            else for (int c = 0; c < dart::detect::NUM_CAMS; ++c) addCam(c);
+            ws_.sendTo(id, json{{"type", "camera_snapshot"},
+                                {"cams", arr}}.dump());
+        } else if (type == "run_autocalib") {
+            const int cam = j.at("cam").get<int>();
+            const auto opt =
+                autoCalibOptionsFromJson(j.value("options", json::object()));
+            const auto res = det_.runAutoCalib(cam, opt);
+            ws_.sendTo(id, autoCalibResultToJson(cam, res).dump());
+            ack(res.ok, res.ok ? "" : res.error);
+        } else if (type == "save_calibration") {
+            const int cam = j.at("cam").get<int>();
+            std::string err;
+            const bool ok = det_.saveCalibration(cam, err);
+            ack(ok, err);
+            ws_.sendTo(id, calibrationToJson(det_.calibrationInfo(),
+                                             det_.isReplay()).dump());
         } else {
             ack(false, "unknown command: " + type);
         }

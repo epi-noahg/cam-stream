@@ -11,6 +11,10 @@
 import { create } from "zustand";
 import type {
   BoardStatus,
+  AutoCalibOptions,
+  AutoCalibResult,
+  CalibrationState,
+  CameraSnapshot,
   Command,
   DartDetected,
   GameState,
@@ -42,6 +46,9 @@ type DartStore = {
   history: GameSummary[];
   players: PlayerRow[];
   savedGames: SavedGame[];
+  calibration: CalibrationState | null;
+  snapshots: Record<number, string>;          // camId → JPEG base64
+  autoCalibResults: Record<number, AutoCalibResult>;
 
   connect: (url?: string) => void;
   disconnect: () => void;
@@ -63,6 +70,10 @@ type DartStore = {
   deletePlayer: (id: number) => void;
   getSavedGames: () => void;
   resumeGame: (id: string) => void;
+  getCalibration: () => void;
+  getCameraSnapshot: (cam?: number) => void;
+  runAutoCalib: (cam: number, options: AutoCalibOptions) => void;
+  saveCalibration: (cam: number) => void;
 };
 
 let ws: WebSocket | null = null;
@@ -80,6 +91,9 @@ export const useDartStore = create<DartStore>((set, get) => ({
   history: [],
   players: [],
   savedGames: [],
+  calibration: null,
+  snapshots: {},
+  autoCalibResults: {},
 
   connect: (url) => {
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING))
@@ -126,6 +140,23 @@ export const useDartStore = create<DartStore>((set, get) => ({
           case "saved_games":
             set({ savedGames: (msg.games as SavedGame[]) ?? [] });
             break;
+          case "calibration":
+            set({ calibration: msg as unknown as CalibrationState });
+            break;
+          case "camera_snapshot": {
+            const cams = (msg.cams as CameraSnapshot[]) ?? [];
+            set((s) => {
+              const snapshots = { ...s.snapshots };
+              for (const c of cams) snapshots[c.camId] = c.jpeg;
+              return { snapshots };
+            });
+            break;
+          }
+          case "autocalib_result": {
+            const r = msg as unknown as AutoCalibResult;
+            set((s) => ({ autoCalibResults: { ...s.autoCalibResults, [r.camId]: r } }));
+            break;
+          }
           default:
             break; // ack / error / players / history handled elsewhere
         }
@@ -164,4 +195,11 @@ export const useDartStore = create<DartStore>((set, get) => ({
   deletePlayer: (id) => get().send({ type: "delete_player", id }),
   getSavedGames: () => get().send({ type: "get_saved_games" }),
   resumeGame: (id) => get().send({ type: "resume_game", id }),
+  getCalibration: () => get().send({ type: "get_calibration" }),
+  getCameraSnapshot: (cam) =>
+    get().send(cam === undefined
+      ? { type: "get_camera_snapshot" }
+      : { type: "get_camera_snapshot", cam }),
+  runAutoCalib: (cam, options) => get().send({ type: "run_autocalib", cam, options }),
+  saveCalibration: (cam) => get().send({ type: "save_calibration", cam }),
 }));

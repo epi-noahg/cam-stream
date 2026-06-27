@@ -116,6 +116,56 @@ export type GameSummary = {
   finishedAt: string;
 };
 
+// ── Calibration (onglet de calibration) ─────────────────────────────────────
+export type CalibCamInfo = {
+  camId: number;
+  calibPath: string;
+  zonesPath: string;
+  hasCalib: boolean;
+  hasZones: boolean;
+  width: number;
+  height: number;
+  orientationDeg: number;
+  diffThreshold: number;
+};
+
+export type CalibrationState = {
+  replay: boolean;
+  cams: CalibCamInfo[];
+};
+
+/** Aperçu d'une caméra : JPEG base64 (sans préfixe data:). */
+export type CameraSnapshot = {
+  camId: number;
+  jpeg: string;
+};
+
+/** Réglages de l'auto-scan envoyés au serveur. */
+export type AutoCalibOptions = {
+  redADelta?: number;
+  greenADelta?: number;
+  minChroma?: number;
+  sector20Offset?: number;
+  sector20HintX?: number;
+  sector20HintY?: number;
+  autotune?: boolean;
+};
+
+/** Résultat d'un auto-scan : diagnostics + overlay JPEG base64. */
+export type AutoCalibResult = {
+  camId: number;
+  ok: boolean;
+  error: string;
+  warning: string;
+  triplesFound: number;
+  doublesFound: number;
+  meanReprojErrPx: number;
+  redADelta: number;
+  greenADelta: number;
+  minChroma: number;
+  overlay: string;
+};
+
 // ── Commandes client → serveur ──────────────────────────────────────────────
 export type Command =
   | { type: "create_game"; players: { id?: number; nickname: string; team?: number }[]; options: Partial<GameOptions> }
@@ -133,4 +183,8 @@ export type Command =
   | { type: "get_history"; limit?: number }
   | { type: "create_player"; nickname: string }
   | { type: "rename_player"; id: number; nickname: string }
+  | { type: "get_calibration" }
+  | { type: "get_camera_snapshot"; cam?: number; maxWidth?: number }
+  | { type: "run_autocalib"; cam: number; options: AutoCalibOptions }
+  | { type: "save_calibration"; cam: number }
   | { type: "delete_player"; id: number };

@@ -35,6 +35,11 @@ json gameStateToJson(const game::GameState& s,
                      const std::string& id = {});
 json boardStatusToJson(const detect::BoardStatus& b);
 
+/// Calibration overview (per-camera files + geometry) for the calibration tab.
+json calibrationToJson(const std::vector<detect::CalibCamInfo>& cams, bool replay);
+/// Result of one auto-scan (diagnostics + base64 JPEG overlay preview).
+json autoCalibResultToJson(int cam, const detect::AutoCalibOutcome& r);
+
 /// Build the `dart_detected` event payload.
 json dartDetectedToJson(const game::Throw& t, const game::ThrowMeta& m,
                         int dartIndex, long throwId);
@@ -51,5 +56,7 @@ game::GameConfig configFromJson(const json& j);
 /// Parse a list of {id, nickname} players.  Missing ids are auto-assigned.
 std::vector<game::PlayerState> playersFromJson(const json& j);
 game::Throw      throwFromJson(const json& j);
+/// Parse the calibration tab's auto-scan knobs.
+detect::AutoCalibOptions autoCalibOptionsFromJson(const json& j);
 
 } // namespace dart::api

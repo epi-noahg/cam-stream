@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Target, TrendingUp, Clock, Trophy, Settings, RotateCcw } from "lucide-react";
+import { Target, TrendingUp, Clock, Trophy, Settings, RotateCcw, Crosshair } from "lucide-react";
 import { useDartStore } from "@/store/dartStore";
 
 const gameModes = [
@@ -137,6 +137,14 @@ export default function HomePage() {
             <div>
               <div className="text-lg font-bold">Réglages</div>
               <div className="text-sm text-gray-400">Gérer les joueurs, caméras</div>
+            </div>
+          </Link>
+          <Link href="/calibration"
+            className="col-span-2 rounded-2xl bg-gray-900 border border-gray-700 p-5 flex items-center gap-3 hover:border-red-500 active:scale-[0.98]">
+            <Crosshair className="w-7 h-7 text-red-500" />
+            <div>
+              <div className="text-lg font-bold">Calibration</div>
+              <div className="text-sm text-gray-400">Caméras, scan auto & sauvegarde des configs</div>
             </div>
           </Link>
         </div>

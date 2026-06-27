@@ -43,4 +43,44 @@ struct BoardStatus {
     bool operator!=(const BoardStatus& o) const { return !(*this == o); }
 };
 
+/// One camera's calibration files + geometry, surfaced to the calibration UI.
+struct CalibCamInfo {
+    int         camId      {0};
+    std::string calibPath;         ///< camN.yml
+    std::string zonesPath;         ///< camN_zones.png
+    bool        hasCalib   {false};///< calib yml present + loaded
+    bool        hasZones   {false};///< companion zone map present
+    int         width      {0};
+    int         height     {0};
+    float       orientationDeg {0.f};
+    float       diffThreshold   {-1.f};
+};
+
+/// AutoCalibrator knobs the UI can tweak before a scan.
+struct AutoCalibOptions {
+    int   redADelta     {16};
+    int   greenADelta   {12};
+    int   minChroma     {16};
+    int   sector20Offset{0};
+    float sector20HintX {-1.f};   ///< sector-20 click, normalized [0,1] (-1 = unset)
+    float sector20HintY {-1.f};   ///< converted to pixels against the actual frame
+    bool  autotune      {false};  ///< sweep colour thresholds before running
+};
+
+/// Outcome of one auto-scan: diagnostics + a base64 JPEG overlay for preview.
+/// Held pending in DetectionService until the operator saves it.
+struct AutoCalibOutcome {
+    bool        ok        {false};
+    std::string error;
+    std::string warning;
+    int         triplesFound {0};
+    int         doublesFound {0};
+    float       meanReprojErrPx {-1.f};
+    // Effective colour thresholds used (echoes autotune results back to the UI).
+    int         redADelta  {16};
+    int         greenADelta{12};
+    int         minChroma  {16};
+    std::string overlayBase64;    ///< JPEG bytes, base64, no data: prefix
+};
+
 } // namespace dart::detect

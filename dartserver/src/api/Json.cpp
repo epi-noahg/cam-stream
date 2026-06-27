@@ -153,6 +153,40 @@ json boardStatusToJson(const detect::BoardStatus& b) {
     };
 }
 
+json calibrationToJson(const std::vector<detect::CalibCamInfo>& cams, bool replay) {
+    json arr = json::array();
+    for (const auto& c : cams)
+        arr.push_back(json{
+            {"camId",          c.camId},
+            {"calibPath",      c.calibPath},
+            {"zonesPath",      c.zonesPath},
+            {"hasCalib",       c.hasCalib},
+            {"hasZones",       c.hasZones},
+            {"width",          c.width},
+            {"height",         c.height},
+            {"orientationDeg", c.orientationDeg},
+            {"diffThreshold",  c.diffThreshold},
+        });
+    return json{{"type", "calibration"}, {"replay", replay}, {"cams", arr}};
+}
+
+json autoCalibResultToJson(int cam, const detect::AutoCalibOutcome& r) {
+    return json{
+        {"type",            "autocalib_result"},
+        {"camId",           cam},
+        {"ok",              r.ok},
+        {"error",           r.error},
+        {"warning",         r.warning},
+        {"triplesFound",    r.triplesFound},
+        {"doublesFound",    r.doublesFound},
+        {"meanReprojErrPx", r.meanReprojErrPx},
+        {"redADelta",       r.redADelta},
+        {"greenADelta",     r.greenADelta},
+        {"minChroma",       r.minChroma},
+        {"overlay",         r.overlayBase64},
+    };
+}
+
 json dartDetectedToJson(const game::Throw& t, const game::ThrowMeta& m,
                         int dartIndex, long throwId) {
     return json{
@@ -268,6 +302,19 @@ game::Throw throwFromJson(const json& j) {
     t.multiplier = j.value("multiplier", 1);
     t.bust       = j.value("bust", false);
     return t;
+}
+
+detect::AutoCalibOptions autoCalibOptionsFromJson(const json& j) {
+    detect::AutoCalibOptions o;
+    if (!j.is_object()) return o;
+    o.redADelta      = j.value("redADelta", o.redADelta);
+    o.greenADelta    = j.value("greenADelta", o.greenADelta);
+    o.minChroma      = j.value("minChroma", o.minChroma);
+    o.sector20Offset = j.value("sector20Offset", o.sector20Offset);
+    o.sector20HintX  = j.value("sector20HintX", o.sector20HintX);
+    o.sector20HintY  = j.value("sector20HintY", o.sector20HintY);
+    o.autotune       = j.value("autotune", o.autotune);
+    return o;
 }
 
 } // namespace dart::api

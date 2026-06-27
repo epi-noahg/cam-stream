@@ -80,6 +80,23 @@ public:
     void resetRound();
     void refreshBackground();
 
+    // ── Calibration (run from the app's calibration tab) ─────────────────
+    /// True in --replay mode (cameras are recorded videos, not live V4L2).
+    bool isReplay() const { return cfg_.replay; }
+    /// Per-camera calibration files + geometry, read fresh from disk.
+    std::vector<CalibCamInfo> calibrationInfo() const;
+    /// Latest frame from one camera as a base64 JPEG (scaled to maxWidth),
+    /// or "" if no frame is available yet.
+    std::string cameraSnapshotJpeg(int cam, int maxWidth = 480) const;
+    /// Run the AutoCalibrator on the latest frame of one camera.  The result
+    /// (calibration + zone map + the frame) is held pending until
+    /// saveCalibration() persists it; the returned outcome carries the
+    /// diagnostics + an overlay preview for the UI.
+    AutoCalibOutcome runAutoCalib(int cam, const AutoCalibOptions& opt);
+    /// Persist the pending auto-calib result (camN.yml + camN_zones.png) and
+    /// hot-swap it into the live pipeline.  False (+ err) if nothing pending.
+    bool saveCalibration(int cam, std::string& err);
+
     // ── Replay transport (only meaningful in --replay mode) ──────────────
     // Drive playback from a local control window on the Mac.
     void replayTogglePause();
@@ -97,6 +114,8 @@ private:
     void feedLoopCamera_(int cam_id);
     void statusLoop_();
     BoardStatus computeStatus_() const;
+    /// Copy the latest frame for one camera out of display_frames_.
+    bool latestFrame_(int cam, cv::Mat& out) const;
 
     dart::game::GameManager&           gm_;
     Config                             cfg_;
@@ -123,6 +142,13 @@ private:
     // CameraCapture (server/src) into this header.
     struct LiveCams;
     std::unique_ptr<LiveCams>          live_;
+
+    // Pending auto-calib results awaiting save (one per camera).  Holds
+    // camdetect types (BoardCalibration / ZoneMap), so it is defined in the
+    // .cpp to keep camdetect/OpenCV out of this header.
+    struct PendingCalibs;
+    std::unique_ptr<PendingCalibs>     pending_;
+    mutable std::mutex                 pending_mtx_;
 };
 
 } // namespace dart::detect
