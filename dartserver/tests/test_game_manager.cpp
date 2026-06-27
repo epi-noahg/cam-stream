@@ -117,6 +117,30 @@ void testTeamFinish() {
     CHECK(s.finishedPlayers.size() == 4);
 }
 
+// Re-choosing a mode / starting a new game must mint a fresh, unique id so the
+// previous (still unfinished) match keeps its own persistence key and stays
+// resumable instead of being overwritten — even for back-to-back creations
+// within the same millisecond.
+void testNewGameMintsFreshId() {
+    GameManager m; setup(m, 501);
+    const std::string id1 = m.gameId();
+    CHECK(!id1.empty());
+    GameState prev = m.snapshot();
+
+    setup(m, 301);
+    const std::string id2 = m.gameId();
+    CHECK(!id2.empty());
+    CHECK(id1 != id2);
+
+    setup(m, 701);
+    CHECK(m.gameId() != id1);
+    CHECK(m.gameId() != id2);
+
+    // Resuming a saved game restores its id so updates land on the same row.
+    m.loadState(prev, id1);
+    CHECK(m.gameId() == id1);
+}
+
 } // namespace
 
 int main() {
@@ -126,6 +150,7 @@ int main() {
     testCheckoutExposed();
     testTeamSharedScore();
     testTeamFinish();
+    testNewGameMintsFreshId();
 
     if (g_failures == 0) std::cout << "All GameManager tests passed.\n";
     else std::cerr << g_failures << " check(s) failed.\n";

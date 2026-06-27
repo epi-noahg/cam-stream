@@ -93,6 +93,8 @@ export default function LivePage() {
     : game && game.gameOver
     ? "victory"
     : "setup";
+  // Alias type-guard : restreint `game` à non-null dans la branche de jeu.
+  const showGame = !!game && !game.gameOver && !newGame && !waitingNew;
 
   // Libellé du gagnant : pseudo, ou "Équipe N — membres" en mode équipe.
   let winnerLabel = "";
@@ -129,7 +131,7 @@ export default function LivePage() {
         <Link href="/leaderboard" className="min-h-11 px-3 flex items-center rounded-xl bg-gray-800 border border-gray-700 active:scale-95">📊</Link>
       </div>
 
-      {screen !== "game" ? (
+      {!showGame ? (
         <div className="flex-1 min-h-0 overflow-auto">
           {screen === "victory" ? (
             <Victory label={winnerLabel} onReplay={replaySamePlayers} onNew={() => setNewGame(true)} />

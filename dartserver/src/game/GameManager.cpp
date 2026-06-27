@@ -5,15 +5,23 @@
 #include "RoundClockEngine.hpp"
 #include "Checkout.hpp"
 
+#include <atomic>
 #include <chrono>
+#include <cstdint>
 
 namespace dart::game {
 namespace {
 
 std::string makeGameId() {
+    // Process-local monotonic counter guarantees uniqueness even when several
+    // games are created within the same millisecond (the timestamp alone would
+    // collide and the saved-game upsert would overwrite the earlier match).
+    static std::atomic<std::uint64_t> seq{0};
     const auto now = std::chrono::system_clock::now().time_since_epoch();
-    return "g" + std::to_string(
-        std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
+    const auto ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+    return "g" + std::to_string(ms) + "-" +
+           std::to_string(seq.fetch_add(1, std::memory_order_relaxed));
 }
 
 bool contains(const std::vector<int>& v, int id) {
