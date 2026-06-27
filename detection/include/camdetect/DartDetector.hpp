@@ -58,6 +58,12 @@ public:
 
     const BoardCalibration& calib() const { return calib_; }
 
+    /// Pixel-accurate zone map attached to this camera (may be empty).
+    /// Lets fusion read the zone at an arbitrary board point projected into
+    /// this camera — used to determine the fused zone from the triangulated
+    /// crossing instead of each camera's own (noisy) tip pixel.
+    const ZoneMap& zoneMap() const { return zone_map_; }
+
     /// True when the cumulative (empty-board reference) mask is currently
     /// usable as a witness for cross-cam support checks: background learned
     /// and no human occluding the board.
@@ -88,6 +94,12 @@ private:
     cv::Point2f                       last_tip_pixel_ {};
     bool                              has_candidate_  {false};
     bool                              emitted_        {false};   // suppress dupes
+    /// Running sum of the raw LAB-distance image over the current stability
+    /// window, and the frame count.  Averaged at emit to re-fit the dart axis
+    /// and tip on a temporally denoised silhouette that recovers low-contrast
+    /// (dark-on-dark) tip pixels otherwise lost to per-frame thresholding.
+    cv::Mat                           dist_acc_;
+    int                               dist_acc_n_     {0};
 
     DetectorViz                       last_viz_       {};
     float                             diff_threshold_     {15.f};

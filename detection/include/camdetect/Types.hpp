@@ -119,6 +119,12 @@ struct FusedHit {
     float                                 confidence {0.f};
     cv::Point2f                           board_xy   {};   // fused position, mm
     float                                 sigma_mm   {10.f}; // fused 1-sigma, mm
+    /// Fused 1-sigma uncertainty along the RADIAL direction at board_xy (mm).
+    /// The ring decision (single / triple / double — 8 mm bands) is only as
+    /// trustworthy as this: when no camera has a near-tangential view of the
+    /// spot, radius lives in the loose along-axis direction and sigma_r_mm is
+    /// large, so the ring call must degrade to the safe single.
+    float                                 sigma_r_mm {10.f};
     std::array<DartHit, NUM_CAMS>         per_cam    {};
     double                                timestamp  {0.0};
 };

@@ -104,6 +104,16 @@ private:
     void watchdogStuckHuman();          ///< force-resync a lone-HUMAN cam
     RoundStatus computeRoundStatus_() const;  ///< lock-held helper
 
+    /// Re-determine a fused hit's zone from the TRIANGULATED crossing instead
+    /// of trusting each camera's own (noisy) tip label.  Votes among the
+    /// geometric lookup at the crossing and each camera's pixel-accurate zone
+    /// map sampled at the crossing projected back into that camera, weighted
+    /// by how clearly each read sits inside its zone (boundary margin) and by
+    /// the camera's viewing quality at that spot.  Also recomputes a calibrated
+    /// confidence that honestly collapses for single-camera (un-triangulated)
+    /// hits, whose tip can have slid along the dart axis.  Lock-held helper.
+    void refineFusedZone_(FusedHit& f) const;
+
     mutable std::mutex                                  mtx_;
     std::array<std::unique_ptr<DartDetector>, NUM_CAMS> detectors_;
     MultiCamFusion                                      fusion_;

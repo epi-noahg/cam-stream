@@ -1,4 +1,5 @@
 #include "camdetect/Pipeline.hpp"
+#include "camdetect/ZoneMapper.hpp"
 
 #include <cmath>
 #include <cstdio>
@@ -149,14 +150,20 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
             if (hit) fused = fusion_.addHit(*hit);          // all-cams fast path
             if (!fused) fused = fusion_.tick(fusion_clock_); // time-driven close
             if (fused) {
+                // Determine the zone from the triangulated crossing rather
+                // than each camera's own tip — far more robust near wires and
+                // ring edges, where a few px of per-cam tip slide flips the
+                // label.  Also recomputes an honest confidence.
+                refineFusedZone_(*fused);
                 if (traceEnabled()) {
                     int nv = fusedVoteCount(*fused);
                     CAMTRACE("[trace] t=%.2f f=%d FUSED zone=%s xy=(%.0f,%.0f) "
-                             "conf=%.2f votes=%d",
+                             "conf=%.2f votes=%d sigma=%.1f sigma_r=%.1f",
                              fused->timestamp,
                              static_cast<int>(fused->timestamp * 30 + 0.5),
                              fused->zone.c_str(), fused->board_xy.x,
-                             fused->board_xy.y, fused->confidence, nv);
+                             fused->board_xy.y, fused->confidence, nv,
+                             fused->sigma_mm, fused->sigma_r_mm);
                 }
                 bool is_dup           = false;
                 bool updated          = false;
@@ -199,6 +206,7 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
                     }
                     if (auto refused = MultiCamFusion::fuseVotes(union_votes)) {
                         refused->timestamp = prev.timestamp;
+                        refineFusedZone_(*refused);
                         const bool changed = refused->zone != prev.zone;
                         CAMTRACE("[trace]   MERGE into %s -> %s (conf=%.2f, "
                                  "votes=%d)",
@@ -232,6 +240,154 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
     }
 
     if (cb && fused) cb(*fused);
+}
+
+void Pipeline::refineFusedZone_(FusedHit& f) const
+{
+    // How many cameras actually voted for this hit?  Two or more means the
+    // position is TRIANGULATED (the weighted-LS crossing pins the tip across
+    // every camera's axis); one means the tip can still be slid arbitrarily
+    // far along that lone camera's dart axis — the zone is then only as good
+    // as that single silhouette.
+    int n_voters = 0;
+    for (int i = 0; i < NUM_CAMS; ++i)
+        if (f.per_cam[i].cam_id >= 0) ++n_voters;
+
+    const cv::Point2f X = f.board_xy;
+
+    // Crossing trust ∈ (0,1]: high only when the tip is genuinely triangulated
+    // (≥2 voters) with a tight fused covariance.  Scales the CROSSING-coupled
+    // reads (geometric + back-projection) so that when the crossing is weak the
+    // independent own-tip reads carry the decision instead — a single bad axis
+    // can then never make a back-projected wrong zone look falsely unanimous.
+    const float cq = (n_voters >= 2)
+        ? std::clamp(1.f - f.sigma_mm / 12.f, 0.15f, 1.f) : 0.15f;
+
+    // Candidate zone reads, each weighted by how clearly it sits inside its
+    // zone (boundary margin in mm) times the source's viewing quality.
+    struct Acc {
+        std::string label;
+        int         score      {0};
+        float       weight     {0.f};   // Σ weights across agreeing reads
+        float       best_margin{0.f};   // mm to nearest boundary, best source
+    };
+    std::array<Acc, 2 * NUM_CAMS + 2> acc{};
+    int n_acc = 0;
+    auto addW = [&](const std::string& label, int score,
+                    float weight, float margin_mm) {
+        if (weight <= 0.f) return;
+        for (int i = 0; i < n_acc; ++i) {
+            if (acc[i].label != label) continue;
+            acc[i].weight     += weight;
+            acc[i].best_margin = std::max(acc[i].best_margin, margin_mm);
+            return;
+        }
+        acc[n_acc++] = {label, score, weight, margin_mm};
+    };
+
+    constexpr float DEFAULT_MM_PER_PX = 0.6f;
+
+    // ── Channel A — CROSSING (coupled): geometric + back-projection ─────────
+    // 1) Geometric lookup at the crossing — the canonical board reference,
+    //    treated as one head-on "virtual camera".
+    addW(ZoneMapper::lookup(X).label, ZoneMapper::lookup(X).value,
+         std::max(ZoneMapper::boundaryMarginMM(X), 0.25f) * cq,
+         ZoneMapper::boundaryMarginMM(X));
+    // 2) Every camera with usable geometry reads its pixel-accurate map at X
+    //    projected back into that camera — all using the SAME triangulated
+    //    point, so good crossings read near-unanimously regardless of each
+    //    camera's own tip slide.
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        const auto& det = *detectors_[i];
+        if (!det.calib().isValid() || det.zoneMap().empty()) continue;
+        const cv::Point2f px = det.calib().boardToImage(X);
+        const ZoneResult  zr = det.zoneMap().lookup(px);
+        const cv::Vec2f   sc = det.calib().localScaleMmPerPx(px);
+        const float mm_per_px = sc[0] > 0.f ? sc[0] : DEFAULT_MM_PER_PX;
+        const float margin_mm = det.zoneMap().boundaryDistancePx(px) * mm_per_px;
+        const float viewq = sc[1] > 0.f
+            ? std::clamp(DEFAULT_MM_PER_PX / sc[1], 0.05f, 1.f) : 0.3f;
+        addW(zr.label, zr.value, std::max(margin_mm, 0.25f) * viewq * cq,
+             margin_mm);
+    }
+
+    // ── Channel B — OWN-TIP (independent): each voting camera's direct label ─
+    // The detector already read its pixel-accurate map at its OWN measured tip.
+    // That read is independent of the crossing, so it provides dissent if the
+    // crossing is corrupted.  Up-weighted as crossing trust falls (so it owns
+    // single-camera hits) and kept secondary when the crossing is strong (so a
+    // lone wrong tip never overturns a clean triangulation).
+    const float own_scale = 0.6f * (1.3f - cq);
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        const DartHit& h = f.per_cam[i];
+        if (h.cam_id < 0 || h.zone.empty()) continue;
+        const float viewq = std::clamp(h.view_q, 0.05f, 1.f);
+        addW(h.zone, h.score,
+             std::max(h.zone_margin_mm, 0.25f) * viewq * own_scale,
+             h.zone_margin_mm);
+    }
+
+    if (n_acc == 0) return;   // no usable geometry; leave fusion's own label
+
+    int   wi = 0;
+    float total = 0.f;
+    for (int i = 0; i < n_acc; ++i) {
+        total += acc[i].weight;
+        if (acc[i].weight > acc[wi].weight) wi = i;
+    }
+    if (total <= 0.f) return;
+
+    f.zone  = acc[wi].label;
+    f.score = acc[wi].score;
+
+    // ── Honest confidence ───────────────────────────────────────────────────
+    //   consensus  — winner's share of the total vote weight (collapses when
+    //                sources split between labels: a fragile sector call).
+    //   placement  — erf(margin / (sigma·√2)): chance a Gaussian positional
+    //                error leaves the label intact.  sigma is the small fused
+    //                value when triangulated, inflated to the along-slide for a
+    //                lone camera (whose tip is free to be wrong along its axis).
+    //   ring_mass  — for a narrow ring band (triple/double/bull/25): the actual
+    //                Gaussian probability mass of the radius inside that band,
+    //                from the fused RADIAL sigma.  Parameter-free: an
+    //                un-triangulated or radius-uncertain T/D earns near-zero
+    //                confidence and gets flagged for review, without ever
+    //                downgrading a correct-but-edge label.
+    float sigma_eff = std::max(f.sigma_mm, 0.5f);
+    if (n_voters < 2) {
+        for (int i = 0; i < NUM_CAMS; ++i)
+            if (f.per_cam[i].cam_id >= 0)
+                sigma_eff = std::max(sigma_eff, f.per_cam[i].sigma_along_mm);
+    }
+    const float consensus = acc[wi].weight / total;
+    const float placement = std::erf(
+        acc[wi].best_margin / (sigma_eff * static_cast<float>(M_SQRT2)));
+
+    float ring_mass = 1.f;
+    {
+        float lo = 0.f, hi = 0.f;
+        bool narrow = false;
+        const std::string& z = f.zone;
+        if (!z.empty() && z[0] == 'T') {
+            lo = board::TRIPLE_INNER; hi = board::TRIPLE_OUTER; narrow = true;
+        } else if (!z.empty() && z[0] == 'D') {
+            lo = board::DOUBLE_INNER; hi = board::DOUBLE_OUTER; narrow = true;
+        } else if (z == "Bull") {
+            lo = 0.f; hi = board::BULLSEYE_RADIUS; narrow = true;
+        } else if (z == "25") {
+            lo = board::BULLSEYE_RADIUS; hi = board::BULL_RADIUS; narrow = true;
+        }
+        if (narrow) {
+            const float r  = std::sqrt(X.x * X.x + X.y * X.y);
+            const float sr = std::max(f.sigma_r_mm, 0.5f);
+            auto Phi = [](float zz) {
+                return 0.5f * (1.f + std::erf(zz * static_cast<float>(M_SQRT1_2)));
+            };
+            ring_mass = std::clamp(Phi((hi - r) / sr) - Phi((lo - r) / sr),
+                                   0.f, 1.f);
+        }
+    }
+    f.confidence = std::clamp(consensus * placement * ring_mass, 0.f, 1.f);
 }
 
 void Pipeline::watchdogStuckHuman()
