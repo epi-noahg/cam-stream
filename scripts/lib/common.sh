@@ -17,6 +17,7 @@ REPO_ROOT="$(cd "$LIB_DIR/../.." && pwd)"
 WEB_DIR="$REPO_ROOT/GoDartss"
 ANDROID_DIR="$WEB_DIR/android"
 SERVER_SRC="$REPO_ROOT/dartserver"
+DETECTION_SRC="$REPO_ROOT/detection"
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 if [ -t 1 ]; then

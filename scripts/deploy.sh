@@ -67,6 +67,13 @@ needs() { grep -q "$1" <<<"$CHANGED"; }
 DID_SERVER=0
 DID_WEB=0
 
+# A detection/ change rebuilds the standalone camdetect tools (autocalib,
+# calibrate, …). No service runs these, so this never triggers a restart.
+if needs "^detection/" || [ "$FORCE" -eq 1 ]; then
+  info "detection changed → rebuilding standalone camdetect tools"
+  run "$REPO_ROOT/scripts/build-detection.sh" release
+fi
+
 # The dartserver build embeds the camdetect library via add_subdirectory(../detection),
 # so a change under detection/ must rebuild (and restart) the server too.
 if needs "^dartserver/" || needs "^detection/" || [ "$FORCE" -eq 1 ]; then
