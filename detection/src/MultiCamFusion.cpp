@@ -212,17 +212,60 @@ std::optional<FusedHit> MultiCamFusion::fuseVotes(const std::vector<DartHit>& vo
     // i.e. the crossing of the cams' axis lines.  A camera that slid 30 mm
     // up its own shaft still pulls the solution onto its line sideways,
     // exactly where its information actually is.
-    cv::Matx22f W_sum = cv::Matx22f::zeros();
-    cv::Vec2f   Wx_sum{0.f, 0.f};
-    for (int m : members) {
-        const cv::Matx22f W = covOf(votes[m]).inv();
-        W_sum  = W_sum + W;
-        Wx_sum = Wx_sum + W * cv::Vec2f(votes[m].board_xy.x,
-                                        votes[m].board_xy.y);
+    auto solve = [&](const std::vector<int>& mem,
+                     cv::Matx22f& C_out, cv::Point2f& x_out) {
+        cv::Matx22f W_sum = cv::Matx22f::zeros();
+        cv::Vec2f   Wx_sum{0.f, 0.f};
+        for (int m : mem) {
+            const cv::Matx22f W = covOf(votes[m]).inv();
+            W_sum  = W_sum + W;
+            Wx_sum = Wx_sum + W * cv::Vec2f(votes[m].board_xy.x,
+                                            votes[m].board_xy.y);
+        }
+        C_out = W_sum.inv();
+        const cv::Vec2f xv = C_out * Wx_sum;
+        x_out = {xv[0], xv[1]};
+    };
+
+    cv::Matx22f C_fused;
+    cv::Point2f centroid;
+    solve(members, C_fused, centroid);
+
+    // Robust refit (leave-one-out).  A single subtly-bad axis can stay inside
+    // the slide-consistency cluster yet lever the crossing — and because
+    // Pipeline then back-projects the crossing into every camera's zone map,
+    // a corrupted crossing would read as a FALSELY UNANIMOUS wrong zone.  With
+    // ≤3 votes RANSAC is theatre; instead, if 3+ cams contribute, find the
+    // member whose ACROSS-axis residual to the crossing is largest and, if it
+    // exceeds a χ²-ish gate, drop it and refit on the rest.
+    if (members.size() >= 3) {
+        // Score each camera by its across-residual to the crossing of the OTHER
+        // cameras (leave-one-out).  Crucially NOT to the full-solve centroid:
+        // that is already contaminated by a bad axis (pulled toward it along a
+        // good camera's loose along-direction), which masks the very outlier we
+        // want to catch.  The leave-one-out crossing is uncontaminated by k, so
+        // a genuinely bad camera shows a large honest residual to it.
+        int         worst   = -1;
+        float       worst_r = 0.f;
+        cv::Matx22f best_C   = C_fused;
+        cv::Point2f best_X   = centroid;
+        for (int k : members) {
+            std::vector<int> others;
+            for (int m : members) if (m != k) others.push_back(m);
+            cv::Matx22f Ck; cv::Point2f Xk;
+            solve(others, Ck, Xk);
+            const float rr = mahaSq(votes[k].board_xy - Xk, covOf(votes[k]));
+            if (rr > worst_r) { worst_r = rr; worst = k; best_C = Ck; best_X = Xk; }
+        }
+        constexpr float OUTLIER_MAHA = 9.f;   // ~3σ in the tight across direction
+        if (worst >= 0 && worst_r > OUTLIER_MAHA) {
+            std::vector<int> kept;
+            for (int m : members) if (m != worst) kept.push_back(m);
+            members.swap(kept);
+            C_fused  = best_C;       // the clean crossing of the kept cameras
+            centroid = best_X;
+        }
     }
-    const cv::Matx22f C_fused = W_sum.inv();
-    const cv::Vec2f   xv      = C_fused * Wx_sum;
-    const cv::Point2f centroid{xv[0], xv[1]};
 
     // Fused 1-sigma: worst direction of the fused covariance, inflated when
     // the members' residuals exceed what their error models promised
@@ -231,12 +274,30 @@ std::optional<FusedHit> MultiCamFusion::fuseVotes(const std::vector<DartHit>& vo
     const float det  = C_fused(0,0)*C_fused(1,1) - C_fused(0,1)*C_fused(1,0);
     const float disc = std::sqrt(std::max(0.f, tr*tr - 4.f*det));
     float sigma_fused = std::sqrt(std::max(0.25f, (tr + disc) * 0.5f));
+    float infl = 1.f;
     if (members.size() >= 2) {
         float r_sum = 0.f;
         for (int m : members)
             r_sum += mahaSq(votes[m].board_xy - centroid, covOf(votes[m]));
         const float r_mean = r_sum / static_cast<float>(members.size());
-        if (r_mean > 2.f) sigma_fused *= std::sqrt(r_mean * 0.5f);
+        if (r_mean > 2.f) infl = std::sqrt(r_mean * 0.5f);
+    }
+    sigma_fused *= infl;
+
+    // Radial 1-sigma at the crossing: project the fused covariance onto the
+    // unit radial r̂.  This is what the ring (single/triple/double) decision
+    // must be gated on — when no camera sees the spot near-tangentially,
+    // radius lives in the loose along-axis direction and sigma_r is large.
+    float sigma_r = sigma_fused;
+    {
+        const float r = std::sqrt(centroid.x*centroid.x + centroid.y*centroid.y);
+        if (r > 1e-3f) {
+            const cv::Vec2f rh{centroid.x / r, centroid.y / r};
+            const float var_r =
+                rh[0]*(C_fused(0,0)*rh[0] + C_fused(0,1)*rh[1]) +
+                rh[1]*(C_fused(1,0)*rh[0] + C_fused(1,1)*rh[1]);
+            sigma_r = std::sqrt(std::max(0.25f, var_r)) * infl;
+        }
     }
 
     // ── Zone: probability-weighted vote ────────────────────────────────────
@@ -306,6 +367,7 @@ std::optional<FusedHit> MultiCamFusion::fuseVotes(const std::vector<DartHit>& vo
     f.score      = winner->zr.value;
     f.board_xy   = centroid;
     f.sigma_mm   = sigma_fused;
+    f.sigma_r_mm = sigma_r;
     f.confidence = std::clamp(p_right * consensus, 0.f, 1.f);
     f.timestamp  = votes[members.front()].timestamp;
     for (int m : members) {

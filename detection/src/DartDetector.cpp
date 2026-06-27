@@ -97,6 +97,16 @@ struct Endpoints {
     float       width_a   {0.f};   // cross-section near `a`
     float       width_b   {0.f};   // cross-section near `b`
     float       width_mid {0.f};   // cross-section near the dart's middle
+    /// RMS perpendicular residual (px) of the cross-section midpoints to the
+    /// fitted axis line.  Small for a real (straight, collinear) dart, large
+    /// for an occluded / forked / blob-like silhouette.  -1 when not measured
+    /// (too few midpoints).  A band-independent silhouette-straightness signal.
+    float       residual_rms {-1.f};
+    /// Cross-section midpoints in IMAGE space (the points the axis line was fit
+    /// through).  Mapped to board space by the caller to estimate the dart
+    /// line's angular uncertainty (slope standard error) for the fusion
+    /// across-axis covariance.  Empty when too few slices were available.
+    std::vector<cv::Point2f> midpts_img;
 };
 
 /// Expand `seed_bb` along `dir` by `axial_pad` pixels on each side, and by
@@ -258,11 +268,24 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
 
     // ── 5. Refit line through cross-section midpoints ──────────────────────
     cv::Point2f dir1, origin1;
+    float       residual_rms = -1.f;
     if (midpts.size() >= 3) {
         cv::Vec4f line1;
         cv::fitLine(midpts, line1, cv::DIST_L2, 0, 0.01, 0.01);
         dir1    = {line1[0], line1[1]};
         origin1 = {line1[2], line1[3]};
+        // RMS perpendicular residual of the midpoints to the fitted axis —
+        // a real dart's slice centres are collinear (small), a fork/blob's
+        // are not.  Band-independent silhouette-straightness signal.
+        const cv::Point2f perpf{-dir1.y, dir1.x};
+        double s2 = 0.0;
+        for (const auto& m : midpts) {
+            const float d = (m.x - origin1.x) * perpf.x +
+                            (m.y - origin1.y) * perpf.y;
+            s2 += static_cast<double>(d) * d;
+        }
+        residual_rms = static_cast<float>(
+            std::sqrt(s2 / static_cast<double>(midpts.size())));
     } else {
         dir1    = dir0;
         origin1 = origin0;
@@ -312,7 +335,9 @@ Endpoints dartAxisByMidpoints(const std::vector<cv::Point>& seed_contour,
     r.dir       = dir1;
     r.width_a   = width_a;
     r.width_b   = width_b;
-    r.width_mid = width_mid;
+    r.width_mid    = width_mid;
+    r.residual_rms = residual_rms;
+    r.midpts_img   = std::move(midpts);
     return r;
 }
 
@@ -439,6 +464,8 @@ void DartDetector::reset()
     jitter_sq_sum_           = 0.f;
     jitter_n_                = 0;
     has_candidate_           = false;
+    dist_acc_.release();
+    dist_acc_n_              = 0;
     emitted_                 = false;
     last_tip_pixel_          = {};
     last_viz_                = {};
@@ -517,8 +544,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     const cv::Mat ker3 = cv::getStructuringElement(cv::MORPH_RECT, {3, 3});
     const cv::Mat ker7 = cv::getStructuringElement(cv::MORPH_RECT, {7, 7});
 
-    auto buildMask = [&](const cv::Mat& reference) {
-        cv::Mat dist = labDistance(lab, reference);
+    auto maskFromDist = [&](const cv::Mat& dist) {
         cv::Mat dist8;
         dist.convertTo(dist8, CV_8U, 1.0, 0.0);
         cv::GaussianBlur(dist8, dist8, {5, 5}, 0);
@@ -528,9 +554,18 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         cv::morphologyEx(m, m, cv::MORPH_CLOSE, ker7);
         return m;
     };
+    auto buildMask = [&](const cv::Mat& reference) {
+        return maskFromDist(labDistance(lab, reference));
+    };
 
     const bool use_throw_bg = !throw_bg_lab_.empty();
-    cv::Mat mask       = buildMask(use_throw_bg ? throw_bg_lab_ : bg_lab_);
+    // Retain the raw dart-reference distance: it is accumulated across the
+    // stability window so the EMIT-time axis/tip can be re-fit on a temporally
+    // denoised silhouette that recovers dark-on-dark tip pixels (below the
+    // per-frame threshold but consistent across frames).
+    const cv::Mat dart_dist = labDistance(lab,
+                                  use_throw_bg ? throw_bg_lab_ : bg_lab_);
+    cv::Mat mask       = maskFromDist(dart_dist);
     cv::Mat human_mask = use_throw_bg ? buildMask(bg_lab_) : mask;
 
     // Keep the cumulative mask queryable by peers (cross-cam support).
@@ -788,18 +823,27 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     //
     // throw_bg_lab_ tracks the POST-COMMIT reference: gate it on the dart
     // mask (anything NEW since the snap shouldn't be absorbed).
-    {
-        cv::Mat update_mask;
-        cv::bitwise_not(human_mask, update_mask);
-        for (const auto& tip : logged_tips_px_) {
-            cv::circle(update_mask, tip, 20, cv::Scalar(0), -1);
+    // Freeze both references while a dart candidate is being tracked: the
+    // marginal sub-threshold tip/shaft pixels the temporal refit needs to
+    // recover are, by definition, OUTSIDE the per-frame mask and so would be
+    // ABSORBED into the reference over exactly the accumulation window
+    // (~20% at α·N), monotonically weakening the very signal we sum.  The
+    // window is ≤17 frames; adaptation resumes the next non-candidate frame.
+    if (!has_candidate_) {
+        {
+            cv::Mat update_mask;
+            cv::bitwise_not(human_mask, update_mask);
+            for (const auto& tip : logged_tips_px_) {
+                cv::circle(update_mask, tip, 20, cv::Scalar(0), -1);
+            }
+            cv::accumulateWeighted(lab, bg_lab_, BG_UPDATE_ALPHA, update_mask);
         }
-        cv::accumulateWeighted(lab, bg_lab_, BG_UPDATE_ALPHA, update_mask);
-    }
-    if (!throw_bg_lab_.empty()) {
-        cv::Mat update_mask;
-        cv::bitwise_not(mask, update_mask);
-        cv::accumulateWeighted(lab, throw_bg_lab_, BG_UPDATE_ALPHA, update_mask);
+        if (!throw_bg_lab_.empty()) {
+            cv::Mat update_mask;
+            cv::bitwise_not(mask, update_mask);
+            cv::accumulateWeighted(lab, throw_bg_lab_, BG_UPDATE_ALPHA,
+                                   update_mask);
+        }
     }
 
     // Board-clean must be judged against the EMPTY-BOARD reference
@@ -933,6 +977,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     // Stability tracking.  The accumulated per-frame tip movement over the
     // stable window doubles as a measured pixel-noise estimate for the
     // confidence model below.
+    auto resetAccum = [&] { dist_acc_ = dart_dist.clone(); dist_acc_n_ = 1; };
     if (has_candidate_) {
         const cv::Point2f d = best_tip - last_tip_pixel_;
         const float movement = std::sqrt(d.x*d.x + d.y*d.y);
@@ -940,20 +985,90 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             ++stable_frames_;
             jitter_sq_sum_ += movement * movement;
             ++jitter_n_;
+            if (dist_acc_.empty() || dist_acc_.size() != dart_dist.size())
+                resetAccum();
+            else { dist_acc_ += dart_dist; ++dist_acc_n_; }
         } else {
             stable_frames_ = 1;
             jitter_sq_sum_ = 0.f;
             jitter_n_      = 0;
+            resetAccum();
         }
     } else {
         stable_frames_ = 1;
         jitter_sq_sum_ = 0.f;
         jitter_n_      = 0;
+        resetAccum();
     }
     last_tip_pixel_ = best_tip;
     has_candidate_  = true;
 
     if (stable_frames_ < STABLE_FRAMES_REQUIRED) return std::nullopt;
+    // ── Temporal silhouette refit ───────────────────────────────────────────
+    // Re-fit the axis & tip on the stability-window AVERAGE of the raw LAB
+    // distance.  Averaging suppresses per-frame sensor noise (~√N), so a
+    // modestly lower threshold recovers the temporally-consistent low-contrast
+    // (dark-on-dark) tip/shaft pixels that single-frame thresholding drops —
+    // extending the "farthest in-band pixel" tip out toward the true contact
+    // point and undoing the inward radius bias.  Detection / stability / ghost
+    // logic already ran on the per-frame mask; this only sharpens the EMITTED
+    // geometry, and only when the refit agrees with the per-frame tip (sanity).
+    if (dist_acc_n_ >= 4 && !dist_acc_.empty()) {
+        cv::Mat avg = dist_acc_ * (1.0 / static_cast<double>(dist_acc_n_));
+        cv::Mat ad8, amask;
+        avg.convertTo(ad8, CV_8U);
+        cv::GaussianBlur(ad8, ad8, {5, 5}, 0);
+        cv::threshold(ad8, amask, diff_threshold_ * 0.75f, 255,
+                      cv::THRESH_BINARY);
+        cv::morphologyEx(amask, amask, cv::MORPH_OPEN,  ker3);
+        cv::morphologyEx(amask, amask, cv::MORPH_CLOSE, ker7);
+
+        std::vector<std::vector<cv::Point>> acont;
+        cv::findContours(amask, acont, cv::RETR_EXTERNAL,
+                         cv::CHAIN_APPROX_NONE);
+        const std::vector<cv::Point>* seed = nullptr;
+        double best_d2 = 1e18;
+        for (const auto& c : acont) {
+            if (cv::contourArea(c) < MIN_BLOB_AREA) continue;
+            const double d  = cv::pointPolygonTest(c, best_tip, true);
+            const double d2 = d >= 0.0 ? 0.0 : d * d;   // 0 when tip is inside
+            if (d2 < best_d2) { best_d2 = d2; seed = &c; }
+        }
+        if (seed && best_d2 <= 25.0 * 25.0) {
+            const Endpoints rep =
+                dartAxisByMidpoints(*seed, amask, line_merge_perp_px_);
+            if (cv::norm(rep.a - rep.b) > 1.f) {
+                const cv::Point2f a_board = calib_.imageToBoard(rep.a);
+                const cv::Point2f b_board = calib_.imageToBoard(rep.b);
+                const float a_r2 = a_board.dot(a_board);
+                const float b_r2 = b_board.dot(b_board);
+                bool a_is_tip;
+                if (rep.width_a > 0.f && rep.width_b > 0.f &&
+                    std::abs(rep.width_a - rep.width_b) >
+                        0.10f * std::max(rep.width_a, rep.width_b))
+                    a_is_tip = rep.width_a < rep.width_b;
+                else
+                    a_is_tip = a_r2 < b_r2;
+                const cv::Point2f new_tip = a_is_tip ? rep.a : rep.b;
+                const cv::Point2f new_xy  = a_is_tip ? a_board : b_board;
+                const float new_r = std::sqrt(new_xy.dot(new_xy));
+                // Accept only a sane refinement near the per-frame tip.
+                if (new_r <= MAX_BOARD_RADIUS_MM &&
+                    cv::norm(new_tip - best_tip) <= 30.f) {
+                    best_ep       = rep;
+                    best_tip      = new_tip;
+                    best_board_xy = new_xy;
+                    best_dir      = a_is_tip ? rep.dir : -rep.dir;
+                    // NOTE: deliberately do NOT rebuild best_region from the
+                    // lower-threshold averaged silhouette — committed_regions_
+                    // (ghost suppression) must stay on the TIGHT per-frame
+                    // footprint, else a denser refit region overlaps a genuine
+                    // nearby same-sector dart >GHOST_OVERLAP_FRAC and wrongly
+                    // suppresses it.  The refit only sharpens tip/axis/zone.
+                }
+            }
+        }
+    }
 
     // Emit + log this dart so the next frame finds the NEXT dart.  ALWAYS
     // record the tip — otherwise a dart seen after the list is full is never
@@ -1028,12 +1143,19 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     const float length  = static_cast<float>(cv::norm(best_ep.a - best_ep.b));
     const float w_mid   = std::max(1.f, best_ep.width_mid);
     const float aspect  = length / w_mid;
-    const bool  a_was_tip = (best_tip.x == best_ep.a.x &&
-                             best_tip.y == best_ep.a.y);
-    const float tip_w   = a_was_tip ? best_ep.width_a : best_ep.width_b;
-    const float aspect_q   = std::clamp(aspect / 8.f,            0.2f, 1.f);
-    const float tip_sharp  = std::clamp(1.f - tip_w / w_mid,     0.2f, 1.f);
-    const float shape_q    = std::clamp(aspect_q * tip_sharp,    0.05f, 1.f);
+    // Silhouette quality from two BAND-INDEPENDENT signals (the old
+    // tip-taper term measured width inside the ±perp_tol core where a dart
+    // is uniform, so it always collapsed to its floor and pinned shape_q at
+    // ~0.20 — see ARCH notes).  Now:
+    //   aspect_q   elongation: length / mid-width (blobs score low).
+    //   straight_q collinearity of the cross-section midpoints: a real dart's
+    //              slice centres lie on a line, a fork / occlusion / blob's
+    //              scatter.  Independent of the perp band.
+    const float aspect_q   = std::clamp((aspect - 2.f) / 8.f, 0.10f, 1.f);
+    const float straight_q = best_ep.residual_rms >= 0.f
+        ? std::clamp(1.f - best_ep.residual_rms / 3.f, 0.15f, 1.f)
+        : 0.5f;   // too few midpoints to judge → neutral
+    const float shape_q    = std::clamp(aspect_q * straight_q, 0.05f, 1.f);
 
     // Local mm-per-pixel scale at the tip ({min, max} singular values).
     constexpr float DEFAULT_MM_PER_PX = 0.6f;   // ~uncalibrated fallback
@@ -1092,17 +1214,67 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             ALONG_BASE_PX + jitter_px + (1.f - shape_q) * ALONG_SHAPE_PX;
         const float sigma_across_px = BASE_TIP_NOISE_PX + jitter_px;
 
+        // A homography maps a straight image line to a straight board line, so
+        // the Jacobian tangent at the tip is ALREADY exactly along that board
+        // line — i.e. the true tip→tail chord direction (verified: 0.000° vs
+        // the full chord).  Crossing these board lines across cameras therefore
+        // recovers the 3D contact point exactly; the along-axis tip slide only
+        // moves each board_xy along its own line, never the crossing.
         if (along_scale > 1e-6f)
             hit_axis_board = {along_b[0] / along_scale,
                               along_b[1] / along_scale};
 
         hit_sigma_along_mm  = std::max(2.f,
             (along_scale  > 0.f ? along_scale  : scale[1]) * sigma_along_px);
-        // Floor at the residual calibration bias: even a perfect axis fit
-        // doesn't place the board-space line better than the homography
-        // does, and crossing two lines AMPLIFIES any offset between them.
-        hit_sigma_across_mm = std::max(2.5f,
+
+        // Base across error: the axis-fit lateral noise at the tip, floored at
+        // the residual calibration bias (crossing two lines amplifies offsets).
+        const float across_base_mm = std::max(2.5f,
             (across_scale > 0.f ? across_scale : scale[0]) * sigma_across_px);
+
+        // ── Angular (line-orientation) uncertainty → across error ───────────
+        // A short / foreshortened / fragmented silhouette pins the tip ACROSS
+        // its axis but leaves the axis ANGLE poorly determined.  That angular
+        // error, levered from the fit CENTROID out to the contact point (~half
+        // the shaft away), is a real across displacement of the board line at
+        // the tip — exactly what corrupts the multi-cam crossing for grazing
+        // far-rim darts.  Estimate the board-space slope standard error from the
+        // cross-section midpoints mapped through the homography (so the
+        // anisotropic px→mm scaling is handled exactly): sigma_phi =
+        // sqrt(resid² + base²)·sqrt(12/N)/span, with the sqrt(12/N) slope-SE
+        // factor so a sparse 2-3-point fit reads honestly uncertain instead of
+        // falsely collinear.  Add lever·sigma_phi in quadrature.
+        float across_extra_mm = 12.f;   // N<3 → angle unconstrained → loose
+        const int Nmp = static_cast<int>(best_ep.midpts_img.size());
+        if (Nmp >= 3 && calib_.isValid()) {
+            std::vector<cv::Point2f> mb;
+            cv::perspectiveTransform(best_ep.midpts_img, mb,
+                                     calib_.homography_img_to_board);
+            cv::Point2f c{0.f, 0.f};
+            for (const auto& p : mb) c += p;
+            c *= 1.f / static_cast<float>(Nmp);
+            const cv::Point2f perp_b{-hit_axis_board.y, hit_axis_board.x};
+            double s2 = 0.0; float tmin = 1e9f, tmax = -1e9f;
+            for (const auto& p : mb) {
+                const cv::Point2f d = p - c;
+                const float resid = d.x*perp_b.x + d.y*perp_b.y;
+                s2 += static_cast<double>(resid) * resid;
+                const float t = d.x*hit_axis_board.x + d.y*hit_axis_board.y;
+                tmin = std::min(tmin, t); tmax = std::max(tmax, t);
+            }
+            const float rms_mm  = static_cast<float>(std::sqrt(s2 / Nmp));
+            const float span_mm = std::max(5.f, tmax - tmin);
+            constexpr float BASE_RESID_MM = 0.6f;   // irreducible board-fit noise
+            const float sigma_phi = std::sqrt(rms_mm*rms_mm +
+                                              BASE_RESID_MM*BASE_RESID_MM) *
+                                    std::sqrt(12.f / static_cast<float>(Nmp)) /
+                                    span_mm;                              // rad
+            const float lever_mm = static_cast<float>(
+                cv::norm(best_board_xy - c));   // fit centroid → contact (≈ tip)
+            across_extra_mm = lever_mm * sigma_phi;
+        }
+        hit_sigma_across_mm = std::sqrt(across_base_mm * across_base_mm +
+                                        across_extra_mm * across_extra_mm);
     }
 
     dumpEmit(frame, mask, best_region, best_ep.a, best_ep.b, best_tip,
