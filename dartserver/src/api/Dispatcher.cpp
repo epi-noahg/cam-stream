@@ -36,6 +36,9 @@ void Dispatcher::wire() {
     det_.setOnBoardStatus([this](const dart::detect::BoardStatus& b) {
         ws_.broadcast(boardStatusToJson(b).dump());
     });
+    det_.setOnAutoCalib([this](int cam, const dart::detect::AutoCalibOutcome& r) {
+        ws_.broadcast(autoCalibResultToJson(cam, r).dump());
+    });
     if (db_)
         gm_.setOnGameOver([this](const dart::game::GameState& s) {
             db_->recordFinishedGame(s);
@@ -167,22 +170,31 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
                                              det_.isReplay()).dump());
         } else if (type == "get_camera_snapshot") {
             const int maxW = j.value("maxWidth", 480);
+            const bool ov = j.value("overlay", false);
             json arr = json::array();
             auto addCam = [&](int c) {
-                std::string b64 = det_.cameraSnapshotJpeg(c, maxW);
+                std::string b64 = det_.cameraSnapshotJpeg(c, maxW, ov);
                 if (!b64.empty()) arr.push_back({{"camId", c}, {"jpeg", b64}});
             };
             if (j.contains("cam")) addCam(j.at("cam").get<int>());
             else for (int c = 0; c < dart::detect::NUM_CAMS; ++c) addCam(c);
             ws_.sendTo(id, json{{"type", "camera_snapshot"},
-                                {"cams", arr}}.dump());
+                                {"cams", arr}, {"overlay", ov}}.dump());
         } else if (type == "run_autocalib") {
             const int cam = j.at("cam").get<int>();
             const auto opt =
                 autoCalibOptionsFromJson(j.value("options", json::object()));
-            const auto res = det_.runAutoCalib(cam, opt);
-            ws_.sendTo(id, autoCalibResultToJson(cam, res).dump());
-            ack(res.ok, res.ok ? "" : res.error);
+            const bool started = det_.runAutoCalibAsync(cam, opt);
+            if (started) {
+                ack(true);
+            } else {
+                // Surface the rejection as a failed result so the UI's per-cam
+                // "scanning" state clears instead of spinning forever.
+                dart::detect::AutoCalibOutcome busyOut;
+                busyOut.error = "un scan est déjà en cours";
+                ws_.sendTo(id, autoCalibResultToJson(cam, busyOut).dump());
+                ack(false, busyOut.error);
+            }
         } else if (type == "save_calibration") {
             const int cam = j.at("cam").get<int>();
             std::string err;

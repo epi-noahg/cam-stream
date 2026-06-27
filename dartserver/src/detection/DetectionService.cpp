@@ -61,6 +61,9 @@ struct DetectionService::PendingCalibs {
         cv::Mat                     frame;
     };
     std::array<Slot, NUM_CAMS> slots;
+    // Currently-applied zone maps (loaded at init / updated on save), used to
+    // draw the live "current calibration" overlay.
+    std::array<camdetect::ZoneMap, NUM_CAMS> current;
 };
 
 namespace {
@@ -151,6 +154,7 @@ bool DetectionService::init(const Config& cfg) {
         const std::string zpath =
             camdetect::ZoneMap::companionPath(cfg_.calibPaths[c]);
         if (zm.loadFromFile(zpath)) {
+            pending_->current[c] = zm;             // copy for the live overlay
             pipeline_->setZoneMap(c, std::move(zm));
             std::cout << "[detection] cam" << c << " zone map: " << zpath << "\n";
         }
@@ -190,6 +194,7 @@ void DetectionService::stop() {
     for (auto& t : feed_threads_) if (t.joinable()) t.join();
     feed_threads_.clear();
     if (status_thread_.joinable()) status_thread_.join();
+    if (scan_thread_.joinable()) scan_thread_.join();
 }
 
 // Interleaved lockstep replay with transport controls (pause / step / seek)
@@ -435,9 +440,18 @@ std::vector<CalibCamInfo> DetectionService::calibrationInfo() const {
     return out;
 }
 
-std::string DetectionService::cameraSnapshotJpeg(int cam, int maxWidth) const {
+std::string DetectionService::cameraSnapshotJpeg(int cam, int maxWidth,
+                                                 bool overlayCurrent) const {
     cv::Mat f;
     if (!latestFrame_(cam, f)) return {};
+    if (overlayCurrent && cam >= 0 && cam < NUM_CAMS) {
+        camdetect::ZoneMap zm;
+        {
+            std::lock_guard<std::mutex> lk(pending_mtx_);
+            zm = pending_->current[cam];
+        }
+        if (!zm.empty() && zm.size() == f.size()) f = zm.overlay(f);
+    }
     return encodeJpegBase64(f, maxWidth);
 }
 
@@ -488,6 +502,19 @@ AutoCalibOutcome DetectionService::runAutoCalib(int cam,
     return out;
 }
 
+bool DetectionService::runAutoCalibAsync(int cam, const AutoCalibOptions& opt) {
+    bool expected = false;
+    if (!scanning_.compare_exchange_strong(expected, true))
+        return false;                                   // a scan is in flight
+    if (scan_thread_.joinable()) scan_thread_.join();   // reap the previous one
+    scan_thread_ = std::thread([this, cam, opt] {
+        AutoCalibOutcome out = runAutoCalib(cam, opt);
+        if (on_autocalib_) on_autocalib_(cam, out);
+        scanning_ = false;
+    });
+    return true;
+}
+
 bool DetectionService::saveCalibration(int cam, std::string& err) {
     if (cam < 0 || cam >= NUM_CAMS) { err = "invalid camera"; return false; }
 
@@ -518,10 +545,11 @@ bool DetectionService::saveCalibration(int cam, std::string& err) {
     // Hot-swap into the running pipeline so the new calibration is used now.
     if (pipeline_) {
         pipeline_->setCalibration(cam, calib);
-        pipeline_->setZoneMap(cam, std::move(zoneMap));
+        pipeline_->setZoneMap(cam, zoneMap);   // copy; keep one for the overlay
     }
 
     std::lock_guard<std::mutex> lk(pending_mtx_);
+    pending_->current[cam] = std::move(zoneMap);
     pending_->slots[cam].valid = false;
     return true;
 }

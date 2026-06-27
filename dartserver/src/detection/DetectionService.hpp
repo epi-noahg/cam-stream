@@ -59,6 +59,8 @@ public:
     };
 
     using BoardStatusCallback = std::function<void(const BoardStatus&)>;
+    /// Fired when an async auto-scan finishes; carries the camera + outcome.
+    using AutoCalibCallback   = std::function<void(int, const AutoCalibOutcome&)>;
 
     explicit DetectionService(dart::game::GameManager& gm);
     ~DetectionService();
@@ -71,6 +73,7 @@ public:
     void stop();
 
     void setOnBoardStatus(BoardStatusCallback cb) { on_status_ = std::move(cb); }
+    void setOnAutoCalib(AutoCalibCallback cb) { on_autocalib_ = std::move(cb); }
     BoardStatus boardStatus() const;
 
     /// True once a replay run has consumed all frames (never set in live mode).
@@ -87,12 +90,18 @@ public:
     std::vector<CalibCamInfo> calibrationInfo() const;
     /// Latest frame from one camera as a base64 JPEG (scaled to maxWidth),
     /// or "" if no frame is available yet.
-    std::string cameraSnapshotJpeg(int cam, int maxWidth = 480) const;
+    std::string cameraSnapshotJpeg(int cam, int maxWidth = 480,
+                                   bool overlayCurrent = false) const;
     /// Run the AutoCalibrator on the latest frame of one camera.  The result
     /// (calibration + zone map + the frame) is held pending until
     /// saveCalibration() persists it; the returned outcome carries the
     /// diagnostics + an overlay preview for the UI.
     AutoCalibOutcome runAutoCalib(int cam, const AutoCalibOptions& opt);
+    /// Non-blocking variant: runs the scan on a worker thread and delivers the
+    /// outcome via the AutoCalibCallback, so the WS connection keeps serving
+    /// snapshots/commands while a (possibly slow) scan runs.  Returns false if
+    /// a scan is already in flight.
+    bool runAutoCalibAsync(int cam, const AutoCalibOptions& opt);
     /// Persist the pending auto-calib result (camN.yml + camN_zones.png) and
     /// hot-swap it into the live pipeline.  False (+ err) if nothing pending.
     bool saveCalibration(int cam, std::string& err);
@@ -126,6 +135,9 @@ private:
     std::atomic<bool>                  running_ {false};
     std::atomic<bool>                  finished_ {false};
     BoardStatusCallback                on_status_;
+    AutoCalibCallback                  on_autocalib_;
+    std::atomic<bool>                  scanning_ {false};
+    std::thread                        scan_thread_;
 
     // Replay transport state (driven by the control window).
     std::atomic<bool>                  paused_ {false};

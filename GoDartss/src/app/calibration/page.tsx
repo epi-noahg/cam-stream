@@ -3,15 +3,17 @@
 /**
  * Onglet Calibration — piloté par le serveur de fléchettes autoritatif.
  *
- * Affiche les 3 caméras (aperçu live), les configs disponibles (camN.yml +
- * zone map), permet de relancer un auto-scan (AutoCalibrator), d'ajuster les
- * réglages, puis de sauvegarder le bon résultat — qui est alors écrit sur
- * disque ET appliqué à chaud au pipeline en cours.
+ * - Affiche en continu la CALIBRATION ACTUELLE dessinée sur le flux live de
+ *   chaque caméra (toggle "Calibration actuelle").
+ * - Relance un auto-scan (AutoCalibrator) en arrière-plan : l'aperçu live
+ *   continue de tourner pendant le scan, et le résultat arrive en broadcast.
+ * - Permet d'ajuster les réglages puis d'enregistrer le bon résultat — écrit
+ *   sur disque ET appliqué à chaud au pipeline en cours.
  */
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Crosshair, ScanLine, Save, RotateCcw, Play, Pause } from "lucide-react";
+import { ArrowLeft, Crosshair, ScanLine, Save, RotateCcw, Play, Pause, CheckCircle2, Loader2 } from "lucide-react";
 import { useDartStore } from "@/store/dartStore";
 import type { CalibCamInfo, CamState } from "@/lib/dartTypes";
 
@@ -34,6 +36,8 @@ const DEFAULT_OPT: Opt = {
   hintX: -1,
   hintY: -1,
 };
+
+const SCAN_TIMEOUT_MS = 60000;
 
 const CAM_STATE_LABEL: Record<CamState, string> = {
   warmup: "Apprentissage…",
@@ -74,16 +78,21 @@ export default function CalibrationPage() {
 
   const [opts, setOpts] = useState<Record<number, Opt>>({});
   const [busy, setBusy] = useState<Record<number, boolean>>({});
+  const [timedOut, setTimedOut] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   const [savedFlash, setSavedFlash] = useState<Record<number, boolean>>({});
-  const [showOverlay, setShowOverlay] = useState<Record<number, boolean>>({});
+  const [view, setView] = useState<Record<number, "live" | "result">>({});
+  const [showCurrentCalib, setShowCurrentCalib] = useState(true);
   const [live, setLive] = useState(true);
 
   const prevResults = useRef<Record<number, unknown>>({});
   const prevCalib = useRef<unknown>(null);
   const pendingSaves = useRef<Set<number>>(new Set());
+  const scanTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
 
   const getOpt = (map: Record<number, Opt>, camId: number): Opt => map[camId] ?? DEFAULT_OPT;
+  const setOpt = (camId: number, patch: Partial<Opt>) =>
+    setOpts((o) => ({ ...o, [camId]: { ...getOpt(o, camId), ...patch } }));
 
   useEffect(() => {
     connect();
@@ -93,47 +102,42 @@ export default function CalibrationPage() {
   useEffect(() => {
     if (!connected) return;
     getCalibration();
-    getCameraSnapshot();
-  }, [connected, getCalibration, getCameraSnapshot]);
+    getCameraSnapshot(undefined, showCurrentCalib);
+  }, [connected, getCalibration, getCameraSnapshot, showCurrentCalib]);
 
-  // Live preview polling.
+  // Live preview polling (keeps running during a scan thanks to async scans).
   useEffect(() => {
     if (!connected || !live) return;
-    const id = setInterval(() => getCameraSnapshot(), 1500);
+    getCameraSnapshot(undefined, showCurrentCalib);
+    const id = setInterval(() => getCameraSnapshot(undefined, showCurrentCalib), 1500);
     return () => clearInterval(id);
-  }, [connected, live, getCameraSnapshot]);
+  }, [connected, live, showCurrentCalib, getCameraSnapshot]);
 
-  // A fresh auto-scan result clears the busy flag and syncs the sliders to the
-  // thresholds actually used (so auto-tune is reflected).
+  // A fresh scan result clears the busy flag + its timeout, syncs the sliders
+  // to the thresholds actually used (auto-tune), and flips the view to it.
   useEffect(() => {
-    setBusy((b) => {
-      const next = { ...b };
-      for (const k of Object.keys(results)) {
-        const camId = Number(k);
-        if (results[camId] !== prevResults.current[camId]) next[camId] = false;
+    for (const k of Object.keys(results)) {
+      const camId = Number(k);
+      const r = results[camId];
+      if (r === prevResults.current[camId]) continue;
+      if (scanTimers.current[camId]) {
+        clearTimeout(scanTimers.current[camId]);
+        delete scanTimers.current[camId];
       }
-      return next;
-    });
-    setOpts((o) => {
-      const next = { ...o };
-      for (const k of Object.keys(results)) {
-        const camId = Number(k);
-        const r = results[camId];
-        if (r && r.ok && r !== prevResults.current[camId]) {
-          next[camId] = {
-            ...getOpt(next, camId),
-            redADelta: r.redADelta,
-            greenADelta: r.greenADelta,
-            minChroma: r.minChroma,
-          };
-        }
+      setBusy((b) => ({ ...b, [camId]: false }));
+      setTimedOut((t) => ({ ...t, [camId]: false }));
+      if (r?.ok) {
+        setOpts((o) => ({
+          ...o,
+          [camId]: { ...getOpt(o, camId), redADelta: r.redADelta, greenADelta: r.greenADelta, minChroma: r.minChroma },
+        }));
+        setView((v) => ({ ...v, [camId]: "result" }));
       }
-      return next;
-    });
+    }
     prevResults.current = { ...results };
   }, [results]);
 
-  // The calibration overview is re-broadcast after a save → flash confirmation.
+  // The calibration overview is re-broadcast after a save → flash + show live.
   useEffect(() => {
     if (calibration === prevCalib.current) return;
     prevCalib.current = calibration;
@@ -146,28 +150,27 @@ export default function CalibrationPage() {
       saved.forEach((c) => (n[c] = true));
       return n;
     });
-    const t = setTimeout(() => setSavedFlash({}), 2500);
+    setView((v) => {
+      const n = { ...v };
+      saved.forEach((c) => (n[c] = "live")); // applied calib now shows live
+      return n;
+    });
+    const t = setTimeout(() => setSavedFlash({}), 3000);
     return () => clearTimeout(t);
   }, [calibration]);
 
   const cams = calibration?.cams ?? FALLBACK_CAMS;
   const replay = calibration?.replay ?? false;
 
-  const setOpt = (camId: number, patch: Partial<Opt>) =>
-    setOpts((o) => ({ ...o, [camId]: { ...getOpt(o, camId), ...patch } }));
-
-  const onImageClick = (camId: number, e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setOpt(camId, {
-      hintX: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
-      hintY: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
-    });
-  };
-
   const scan = (camId: number) => {
     const o = getOpt(opts, camId);
     setBusy((b) => ({ ...b, [camId]: true }));
-    setShowOverlay((s) => ({ ...s, [camId]: true }));
+    setTimedOut((t) => ({ ...t, [camId]: false }));
+    clearTimeout(scanTimers.current[camId]);
+    scanTimers.current[camId] = setTimeout(() => {
+      setBusy((b) => ({ ...b, [camId]: false }));
+      setTimedOut((t) => ({ ...t, [camId]: true }));
+    }, SCAN_TIMEOUT_MS);
     runAutoCalib(camId, {
       redADelta: o.redADelta,
       greenADelta: o.greenADelta,
@@ -185,9 +188,16 @@ export default function CalibrationPage() {
     saveCalibration(camId);
   };
 
+  // Global activity banner.
+  const scanningCam = Object.keys(busy).find((k) => busy[Number(k)]);
+  const savedCam = Object.keys(savedFlash).find((k) => savedFlash[Number(k)]);
+  let banner: { text: string; tone: "info" | "ok" } | null = null;
+  if (scanningCam !== undefined) banner = { text: `Scan caméra ${scanningCam} en cours…`, tone: "info" };
+  else if (savedCam !== undefined) banner = { text: `Calibration caméra ${savedCam} enregistrée et appliquée`, tone: "ok" };
+
   return (
     <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-6xl mx-auto flex flex-col gap-6">
+      <div className="max-w-6xl mx-auto flex flex-col gap-4">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -210,19 +220,42 @@ export default function CalibrationPage() {
               </div>
             </div>
           </div>
-          <button
-            onClick={() => setLive((v) => !v)}
-            className="flex items-center gap-2 rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 hover:border-red-500 active:scale-95"
-          >
-            {live ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {live ? "Aperçu en pause" : "Reprendre l'aperçu"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowCurrentCalib((v) => !v)}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 active:scale-95 ${
+                showCurrentCalib ? "bg-red-600 border-red-500" : "bg-gray-900 border-gray-700 hover:border-red-500"
+              }`}
+            >
+              <Crosshair className="w-4 h-4" />
+              Calibration actuelle
+            </button>
+            <button
+              onClick={() => setLive((v) => !v)}
+              className="flex items-center gap-2 rounded-lg bg-gray-900 border border-gray-700 px-3 py-2.5 hover:border-red-500 active:scale-95"
+            >
+              {live ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {live ? "Aperçu en pause" : "Reprendre"}
+            </button>
+          </div>
         </div>
+
+        {/* Bannière d'activité */}
+        {banner && (
+          <div
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${
+              banner.tone === "ok" ? "bg-green-700/40 text-green-200" : "bg-blue-700/40 text-blue-100"
+            }`}
+          >
+            {banner.tone === "ok" ? <CheckCircle2 className="w-4 h-4" /> : <Loader2 className="w-4 h-4 animate-spin" />}
+            {banner.text}
+          </div>
+        )}
 
         {!connected && (
           <div className="rounded-2xl bg-gray-900 border border-gray-700 p-6 text-gray-300">
-            En attente du serveur de fléchettes… Vérifie qu'il tourne sur la machine
-            des caméras et que l'URL est correcte dans les{" "}
+            En attente du serveur de fléchettes… Vérifie qu&apos;il tourne sur la machine des
+            caméras et que l&apos;URL est correcte dans les{" "}
             <Link href="/settings" className="text-red-400 underline">
               réglages
             </Link>
@@ -238,8 +271,8 @@ export default function CalibrationPage() {
             const r = results[camId];
             const snap = snapshots[camId];
             const state = board?.cams.find((c) => c.id === camId)?.state;
-            const overlayShown = showOverlay[camId] && r?.ok && r.overlay;
-            const imgSrc = overlayShown
+            const showResult = view[camId] === "result" && r?.ok && r.overlay;
+            const imgSrc = showResult
               ? `data:image/jpeg;base64,${r!.overlay}`
               : snap
               ? `data:image/jpeg;base64,${snap}`
@@ -261,7 +294,13 @@ export default function CalibrationPage() {
 
                 {/* Aperçu / overlay */}
                 <div
-                  onClick={(e) => onImageClick(camId, e)}
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setOpt(camId, {
+                      hintX: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+                      hintY: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+                    });
+                  }}
                   className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-black border border-gray-800 cursor-crosshair select-none"
                 >
                   {imgSrc ? (
@@ -272,34 +311,44 @@ export default function CalibrationPage() {
                       {connected ? "Aucune image" : "—"}
                     </div>
                   )}
-                  {o.hintX >= 0 && o.hintY >= 0 && (
+
+                  {/* Badge mode d'affichage */}
+                  <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] text-gray-200">
+                    {showResult ? "Résultat du scan" : showCurrentCalib && cam.hasZones ? "Calibration actuelle" : "Live"}
+                  </span>
+
+                  {/* Repère secteur 20 */}
+                  {o.hintX >= 0 && o.hintY >= 0 && !showResult && (
                     <div
                       className="absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                       style={{ left: `${o.hintX * 100}%`, top: `${o.hintY * 100}%` }}
                     >
-                      <Crosshair className="w-6 h-6 text-red-500 drop-shadow" />
-                      <span className="absolute left-7 top-0 rounded bg-black/70 px-1 text-[10px] text-red-300">20</span>
+                      <Crosshair className="w-7 h-7 text-red-500 drop-shadow" />
+                      <span className="absolute left-8 top-0 rounded bg-black/70 px-1 text-[10px] text-red-300">20</span>
                     </div>
                   )}
+
                   {isBusy && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm font-semibold">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 text-sm font-semibold">
+                      <Loader2 className="w-6 h-6 animate-spin" />
                       Scan en cours…
                     </div>
                   )}
+
                   {r?.ok && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setShowOverlay((s) => ({ ...s, [camId]: !s[camId] }));
+                        setView((v) => ({ ...v, [camId]: v[camId] === "result" ? "live" : "result" }));
                       }}
                       className="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-[11px] hover:bg-black/90"
                     >
-                      {overlayShown ? "Voir live" : "Voir overlay"}
+                      {showResult ? "Voir live" : "Voir le scan"}
                     </button>
                   )}
                 </div>
                 <p className="text-[11px] text-gray-500 -mt-1">
-                  Astuce : clique dans le secteur 20 si la numérotation est tournée.
+                  Astuce : touche le secteur 20 sur l&apos;image si la numérotation est tournée.
                 </p>
 
                 {/* Config dispo */}
@@ -310,15 +359,11 @@ export default function CalibrationPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Calibrée</span>
-                    <span className={cam.hasCalib ? "text-green-400" : "text-red-400"}>
-                      {cam.hasCalib ? "oui" : "non"}
-                    </span>
+                    <span className={cam.hasCalib ? "text-green-400" : "text-red-400"}>{cam.hasCalib ? "oui" : "non"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Zone map</span>
-                    <span className={cam.hasZones ? "text-green-400" : "text-red-400"}>
-                      {cam.hasZones ? "oui" : "non"}
-                    </span>
+                    <span className={cam.hasZones ? "text-green-400" : "text-red-400"}>{cam.hasZones ? "oui" : "non"}</span>
                   </div>
                   {cam.hasCalib && (
                     <div className="flex justify-between">
@@ -331,7 +376,7 @@ export default function CalibrationPage() {
                 </div>
 
                 {/* Réglages */}
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Slider label="Rouge a*" value={o.redADelta} min={4} max={60} onChange={(v) => setOpt(camId, { redADelta: v })} />
                   <Slider label="Vert a*" value={o.greenADelta} min={4} max={60} onChange={(v) => setOpt(camId, { greenADelta: v })} />
                   <Slider label="Chroma" value={o.minChroma} min={6} max={60} onChange={(v) => setOpt(camId, { minChroma: v })} />
@@ -340,16 +385,16 @@ export default function CalibrationPage() {
                     <span className="text-xs text-gray-400">Secteur 20 (rotation)</span>
                     <div className="flex items-center gap-2">
                       <button onClick={() => setOpt(camId, { sector20Offset: o.sector20Offset - 1 })}
-                        className="h-7 w-7 rounded bg-gray-700 hover:bg-gray-600 font-bold">−</button>
+                        className="h-9 w-9 rounded bg-gray-700 hover:bg-gray-600 font-bold active:scale-95">−</button>
                       <span className="w-6 text-center font-mono text-sm">{((o.sector20Offset % 20) + 20) % 20}</span>
                       <button onClick={() => setOpt(camId, { sector20Offset: o.sector20Offset + 1 })}
-                        className="h-7 w-7 rounded bg-gray-700 hover:bg-gray-600 font-bold">+</button>
+                        className="h-9 w-9 rounded bg-gray-700 hover:bg-gray-600 font-bold active:scale-95">+</button>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 text-xs text-gray-300">
-                      <input type="checkbox" checked={o.autotune}
+                      <input type="checkbox" checked={o.autotune} className="h-4 w-4 accent-red-600"
                         onChange={(e) => setOpt(camId, { autotune: e.target.checked })} />
                       Auto-tune des seuils
                     </label>
@@ -364,13 +409,20 @@ export default function CalibrationPage() {
                 </div>
 
                 {/* Résultat */}
-                {r && (
+                {timedOut[camId] && (
+                  <div className="rounded-lg bg-red-900/30 text-red-200 p-2 text-xs">
+                    Pas de réponse du scan (timeout). Réessaie.
+                  </div>
+                )}
+                {r && !isBusy && (
                   <div className={`rounded-lg p-2 text-xs ${r.ok ? "bg-green-900/30 text-green-200" : "bg-red-900/30 text-red-200"}`}>
                     {r.ok ? (
                       <>
-                        <div>
-                          Triples {r.triplesFound}/20 · Doubles {r.doublesFound}/20 · reproj{" "}
-                          {r.meanReprojErrPx.toFixed(1)}px
+                        <div className="flex items-center gap-1 font-semibold">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Scan terminé
+                        </div>
+                        <div className="mt-0.5">
+                          Triples {r.triplesFound}/20 · Doubles {r.doublesFound}/20 · reproj {r.meanReprojErrPx.toFixed(1)}px
                         </div>
                         {r.warning && <div className="text-yellow-300 mt-0.5">⚠ {r.warning}</div>}
                       </>
@@ -385,19 +437,19 @@ export default function CalibrationPage() {
                   <button
                     onClick={() => scan(camId)}
                     disabled={!connected || isBusy}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-2.5 font-semibold active:scale-95"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-3 font-semibold active:scale-95"
                   >
-                    <ScanLine className="w-4 h-4" />
+                    {isBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanLine className="w-4 h-4" />}
                     {isBusy ? "Scan…" : "Scanner"}
                   </button>
                   <button
                     onClick={() => save(camId)}
                     disabled={!r?.ok || !!saving[camId]}
-                    className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 font-semibold active:scale-95 disabled:opacity-50 ${
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-lg px-3 py-3 font-semibold active:scale-95 disabled:opacity-50 ${
                       savedFlash[camId] ? "bg-green-600" : "bg-red-600 hover:bg-red-700"
                     }`}
                   >
-                    <Save className="w-4 h-4" />
+                    {savedFlash[camId] ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                     {savedFlash[camId] ? "Enregistré !" : saving[camId] ? "…" : "Enregistrer & utiliser"}
                   </button>
                 </div>
@@ -432,7 +484,7 @@ function Slider({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 accent-red-600"
+        className="flex-1 h-2 accent-red-600"
       />
       <span className="w-7 text-right font-mono text-xs">{value}</span>
     </div>

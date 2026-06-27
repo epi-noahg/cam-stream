@@ -71,7 +71,7 @@ type DartStore = {
   getSavedGames: () => void;
   resumeGame: (id: string) => void;
   getCalibration: () => void;
-  getCameraSnapshot: (cam?: number) => void;
+  getCameraSnapshot: (cam?: number, overlay?: boolean) => void;
   runAutoCalib: (cam: number, options: AutoCalibOptions) => void;
   saveCalibration: (cam: number) => void;
 };
@@ -196,10 +196,10 @@ export const useDartStore = create<DartStore>((set, get) => ({
   getSavedGames: () => get().send({ type: "get_saved_games" }),
   resumeGame: (id) => get().send({ type: "resume_game", id }),
   getCalibration: () => get().send({ type: "get_calibration" }),
-  getCameraSnapshot: (cam) =>
+  getCameraSnapshot: (cam, overlay) =>
     get().send(cam === undefined
-      ? { type: "get_camera_snapshot" }
-      : { type: "get_camera_snapshot", cam }),
+      ? { type: "get_camera_snapshot", overlay: overlay ?? false }
+      : { type: "get_camera_snapshot", cam, overlay: overlay ?? false }),
   runAutoCalib: (cam, options) => get().send({ type: "run_autocalib", cam, options }),
   saveCalibration: (cam) => get().send({ type: "save_calibration", cam }),
 }));

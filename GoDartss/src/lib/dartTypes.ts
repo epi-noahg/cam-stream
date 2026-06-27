@@ -184,7 +184,7 @@ export type Command =
   | { type: "create_player"; nickname: string }
   | { type: "rename_player"; id: number; nickname: string }
   | { type: "get_calibration" }
-  | { type: "get_camera_snapshot"; cam?: number; maxWidth?: number }
+  | { type: "get_camera_snapshot"; cam?: number; maxWidth?: number; overlay?: boolean }
   | { type: "run_autocalib"; cam: number; options: AutoCalibOptions }
   | { type: "save_calibration"; cam: number }
   | { type: "delete_player"; id: number };

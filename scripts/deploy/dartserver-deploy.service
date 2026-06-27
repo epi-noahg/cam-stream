@@ -7,8 +7,13 @@ Wants=network-online.target
 Type=oneshot
 User=pstq
 WorkingDirectory=/home/pstq/github/cam-stream
-# Login shell (-l) so the user's node/pnpm toolchain (nvm, corepack, ~/.local/bin)
-# is on PATH — a bare systemd PATH usually can't find pnpm.
-ExecStart=/usr/bin/bash -lc '/home/pstq/github/cam-stream/scripts/deploy.sh'
+# A non-interactive login shell does NOT pick up pnpm/nvm: their PATH exports
+# live in ~/.bashrc, which login shells don't source (and which usually returns
+# early when non-interactive). Without this, detect_pm falls back to npm, whose
+# optional-dependency bug breaks `next build` (@tailwindcss/oxide native binding).
+# So set the toolchain PATH explicitly instead of relying on shell rc files.
+Environment=PNPM_HOME=/home/pstq/.local/share/pnpm
+Environment=PATH=/home/pstq/.local/share/pnpm:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/bash -c '/home/pstq/github/cam-stream/scripts/deploy.sh'
 # A full web build can take a couple of minutes; don't let systemd kill it.
 TimeoutStartSec=900
