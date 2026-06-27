@@ -1,0 +1,4 @@
+# Allow the deploy user to restart only the two dartserver units, no password.
+# Install to /etc/sudoers.d/dartserver-deploy with mode 0440 (see README).
+# Validate before trusting it:  sudo visudo -cf /etc/sudoers.d/dartserver-deploy
+pstq ALL=(root) NOPASSWD: /usr/bin/systemctl restart dartserver.service, /usr/bin/systemctl restart dartserver-web.service

@@ -1,0 +1,14 @@
+[Unit]
+Description=Auto-deploy dartserver (git pull + build + restart)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pstq
+WorkingDirectory=/home/pstq/github/cam-stream
+# Login shell (-l) so the user's node/pnpm toolchain (nvm, corepack, ~/.local/bin)
+# is on PATH — a bare systemd PATH usually can't find pnpm.
+ExecStart=/usr/bin/bash -lc '/home/pstq/github/cam-stream/scripts/deploy.sh'
+# A full web build can take a couple of minutes; don't let systemd kill it.
+TimeoutStartSec=900
