@@ -83,7 +83,8 @@ json optionsToJson(const game::GameState& s) {
 }
 
 json gameStateToJson(const game::GameState& s,
-                     const std::optional<std::vector<game::Throw>>& checkout) {
+                     const std::optional<std::vector<game::Throw>>& checkout,
+                     const std::string& id) {
     json players = json::array();
     for (const auto& p : s.players) {
         json throws = json::array();
@@ -115,7 +116,7 @@ json gameStateToJson(const game::GameState& s,
         for (const auto& t : *checkout) checkoutJson.push_back(throwToJson(t));
     }
 
-    return json{
+    json out{
         {"type", "game_state"},
         {"state", json{
             {"mode", gameModeToString(s.mode)},
@@ -130,6 +131,10 @@ json gameStateToJson(const game::GameState& s,
         }},
         {"checkout", checkoutJson},
     };
+    // Stable match id so clients can tell one game from the next (e.g. to keep
+    // the new-game setup screen until a freshly created game actually arrives).
+    if (!id.empty()) out["id"] = id;
+    return out;
 }
 
 json boardStatusToJson(const detect::BoardStatus& b) {

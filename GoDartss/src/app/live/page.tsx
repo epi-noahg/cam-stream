@@ -41,7 +41,14 @@ function fmtCheckout(t: Throw): string {
 export default function LivePage() {
   const s = useDartStore();
   const [pad, setPad] = useState<PadState>(null);
+  // "Nouvelle partie" demandée (accueil ou écran de victoire) : on affiche la
+  // config et on IGNORE la partie serveur en cours, qui reste sauvegardée et
+  // reprenable depuis l'accueil.
   const [newGame, setNewGame] = useState(false);
+  // Id de la partie remplacée en lançant une nouvelle : on patiente tant que le
+  // serveur n'a pas renvoyé une partie d'id différent (évite d'afficher
+  // brièvement l'ancienne partie / l'écran de victoire).
+  const [replacedId, setReplacedId] = useState<string | null | undefined>(undefined);
   // Mode choisi pour la prochaine "nouvelle partie" (depuis l'accueil).
   const [setupMode, setSetupMode] = useState<GameMode>("X01");
 
@@ -59,13 +66,33 @@ export default function LivePage() {
   }, []);
 
   const game = s.game;
-  // Dès qu'une partie active (non finie) existe, on quitte l'état "nouvelle partie".
-  useEffect(() => {
-    if (game && !game.gameOver) setNewGame(false);
-  }, [game]);
 
-  const showGame = !!game && !game.gameOver;
-  const showVictory = !!game && game.gameOver && !newGame;
+  // Lance une nouvelle partie : mémorise l'id remplacé puis envoie la commande.
+  // L'ancienne partie reste persistée côté serveur (reprenable depuis l'accueil),
+  // même si elle n'est pas terminée.
+  const launchGame = (
+    players: { nickname: string; team?: number }[],
+    opts: Record<string, unknown>,
+  ) => {
+    setReplacedId(s.gameId);
+    setNewGame(false);
+    s.createGame(players, opts);
+  };
+
+  // En attente de la nouvelle partie tant que le serveur renvoie l'id remplacé.
+  const waitingNew = replacedId !== undefined && s.gameId === replacedId;
+
+  // Écran courant. En mode "nouvelle partie" on reste sur la config sans se
+  // laisser détourner par la partie serveur en cours.
+  const screen: "setup" | "loading" | "game" | "victory" = newGame
+    ? "setup"
+    : waitingNew
+    ? "loading"
+    : game && !game.gameOver
+    ? "game"
+    : game && game.gameOver
+    ? "victory"
+    : "setup";
 
   // Libellé du gagnant : pseudo, ou "Équipe N — membres" en mode équipe.
   let winnerLabel = "";
@@ -82,7 +109,7 @@ export default function LivePage() {
   const replaySamePlayers = () => {
     if (!game) return;
     // Les options reçues du serveur contiennent déjà le mode et ses réglages.
-    s.createGame(
+    launchGame(
       game.players.map((p) => ({ nickname: p.nickname, team: p.team })),
       { ...game.options, mode: game.mode ?? game.options.mode ?? "X01" }
     );
@@ -102,12 +129,14 @@ export default function LivePage() {
         <Link href="/leaderboard" className="min-h-11 px-3 flex items-center rounded-xl bg-gray-800 border border-gray-700 active:scale-95">📊</Link>
       </div>
 
-      {!showGame ? (
+      {screen !== "game" ? (
         <div className="flex-1 min-h-0 overflow-auto">
-          {showVictory ? (
+          {screen === "victory" ? (
             <Victory label={winnerLabel} onReplay={replaySamePlayers} onNew={() => setNewGame(true)} />
+          ) : screen === "loading" ? (
+            <NewGameLoading />
           ) : (
-            <Setup mode={setupMode} onStart={(players, opts) => s.createGame(players, opts)} />
+            <Setup mode={setupMode} onStart={launchGame} />
           )}
         </div>
       ) : (
@@ -330,6 +359,18 @@ function Victory({ label, onReplay, onNew }: { label: string; onReplay: () => vo
             Nouvelle partie
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Écran d'attente : nouvelle partie en cours de création ────────────────────
+function NewGameLoading() {
+  return (
+    <div className="flex-1 flex items-center justify-center p-2 min-h-full">
+      <div className="flex flex-col items-center gap-4 text-gray-400">
+        <div className="h-10 w-10 rounded-full border-4 border-gray-700 border-t-red-500 animate-spin" />
+        <div className="text-lg font-semibold">Nouvelle partie…</div>
       </div>
     </div>
   );

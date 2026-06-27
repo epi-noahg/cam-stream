@@ -53,7 +53,7 @@ fi
 
 # What changed between the deployed commit and the incoming one?
 if [ "$FORCE" -eq 1 ]; then
-  CHANGED="dartserver/ GoDartss/"
+  CHANGED="dartserver/ detection/ GoDartss/"
 else
   CHANGED="$(git diff --name-only "$OLD" "$NEW")"
 fi
@@ -67,8 +67,10 @@ needs() { grep -q "$1" <<<"$CHANGED"; }
 DID_SERVER=0
 DID_WEB=0
 
-if needs "^dartserver/" || [ "$FORCE" -eq 1 ]; then
-  info "C++ server changed → rebuilding"
+# The dartserver build embeds the camdetect library via add_subdirectory(../detection),
+# so a change under detection/ must rebuild (and restart) the server too.
+if needs "^dartserver/" || needs "^detection/" || [ "$FORCE" -eq 1 ]; then
+  info "C++ server / detection changed → rebuilding"
   run "$REPO_ROOT/scripts/build-server.sh" release
   DID_SERVER=1
 fi

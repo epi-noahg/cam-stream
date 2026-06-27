@@ -52,8 +52,11 @@ scripts/deploy.sh --force
 
 `git diff --name-only <deployed> <incoming>`:
 
-- a path under `dartserver/` → `scripts/build-server.sh release` + restart
-  `dartserver.service`
+- a path under `dartserver/` **or `detection/`** → `scripts/build-server.sh
+  release` + restart `dartserver.service`. (The server CMake pulls in the
+  `camdetect` detection library via `add_subdirectory(../detection)`, so a
+  detection change is compiled straight into the `dartserver` binary — no
+  separate build step is needed.)
 - a path under `GoDartss/` → `scripts/build-web.sh release` + restart
   `dartserver-web.service`
 - only docs/other changed → pulls, but restarts nothing.

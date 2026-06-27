@@ -34,6 +34,7 @@ function defaultUrl(): string {
 type DartStore = {
   connected: boolean;
   game: GameState | null;
+  gameId: string | null;
   checkout: Throw[] | null;
   board: BoardStatus | null;
   lastDetected: DartDetected | null;
@@ -71,6 +72,7 @@ let manualClose = false;
 export const useDartStore = create<DartStore>((set, get) => ({
   connected: false,
   game: null,
+  gameId: null,
   checkout: null,
   board: null,
   lastDetected: null,
@@ -101,7 +103,7 @@ export const useDartStore = create<DartStore>((set, get) => ({
         try { msg = JSON.parse(ev.data as string); } catch { return; }
         switch (msg.type) {
           case "game_state":
-            set({ game: msg.state as GameState, checkout: (msg.checkout as Throw[]) ?? null });
+            set({ game: msg.state as GameState, gameId: (msg.id as string) ?? null, checkout: (msg.checkout as Throw[]) ?? null });
             break;
           case "board_status":
             set({ board: msg as unknown as BoardStatus });

@@ -31,7 +31,8 @@ json optionsToJson(const game::OptionsX01& o);
 /// Serialize the options block for whichever mode @p s is running.
 json optionsToJson(const game::GameState& s);
 json gameStateToJson(const game::GameState& s,
-                     const std::optional<std::vector<game::Throw>>& checkout);
+                     const std::optional<std::vector<game::Throw>>& checkout,
+                     const std::string& id = {});
 json boardStatusToJson(const detect::BoardStatus& b);
 
 /// Build the `dart_detected` event payload.

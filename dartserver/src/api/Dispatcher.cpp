@@ -15,7 +15,7 @@ Dispatcher::Dispatcher(WsServer& ws, dart::game::GameManager& gm,
 void Dispatcher::wire() {
     // ── Outbound: authoritative state → all clients ─────────────────────
     gm_.setOnChanged([this](const dart::game::GameState& s) {
-        ws_.broadcast(gameStateToJson(s, gm_.currentCheckout()).dump());
+        ws_.broadcast(gameStateToJson(s, gm_.currentCheckout(), gm_.gameId()).dump());
         // Persist the in-progress game so it can be resumed later.
         if (db_ && !s.players.empty()) {
             std::string players;
@@ -53,7 +53,7 @@ void Dispatcher::onConnect_(WsServer::ClientId id) {
     // Bring a freshly connected tablet immediately in sync.
     ws_.sendTo(id, boardStatusToJson(det_.boardStatus()).dump());
     if (gm_.hasGame())
-        ws_.sendTo(id, gameStateToJson(gm_.snapshot(), gm_.currentCheckout()).dump());
+        ws_.sendTo(id, gameStateToJson(gm_.snapshot(), gm_.currentCheckout(), gm_.gameId()).dump());
 }
 
 void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
