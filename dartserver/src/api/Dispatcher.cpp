@@ -15,14 +15,17 @@ Dispatcher::Dispatcher(WsServer& ws, dart::game::GameManager& gm,
 void Dispatcher::wire() {
     // ── Outbound: authoritative state → all clients ─────────────────────
     gm_.setOnChanged([this](const dart::game::GameState& s) {
-        ws_.broadcast(gameStateToJson(s, gm_.currentCheckout()).dump());
+        ws_.broadcast(gameStateToJson(s, gm_.currentCheckout(), gm_.gameId()).dump());
         // Persist the in-progress game so it can be resumed later.
         if (db_ && !s.players.empty()) {
             std::string players;
             for (const auto& p : s.players)
                 players += (players.empty() ? "" : ", ") + p.nickname;
             const json st = gameStateToJson(s, std::nullopt)["state"];
-            db_->saveGame(gm_.gameId(), st.dump(), players, s.options.startingScore);
+            // startingScore is only a display hint; meaningful for X01 only.
+            const int hint = s.mode == dart::game::GameMode::X01
+                                 ? s.options.startingScore : 0;
+            db_->saveGame(gm_.gameId(), st.dump(), players, hint);
         }
     });
     gm_.setOnDetected([this](const dart::game::Throw& t,
@@ -50,7 +53,7 @@ void Dispatcher::onConnect_(WsServer::ClientId id) {
     // Bring a freshly connected tablet immediately in sync.
     ws_.sendTo(id, boardStatusToJson(det_.boardStatus()).dump());
     if (gm_.hasGame())
-        ws_.sendTo(id, gameStateToJson(gm_.snapshot(), gm_.currentCheckout()).dump());
+        ws_.sendTo(id, gameStateToJson(gm_.snapshot(), gm_.currentCheckout(), gm_.gameId()).dump());
 }
 
 void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
@@ -82,7 +85,7 @@ void Dispatcher::onMessage_(WsServer::ClientId id, const std::string& text) {
     try {
         if (type == "create_game") {
             gm_.createGame(playersFromJson(j.value("players", json::array())),
-                           optionsFromJson(j.value("options", json::object())));
+                           configFromJson(j.value("options", json::object())));
             ack(true);
         } else if (type == "manual_throw") {
             gm_.recordManualThrow(throwFromJson(j));

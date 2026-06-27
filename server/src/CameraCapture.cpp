@@ -32,7 +32,7 @@ void CameraCapture::stop()
 
 void CameraCapture::loop()
 {
-    cv::VideoCapture cap(device_);
+    cv::VideoCapture cap(device_, cv::CAP_V4L2);
     if (!cap.isOpened()) {
         std::cerr << "[CameraCapture] cam" << cam_id_
                   << ": cannot open " << device_ << "\n";
@@ -40,14 +40,25 @@ void CameraCapture::loop()
         return;
     }
 
+    // These UVC cams only expose Motion-JPEG, and three of them share one USB
+    // controller — the compressed stream is what lets all three fit the bus
+    // bandwidth. Must be set before the resolution, and only the V4L2 backend
+    // honours CAP_PROP_FOURCC (GStreamer ignores it).
+    cap.set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  width_);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, height_);
     cap.set(cv::CAP_PROP_FPS,          fps_);
 
+    const int cc = static_cast<int>(cap.get(cv::CAP_PROP_FOURCC));
+    const char fourcc[5] = { static_cast<char>(cc & 0xFF),
+                             static_cast<char>((cc >> 8)  & 0xFF),
+                             static_cast<char>((cc >> 16) & 0xFF),
+                             static_cast<char>((cc >> 24) & 0xFF), 0 };
     std::cout << "[CameraCapture] cam" << cam_id_ << " opened ("
               << static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH))  << "x"
               << static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT)) << " @ "
-              << static_cast<int>(cap.get(cv::CAP_PROP_FPS))          << " fps)\n";
+              << static_cast<int>(cap.get(cv::CAP_PROP_FPS))          << " fps, "
+              << fourcc << ")\n";
 
     const auto start_time = std::chrono::steady_clock::now();
     cv::Mat frame;

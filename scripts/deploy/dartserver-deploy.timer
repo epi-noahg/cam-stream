@@ -1,0 +1,13 @@
+[Unit]
+Description=Poll GitHub and auto-deploy dartserver every minute
+
+[Timer]
+# First check shortly after boot, then 60s after each run finishes. Measuring
+# from "run finished" (OnUnitActiveSec) means a slow build can't stack up.
+OnBootSec=2min
+OnUnitActiveSec=60s
+AccuracySec=10s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

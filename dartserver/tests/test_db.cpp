@@ -56,6 +56,23 @@ int main() {
     CHECK(games.size() == 1);
     CHECK(games[0].status == "FINISHED");
 
+    // Resumable saved games: starting new matches while others are unfinished
+    // must keep every one independently resumable (each under its own id).
+    db.saveGame("gameA", R"({"mode":"X01"})", "Alice, Bob", 501);
+    db.saveGame("gameB", R"({"mode":"CRICKET"})", "Carol, Dave", 0);
+    auto saved = db.listSavedGames(20);
+    CHECK(saved.size() == 2);
+    CHECK(!db.loadGameState("gameA").empty());
+    CHECK(!db.loadGameState("gameB").empty());
+
+    // Finishing one removes only that one; the other stays resumable.
+    db.deleteSavedGame("gameB");
+    auto saved2 = db.listSavedGames(20);
+    CHECK(saved2.size() == 1);
+    CHECK(saved2[0].id == "gameA");
+    CHECK(!db.loadGameState("gameA").empty());
+    CHECK(db.loadGameState("gameB").empty());
+
     if (g_failures == 0) std::cout << "All persistence tests passed.\n";
     else std::cerr << g_failures << " check(s) failed.\n";
     return g_failures;

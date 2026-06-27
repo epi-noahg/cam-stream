@@ -25,6 +25,21 @@ game::ScoringMode scoringFromString(const std::string& s) {
     return s == "BEST_OF" ? game::ScoringMode::BestOf : game::ScoringMode::FirstTo;
 }
 
+const char* gameModeToString(game::GameMode m) {
+    switch (m) {
+        case game::GameMode::X01:           return "X01";
+        case game::GameMode::Cricket:       return "CRICKET";
+        case game::GameMode::RoundTheClock: return "ROUND_THE_CLOCK";
+    }
+    return "X01";
+}
+
+game::GameMode gameModeFromString(const std::string& s) {
+    if (s == "CRICKET")         return game::GameMode::Cricket;
+    if (s == "ROUND_THE_CLOCK") return game::GameMode::RoundTheClock;
+    return game::GameMode::X01;
+}
+
 json throwToJson(const game::Throw& t) {
     return json{{"value", t.value}, {"multiplier", t.multiplier},
                 {"bust", t.bust}};
@@ -32,6 +47,7 @@ json throwToJson(const game::Throw& t) {
 
 json optionsToJson(const game::OptionsX01& o) {
     return json{
+        {"mode",          "X01"},
         {"startingScore", o.startingScore},
         {"inType",        inOutToString(o.inType)},
         {"outType",       inOutToString(o.outType)},
@@ -42,20 +58,49 @@ json optionsToJson(const game::OptionsX01& o) {
     };
 }
 
+json optionsToJson(const game::GameState& s) {
+    switch (s.mode) {
+        case game::GameMode::Cricket:
+            return json{
+                {"mode",        "CRICKET"},
+                {"cutThroat",   s.cricket.cutThroat},
+                {"useBull",     s.cricket.useBull},
+                {"scoringMode", scoringToString(s.cricket.scoringMode)},
+                {"legs",        s.cricket.legs},
+                {"teams",       s.cricket.teams},
+            };
+        case game::GameMode::RoundTheClock:
+            return json{
+                {"mode",        "ROUND_THE_CLOCK"},
+                {"scoringMode", scoringToString(s.roundClock.scoringMode)},
+                {"legs",        s.roundClock.legs},
+                {"teams",       s.roundClock.teams},
+            };
+        case game::GameMode::X01:
+            break;
+    }
+    return optionsToJson(s.options);
+}
+
 json gameStateToJson(const game::GameState& s,
-                     const std::optional<std::vector<game::Throw>>& checkout) {
+                     const std::optional<std::vector<game::Throw>>& checkout,
+                     const std::string& id) {
     json players = json::array();
     for (const auto& p : s.players) {
         json throws = json::array();
         for (const auto& t : p.throws) throws.push_back(throwToJson(t));
-        players.push_back(json{
+        json pj{
             {"id", p.id},
             {"nickname", p.nickname},
             {"score", p.score},
             {"legsWon", p.legsWon},
             {"team", p.team},
             {"throws", throws},
-        });
+        };
+        // Mode-specific state, emitted only where it applies.
+        if (s.mode == game::GameMode::Cricket) pj["marks"]  = p.marks;
+        if (s.mode == game::GameMode::RoundTheClock) pj["target"] = p.target;
+        players.push_back(std::move(pj));
     }
 
     json turns = json::array();
@@ -71,10 +116,11 @@ json gameStateToJson(const game::GameState& s,
         for (const auto& t : *checkout) checkoutJson.push_back(throwToJson(t));
     }
 
-    return json{
+    json out{
         {"type", "game_state"},
         {"state", json{
-            {"options", optionsToJson(s.options)},
+            {"mode", gameModeToString(s.mode)},
+            {"options", optionsToJson(s)},
             {"players", players},
             {"currentIndex", s.currentIndex},
             {"dartIndex", s.dartIndex},
@@ -85,6 +131,10 @@ json gameStateToJson(const game::GameState& s,
         }},
         {"checkout", checkoutJson},
     };
+    // Stable match id so clients can tell one game from the next (e.g. to keep
+    // the new-game setup screen until a freshly created game actually arrives).
+    if (!id.empty()) out["id"] = id;
+    return out;
 }
 
 json boardStatusToJson(const detect::BoardStatus& b) {
@@ -120,17 +170,26 @@ json dartDetectedToJson(const game::Throw& t, const game::ThrowMeta& m,
 
 game::GameState gameStateFromJson(const json& j) {
     game::GameState s;
-    s.options = optionsFromJson(j.value("options", json::object()));
+    const json optsJson = j.value("options", json::object());
+    const game::GameConfig cfg = configFromJson(optsJson);
+    s.mode       = cfg.mode;
+    s.options    = cfg.x01;
+    s.cricket    = cfg.cricket;
+    s.roundClock = cfg.roundClock;
     s.players.clear();
     for (const auto& pj : j.value("players", json::array())) {
         game::PlayerState p;
         p.id       = pj.value("id", 0);
         p.nickname = pj.value("nickname", std::string{});
-        p.score    = pj.value("score", s.options.startingScore);
+        p.score    = pj.value("score", s.mode == game::GameMode::X01
+                                           ? s.options.startingScore : 0);
         p.legsWon  = pj.value("legsWon", 0);
         p.team     = pj.value("team", 0);
         for (const auto& tj : pj.value("throws", json::array()))
             p.throws.push_back(throwFromJson(tj));
+        if (pj.contains("marks") && pj["marks"].is_array())
+            p.marks = pj["marks"].get<std::vector<int>>();
+        p.target = pj.value("target", 0);
         s.players.push_back(std::move(p));
     }
     s.currentIndex = j.value("currentIndex", 0);
@@ -160,6 +219,32 @@ game::OptionsX01 optionsFromJson(const json& j) {
     o.allowBust     = j.value("allowBust", false);
     o.teams         = j.value("teams", 1);
     return o;
+}
+
+game::GameConfig configFromJson(const json& j) {
+    game::GameConfig cfg;
+    if (j.is_null()) return cfg;
+    cfg.mode = gameModeFromString(j.value("mode", std::string("X01")));
+    switch (cfg.mode) {
+        case game::GameMode::Cricket:
+            cfg.cricket.cutThroat   = j.value("cutThroat", false);
+            cfg.cricket.useBull     = j.value("useBull", true);
+            cfg.cricket.scoringMode = scoringFromString(
+                j.value("scoringMode", std::string("FIRST_TO")));
+            cfg.cricket.legs        = j.value("legs", 1);
+            cfg.cricket.teams       = j.value("teams", 1);
+            break;
+        case game::GameMode::RoundTheClock:
+            cfg.roundClock.scoringMode = scoringFromString(
+                j.value("scoringMode", std::string("FIRST_TO")));
+            cfg.roundClock.legs        = j.value("legs", 1);
+            cfg.roundClock.teams       = j.value("teams", 1);
+            break;
+        case game::GameMode::X01:
+            cfg.x01 = optionsFromJson(j);
+            break;
+    }
+    return cfg;
 }
 
 std::vector<game::PlayerState> playersFromJson(const json& j) {

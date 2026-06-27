@@ -170,17 +170,24 @@ int Db::recordFinishedGame(const dart::game::GameState& s) {
 
     // ── game row ─────────────────────────────────────────────────────────
     const int dbWinner = s.winner.has_value() ? dbIdFor(*s.winner) : -1;
+    const bool isX01 = s.mode == game::GameMode::X01;
+    const char* mode =
+        s.mode == game::GameMode::Cricket       ? "CRICKET"
+      : s.mode == game::GameMode::RoundTheClock ? "ROUND_THE_CLOCK"
+                                                : "X01";
     {
         sqlite3_stmt* st = nullptr;
         sqlite3_prepare_v2(db_,
             "INSERT INTO game(mode,status,startingScore,doubleOut,doubleIn,"
-            "winnerId,finishedAt) VALUES('X01','FINISHED',?,?,?,?,datetime('now'));",
+            "winnerId,finishedAt) VALUES(?,'FINISHED',?,?,?,?,datetime('now'));",
             -1, &st, nullptr);
-        sqlite3_bind_int(st, 1, s.options.startingScore);
-        sqlite3_bind_int(st, 2, s.options.outType == game::InOutType::Double ? 1 : 0);
-        sqlite3_bind_int(st, 3, s.options.inType  == game::InOutType::Double ? 1 : 0);
-        if (dbWinner >= 0) sqlite3_bind_int(st, 4, dbWinner);
-        else               sqlite3_bind_null(st, 4);
+        sqlite3_bind_text(st, 1, mode, -1, SQLITE_STATIC);
+        // X01-only columns are zeroed for the other modes.
+        sqlite3_bind_int(st, 2, isX01 ? s.options.startingScore : 0);
+        sqlite3_bind_int(st, 3, isX01 && s.options.outType == game::InOutType::Double ? 1 : 0);
+        sqlite3_bind_int(st, 4, isX01 && s.options.inType  == game::InOutType::Double ? 1 : 0);
+        if (dbWinner >= 0) sqlite3_bind_int(st, 5, dbWinner);
+        else               sqlite3_bind_null(st, 5);
         sqlite3_step(st);
         sqlite3_finalize(st);
     }

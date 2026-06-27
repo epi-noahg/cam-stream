@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Autorise le trafic HTTP (non-HTTPS) pour le test sur réseau local.
+     NB: les balises <domain> matchent un hôte EXACT (pas une plage CIDR),
+     d'où l'usage d'un base-config global ici plutôt qu'une liste d'IP.
+     Acceptable pour un build de test LAN (Next.js + dartserver sur le Mac).
+     Pour la prod, restreindre à l'hôte exact ou passer en HTTPS. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
