@@ -269,16 +269,55 @@ void GameManager::correctThrow(int turnIndex, int throwIndex,
         GameState rec = recalcForMode(state_);
 
         if (rec.mode == GameMode::X01) {
-            // Rebuild winner / finished / gameOver from the replayed state.
+            // Rebuild winner / finished / gameOver from the replayed state with
+            // the same team-aware rules live play uses (see recordThrowLocked_).
+            // A player — and their whole team — is finished once their score
+            // reaches zero; the game ends only when at most one team is left in.
+            const std::optional<int> legWinner = rec.winner;  // first to zero
             rec.finishedPlayers.clear();
-            for (const PlayerState& p : rec.players)
-                if (p.legsWon >= rec.options.legs)
-                    rec.finishedPlayers.push_back(p.id);
-            rec.winner = rec.finishedPlayers.empty()
-                ? std::optional<int>{}
-                : std::optional<int>{rec.finishedPlayers.front()};
-            rec.gameOver = rec.finishedPlayers.size() >= rec.players.size() - 1 &&
-                           !rec.players.empty();
+            rec.winner.reset();
+
+            for (const PlayerState& p : rec.players) {
+                if (p.score != 0 || contains(rec.finishedPlayers, p.id)) continue;
+                const int tk = teamKey(p);
+                for (const PlayerState& q : rec.players)
+                    if (teamKey(q) == tk && !contains(rec.finishedPlayers, q.id))
+                        rec.finishedPlayers.push_back(q.id);
+            }
+
+            if (legWinner && contains(rec.finishedPlayers, *legWinner))
+                rec.winner = legWinner;
+
+            rec.gameOver =
+                !rec.finishedPlayers.empty() && activeTeamKeys(rec).size() <= 1;
+
+            if (rec.gameOver) {
+                // Pull the last remaining team in as finishers (placings) and
+                // make sure a winner is always recorded.
+                const std::vector<int> remaining = activeTeamKeys(rec);
+                if (remaining.size() == 1)
+                    for (const PlayerState& p : rec.players)
+                        if (teamKey(p) == remaining[0] &&
+                            !contains(rec.finishedPlayers, p.id))
+                            rec.finishedPlayers.push_back(p.id);
+                if (!rec.winner.has_value() && !rec.finishedPlayers.empty())
+                    rec.winner = rec.finishedPlayers.front();
+            } else if (!rec.players.empty() &&
+                       contains(rec.finishedPlayers,
+                                rec.players[rec.currentIndex].id)) {
+                // The replay landed on a player who has already finished → hand
+                // the turn to the next active player so the UI doesn't stall.
+                const int n = static_cast<int>(rec.players.size());
+                int idx = (rec.currentIndex + 1) % n;
+                for (int a = 0; a < n; ++a) {
+                    if (!contains(rec.finishedPlayers, rec.players[idx].id)) {
+                        rec.currentIndex = idx;
+                        rec.dartIndex    = 0;
+                        break;
+                    }
+                    idx = (idx + 1) % n;
+                }
+            }
         }
         // For Cricket / Round the Clock the replay already cleared the
         // match-level flags; an edited game simply continues from the new state.

@@ -166,35 +166,69 @@ ApplyResult applyThrow(const GameState& state, const Throw& thr) {
 }
 
 GameState recalculateFromTurns(const GameState& state) {
+    const int nplayers = static_cast<int>(state.players.size());
+
+    // Start from a clean slate: keep the players/options but reset all per-turn
+    // progress.  Crucially `turns` is rebuilt from scratch (below) instead of
+    // letting applyThrow append onto the existing list — doing the latter
+    // doubled the history on every correction and corrupted later replays.
     GameState cur = state;
-    // Reset every player to their starting state.
     for (PlayerState& p : cur.players) {
         p.score   = state.options.startingScore;
         p.legsWon = 0;
         p.throws.clear();
     }
-    cur.currentIndex    = 0;
-    cur.dartIndex       = 0;
-    cur.winner          = std::nullopt;
+    cur.currentIndex = 0;
+    cur.dartIndex    = 0;
+    cur.winner       = std::nullopt;
     cur.finishedPlayers.clear();
-    cur.gameOver        = false;
+    cur.gameOver     = false;
 
-    const int nplayers = static_cast<int>(state.players.size());
+    std::vector<std::vector<Throw>> rebuilt;
+    rebuilt.reserve(state.turns.size());
+
     for (std::size_t turnIndex = 0; turnIndex < state.turns.size(); ++turnIndex) {
         const std::vector<Throw>& turn = state.turns[turnIndex];
+        const int playerIndex =
+            nplayers > 0
+                ? static_cast<int>(turnIndex % static_cast<std::size_t>(nplayers))
+                : 0;
 
-        // A turn containing a bust is skipped wholesale (front-end parity).
-        bool hasBust = false;
-        for (const Throw& t : turn) if (t.bust) { hasBust = true; break; }
-        if (hasBust) continue;
+        // Hand the engine a single fresh in-progress turn to fill, so its
+        // bust-restoration sums only this turn and nothing leaks across turns.
+        cur.turns = {{}};
 
-        const int playerIndex = static_cast<int>(turnIndex) % nplayers;
         for (std::size_t throwIndex = 0; throwIndex < turn.size(); ++throwIndex) {
             cur.currentIndex = playerIndex;
             cur.dartIndex    = static_cast<int>(throwIndex);
-            cur = applyThrow(cur, turn[throwIndex]).state;
+
+            // Drop the stored bust flag and let the engine recompute it against
+            // the (possibly edited) value — a correction can clear a stale bust
+            // or introduce a new one.
+            Throw t = turn[throwIndex];
+            t.bust = false;
+
+            ApplyResult r = applyThrow(cur, t);
+            cur = std::move(r.state);
+
+            if (r.finished) {
+                const int id = cur.players[playerIndex].id;
+                bool seen = false;
+                for (int x : cur.finishedPlayers) if (x == id) { seen = true; break; }
+                if (!seen) cur.finishedPlayers.push_back(id);
+                // First player to finish wins the leg; recording the winner here
+                // stops applyThrow awarding a leg to later finishers (placings).
+                if (!cur.winner.has_value()) cur.winner = id;
+            }
         }
+
+        // Capture the engine's recomputed throws for this turn (its first
+        // bucket) into the clean rebuilt history.
+        rebuilt.push_back(cur.turns.empty() ? std::vector<Throw>{}
+                                            : cur.turns.front());
     }
+
+    cur.turns = std::move(rebuilt);
     return cur;
 }
 

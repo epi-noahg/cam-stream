@@ -62,6 +62,67 @@ void testCorrectionRecomputes() {
     CHECK(after.players[0].score == 501 - 20 - 60 - 60);   // 361
 }
 
+// A correction must replay cleanly: the turn history keeps its exact shape
+// (it used to be doubled on every edit, which corrupted later replays).
+void testCorrectionKeepsTurnHistoryClean() {
+    GameManager m; setup(m, 501);
+    for (int i = 0; i < 3; ++i) m.recordManualThrow(T(20, 3));  // P0 full turn
+    for (int i = 0; i < 3; ++i) m.recordManualThrow(T(20, 3));  // P1 full turn
+    GameState before = m.snapshot();
+    const std::size_t turnsBefore = before.turns.size();       // [3,3,0]
+
+    m.correctThrow(0, 0, T(20, 1));
+    GameState after = m.snapshot();
+    CHECK(after.turns.size() == turnsBefore);                  // not doubled
+    CHECK(after.turns[0].size() == 3);
+    CHECK(after.turns[1].size() == 3);
+    CHECK(after.players[0].score == 501 - 20 - 60 - 60);       // 361
+    CHECK(after.players[1].score == 321);
+    CHECK(!after.gameOver);
+}
+
+// Repeated corrections must stay coherent and never end an unfinished match.
+void testRepeatedCorrectionsDoNotEndGame() {
+    GameManager m; setup(m, 501);
+    for (int i = 0; i < 3; ++i) m.recordManualThrow(T(20, 3));  // P0: 321
+    for (int i = 0; i < 3; ++i) m.recordManualThrow(T(20, 3));  // P1: 321
+
+    m.correctThrow(0, 0, T(20, 1));   // P0 first dart 60 -> 20
+    m.correctThrow(1, 0, T(20, 1));   // P1 first dart 60 -> 20
+    GameState s = m.snapshot();
+    CHECK(s.players[0].score == 361);
+    CHECK(s.players[1].score == 361);
+    CHECK(!s.gameOver);
+    CHECK(!s.winner.has_value());
+    CHECK(s.turns.size() == 3);
+}
+
+// A correction in a still-open solo match must not declare the game over.
+void testSoloCorrectionDoesNotEndGame() {
+    GameManager m; setup(m, 501, /*nplayers=*/1);
+    m.recordManualThrow(T(20, 3));    // 441
+    m.correctThrow(0, 0, T(19, 1));   // 482 — nowhere near a checkout
+    GameState s = m.snapshot();
+    CHECK(s.players[0].score == 482);
+    CHECK(!s.gameOver);
+    CHECK(!s.winner.has_value());
+}
+
+// Correcting a dart so it lands the checkout must finish the leg and end a
+// two-player match (the inverse direction — a real finish still works).
+void testCorrectionCanFinishGame() {
+    GameManager m; setup(m, 40);
+    m.recordManualThrow(T(20, 1));    // P0: 40 -> 20 (single, not a finish)
+    GameState before = m.snapshot();
+    CHECK(!before.gameOver);
+    // It was actually a double 20 — a 40 checkout that wins outright.
+    m.correctThrow(0, 0, T(20, 2));
+    GameState s = m.snapshot();
+    CHECK(s.players[0].score == 0);
+    CHECK(s.gameOver);
+    CHECK(s.winner.has_value() && s.winner.value() == 0);
+}
+
 void testUndo() {
     GameManager m; setup(m, 501);
     m.recordManualThrow(T(20, 3));   // 441
@@ -146,6 +207,10 @@ void testNewGameMintsFreshId() {
 int main() {
     testWinnerAndGameOverTwoPlayers();
     testCorrectionRecomputes();
+    testCorrectionKeepsTurnHistoryClean();
+    testRepeatedCorrectionsDoNotEndGame();
+    testSoloCorrectionDoesNotEndGame();
+    testCorrectionCanFinishGame();
     testUndo();
     testCheckoutExposed();
     testTeamSharedScore();

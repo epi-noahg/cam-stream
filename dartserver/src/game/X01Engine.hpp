@@ -21,9 +21,9 @@ struct ApplyResult {
 /// state plus whether it busted / finished the leg.  Mirrors applyThrow().
 ApplyResult applyThrow(const GameState& state, const Throw& thr);
 
-/// Replay every turn from scratch to recompute scores after an edit, skipping
-/// any turn that contains a bust (matching recalculateScoresFromTurns()).
-/// Used by GameManager when a throw is corrected.
+/// Replay every recorded throw from scratch to recompute scores after an edit.
+/// Bust flags are recomputed against the (possibly edited) values and the turn
+/// history is rebuilt cleanly.  Used by GameManager when a throw is corrected.
 GameState recalculateFromTurns(const GameState& state);
 
 } // namespace dart::game
