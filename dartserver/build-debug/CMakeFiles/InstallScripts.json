@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/noahg/github/cam-stream/dartserver/build-debug/cmake_install.cmake",
+		"/Users/noahg/github/cam-stream/dartserver/build-debug/detection/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

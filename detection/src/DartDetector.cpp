@@ -24,6 +24,18 @@ bool traceEnabled()
 #define CAMTRACE(...) do { if (traceEnabled()) { \
     std::fprintf(stderr, __VA_ARGS__); std::fputc('\n', stderr); } } while (0)
 
+/// CAMDETECT_PERF=1 prints coarse throughput / latency stats to stdout: a
+/// per-camera processed-fps line (~1/s, from DetectionService) and a per-emit
+/// settle line (here).  Env-gated, cached — zero cost when unset.
+bool perfEnabled()
+{
+    static const bool on = [] {
+        const char* v = std::getenv("CAMDETECT_PERF");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
 /// CAMDETECT_DUMP=<dir> writes an annotated crop of every emitted hit there:
 /// mask edges (green), claimed dart region (blue), axis (yellow), tip (red).
 const char* dumpDir()
@@ -416,6 +428,9 @@ DartDetector::DartDetector(int cam_id, BoardCalibration calib)
     // its own LAB-diff threshold in its calibration file; otherwise the
     // detector default applies.
     if (calib_.diff_threshold > 0.f) diff_threshold_ = calib_.diff_threshold;
+    // Reused every frame (mask cleanup + the emit-time refit); build once.
+    ker3_ = cv::getStructuringElement(cv::MORPH_RECT, {3, 3});
+    ker7_ = cv::getStructuringElement(cv::MORPH_RECT, {7, 7});
 }
 
 namespace {
@@ -461,6 +476,9 @@ void DartDetector::reset()
     stable_frames_           = 0;
     candidate_gap_           = 0;
     quiet_frames_            = 0;
+    stable_since_ts_         = 0.0;
+    quiet_since_ts_          = 0.0;
+    candidate_since_ts_      = 0.0;
     jitter_sq_sum_           = 0.f;
     jitter_n_                = 0;
     has_candidate_           = false;
@@ -541,8 +559,6 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     // sees the board exactly as it was just after the previous commit — old
     // darts (and their plumes / fragments) sit at zero diff and don't
     // pollute the mask.  Empty until the first commit of the round.
-    const cv::Mat ker3 = cv::getStructuringElement(cv::MORPH_RECT, {3, 3});
-    const cv::Mat ker7 = cv::getStructuringElement(cv::MORPH_RECT, {7, 7});
 
     auto maskFromDist = [&](const cv::Mat& dist) {
         cv::Mat dist8;
@@ -550,8 +566,8 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         cv::GaussianBlur(dist8, dist8, {5, 5}, 0);
         cv::Mat m;
         cv::threshold(dist8, m, diff_threshold_, 255, cv::THRESH_BINARY);
-        cv::morphologyEx(m, m, cv::MORPH_OPEN,  ker3);
-        cv::morphologyEx(m, m, cv::MORPH_CLOSE, ker7);
+        cv::morphologyEx(m, m, cv::MORPH_OPEN,  ker3_);
+        cv::morphologyEx(m, m, cv::MORPH_CLOSE, ker7_);
         return m;
     };
     auto buildMask = [&](const cv::Mat& reference) {
@@ -590,7 +606,7 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     const std::vector<std::vector<cv::Point>>* human_contours_ptr = &contours;
     if (use_throw_bg) {
         cv::findContours(human_mask, human_contours_storage,
-                         cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+                         cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
         human_contours_ptr = &human_contours_storage;
     }
     const auto& human_contours = *human_contours_ptr;
@@ -600,12 +616,18 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     // sqrt(da^2 + db^2) < CHROMA_DIFF_THRESH ⇒ artifact, not a real object.
     auto isLightingArtifact = [&](const std::vector<cv::Point>& c) -> bool {
         if (c.empty()) return false;
-        cv::Mat reg = cv::Mat::zeros(mask.size(), CV_8U);
+        // Scope to the contour's bounding box: the fill + the two cv::mean()
+        // calls then cost ~ROI area, not full-frame area (this runs per large
+        // contour while a player is in frame).
+        cv::Rect bb = cv::boundingRect(c) & cv::Rect(0, 0, mask.cols, mask.rows);
+        if (bb.empty()) return false;
+        cv::Mat reg = cv::Mat::zeros(bb.size(), CV_8U);
         std::vector<std::vector<cv::Point>> v{c};
-        cv::drawContours(reg, v, 0, cv::Scalar(255), -1);
+        cv::drawContours(reg, v, 0, cv::Scalar(255), -1, cv::LINE_8,
+                         cv::noArray(), 0, -bb.tl());
         if (cv::countNonZero(reg) < 100) return false;
-        const cv::Scalar cur = cv::mean(lab,     reg);
-        const cv::Scalar bg  = cv::mean(bg_lab_, reg);
+        const cv::Scalar cur = cv::mean(lab(bb),     reg);
+        const cv::Scalar bg  = cv::mean(bg_lab_(bb), reg);
         const double da = cur[1] - bg[1];
         const double db = cur[2] - bg[2];
         return std::sqrt(da*da + db*db) < CHROMA_DIFF_THRESH;
@@ -750,10 +772,15 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             largest_now = std::max(largest_now, area);
         }
         const bool human_blob_present = (largest_now > HUMAN_PRESENT_AREA);
-        if (human_blob_present) consecutive_small_ = 0;
-        else                    ++consecutive_small_;
+        if (human_blob_present) {
+            consecutive_small_ = 0;
+        } else {
+            if (consecutive_small_ == 0) quiet_since_ts_ = timestamp;
+            ++consecutive_small_;
+        }
 
-        if (consecutive_small_ < POST_HUMAN_QUIET_FRAMES) {
+        if ((timestamp - quiet_since_ts_) < POST_HUMAN_QUIET_SECONDS ||
+            consecutive_small_ < POST_HUMAN_QUIET_MIN_FRAMES) {
             if ((static_cast<int>(timestamp * 30) % 30) == 0)
                 CAMTRACE("[trace] t=%.2f cam%d POST-HUMAN largest=%.0f small=%d",
                          timestamp, cam_id_, largest_now, consecutive_small_);
@@ -990,12 +1017,15 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             else { dist_acc_ += dart_dist; ++dist_acc_n_; }
         } else {
             stable_frames_ = 1;
+            stable_since_ts_ = timestamp;
             jitter_sq_sum_ = 0.f;
             jitter_n_      = 0;
             resetAccum();
         }
     } else {
         stable_frames_ = 1;
+        stable_since_ts_    = timestamp;
+        candidate_since_ts_ = timestamp;
         jitter_sq_sum_ = 0.f;
         jitter_n_      = 0;
         resetAccum();
@@ -1003,7 +1033,9 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
     last_tip_pixel_ = best_tip;
     has_candidate_  = true;
 
-    if (stable_frames_ < STABLE_FRAMES_REQUIRED) return std::nullopt;
+    if ((timestamp - stable_since_ts_) < STABLE_SECONDS_REQUIRED ||
+        stable_frames_ < STABLE_MIN_FRAMES)
+        return std::nullopt;
     // ── Temporal silhouette refit ───────────────────────────────────────────
     // Re-fit the axis & tip on the stability-window AVERAGE of the raw LAB
     // distance.  Averaging suppresses per-frame sensor noise (~√N), so a
@@ -1020,8 +1052,8 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
         cv::GaussianBlur(ad8, ad8, {5, 5}, 0);
         cv::threshold(ad8, amask, diff_threshold_ * 0.75f, 255,
                       cv::THRESH_BINARY);
-        cv::morphologyEx(amask, amask, cv::MORPH_OPEN,  ker3);
-        cv::morphologyEx(amask, amask, cv::MORPH_CLOSE, ker7);
+        cv::morphologyEx(amask, amask, cv::MORPH_OPEN,  ker3_);
+        cv::morphologyEx(amask, amask, cv::MORPH_CLOSE, ker7_);
 
         std::vector<std::vector<cv::Point>> acont;
         cv::findContours(amask, acont, cv::RETR_EXTERNAL,
@@ -1069,6 +1101,10 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
             }
         }
     }
+
+    if (perfEnabled())
+        std::fprintf(stdout, "[perf] cam%d emit settle=%.3fs frames=%d\n",
+                     cam_id_, timestamp - candidate_since_ts_, stable_frames_);
 
     // Emit + log this dart so the next frame finds the NEXT dart.  ALWAYS
     // record the tip — otherwise a dart seen after the list is full is never

@@ -14,7 +14,7 @@ namespace camdetect {
 ///
 /// First N frames build a median background image; subsequent frames are
 /// thresholded against it.  A foreground blob with dart-like aspect ratio,
-/// stable for STABLE_FRAMES_REQUIRED frames, is reported as a DartHit.
+/// stable for a short settle window, is reported as a DartHit.
 class DartDetector {
 public:
     DartDetector(int cam_id, BoardCalibration calib);
@@ -85,6 +85,10 @@ private:
     int                               warmup_count_   {0};
     bool                              warmup_done_    {false};
     cv::Mat                           roi_mask_;      // CV_8U, board region only
+    // Morphology kernels, built once in the constructor and reused every frame
+    // (mask cleanup + the emit-time silhouette refit) instead of re-allocating.
+    cv::Mat                           ker3_;          // MORPH_RECT 3x3
+    cv::Mat                           ker7_;          // MORPH_RECT 7x7
 
     int                               stable_frames_  {0};
     int                               candidate_gap_  {0};
@@ -94,6 +98,11 @@ private:
     cv::Point2f                       last_tip_pixel_ {};
     bool                              has_candidate_  {false};
     bool                              emitted_        {false};   // suppress dupes
+    // Wall-clock anchors for the time-based settle/quiet gates, so per-throw
+    // latency no longer scales with the effective processed frame rate.
+    double                            stable_since_ts_    {0.0};  // stability window start
+    double                            quiet_since_ts_     {0.0};  // first post-human quiet frame
+    double                            candidate_since_ts_ {0.0};  // candidate first seen (perf log)
     /// Running sum of the raw LAB-distance image over the current stability
     /// window, and the frame count.  Averaged at emit to re-fit the dart axis
     /// and tip on a temporally denoised silhouette that recovers low-contrast
@@ -123,10 +132,13 @@ private:
     int                               static_big_frames_  {0};
 
     static constexpr int   WARMUP_FRAMES_REQUIRED       = 30;
-    // Higher → wait longer for the dart to settle before emitting; lower
-    // means we may emit while the dart is still wobbling on impact or even
-    // in motion.  15 frames ≈ 0.5s @30fps is a good middle ground.
-    static constexpr int   STABLE_FRAMES_REQUIRED       = 15;
+    // Wall-clock settle: wait this long after the dart stops moving before
+    // emitting, with a small frame floor so a very low fps still yields a few
+    // samples.  0.5s matches the old 15-frame @30fps gate, but being
+    // time-based the latency no longer balloons when processed fps drops.
+    static constexpr double STABLE_SECONDS_REQUIRED      = 0.5;
+    // Floor: the temporal silhouette refit needs dist_acc_n_ >= 4 samples.
+    static constexpr int    STABLE_MIN_FRAMES            = 4;
     /// A marginal-contrast dart flickers out of the mask for a frame or two
     /// (threshold beat against sensor noise).  Without a grace window every
     /// dropout restarts the stability count and a hard-to-see dart takes
@@ -136,7 +148,10 @@ private:
     static constexpr int   CLEAN_FRAMES_FOR_RESET       = 45;
     static constexpr int   CLEAN_FG_PIXELS              = 800;
     static constexpr int   POST_HUMAN_QUIET_FG_PIXELS   = 1500;   // mask "really" empty
-    static constexpr int   POST_HUMAN_QUIET_FRAMES      = 8;      // ~0.27s settle
+    // Wall-clock post-human quiet before re-checking the board, with a frame
+    // floor.  0.27s matches the old 8-frame @30fps gate.
+    static constexpr double POST_HUMAN_QUIET_SECONDS     = 0.27;
+    static constexpr int    POST_HUMAN_QUIET_MIN_FRAMES  = 3;
     static constexpr float HUGE_CONTOUR_AREA            = 15000.f;
     static constexpr float BG_UPDATE_ALPHA              = 0.015f;
     static constexpr float CHROMA_DIFF_THRESH           =     6.f;  // LAB a*b* dist

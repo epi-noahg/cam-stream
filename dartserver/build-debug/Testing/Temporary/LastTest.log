@@ -1,0 +1,115 @@
+Start testing: Jun 28 15:32 CEST
+----------------------------------------------------------
+1/7 Testing: x01_engine
+1/7 Test: x01_engine
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_x01"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"x01_engine" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All X01 engine tests passed.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"x01_engine" end time: Jun 28 15:32 CEST
+"x01_engine" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/7 Testing: game_manager
+2/7 Test: game_manager
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_game_manager"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"game_manager" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All GameManager tests passed.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"game_manager" end time: Jun 28 15:32 CEST
+"game_manager" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/7 Testing: cricket_engine
+3/7 Test: cricket_engine
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_cricket"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"cricket_engine" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All Cricket engine tests passed.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"cricket_engine" end time: Jun 28 15:32 CEST
+"cricket_engine" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/7 Testing: round_clock_engine
+4/7 Test: round_clock_engine
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_roundclock"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"round_clock_engine" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All Round the Clock engine tests passed.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"round_clock_engine" end time: Jun 28 15:32 CEST
+"round_clock_engine" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/7 Testing: zone_parse
+5/7 Test: zone_parse
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_zone"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"zone_parse" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All zone-parse tests passed.
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"zone_parse" end time: Jun 28 15:32 CEST
+"zone_parse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/7 Testing: persistence
+6/7 Test: persistence
+Command: "/Users/noahg/github/cam-stream/dartserver/build-debug/test_db"
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug
+"persistence" start time: Jun 28 15:32 CEST
+Output:
+----------------------------------------------------------
+All persistence tests passed.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"persistence" end time: Jun 28 15:32 CEST
+"persistence" time elapsed: 00:00:00
+----------------------------------------------------------
+
+Unable to find executable: /Users/noahg/github/cam-stream/dartserver/build-debug/detection/camdetect_test_fusion
+7/7 Testing: fusion_invariance
+7/7 Test: fusion_invariance
+Command: ""
+Directory: /Users/noahg/github/cam-stream/dartserver/build-debug/detection
+"fusion_invariance" start time: 
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"fusion_invariance" end time: Jun 28 15:32 CEST
+"fusion_invariance" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jun 28 15:32 CEST

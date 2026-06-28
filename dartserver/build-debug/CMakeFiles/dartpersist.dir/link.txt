@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdartpersist.a CMakeFiles/dartpersist.dir/src/persistence/Db.cpp.o
+/usr/bin/ranlib libdartpersist.a

@@ -1,0 +1,25 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
+# The set of languages for which implicit dependencies are needed:
+set(CMAKE_DEPENDS_LANGUAGES
+  )
+
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp" "detection/CMakeFiles/camdetect_live.dir/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp.o" "gcc" "detection/CMakeFiles/camdetect_live.dir/Users/noahg/github/cam-stream/client/src/StreamReceiver.cpp.o.d"
+  "/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp" "detection/CMakeFiles/camdetect_live.dir/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp.o" "gcc" "detection/CMakeFiles/camdetect_live.dir/Users/noahg/github/cam-stream/client/src/VideoDecoder.cpp.o.d"
+  "/Users/noahg/github/cam-stream/detection/tools/live_viewer.cpp" "detection/CMakeFiles/camdetect_live.dir/tools/live_viewer.cpp.o" "gcc" "detection/CMakeFiles/camdetect_live.dir/tools/live_viewer.cpp.o.d"
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_LINKED_INFO_FILES
+  )
+
+# Targets to which this target links which contain Fortran sources.
+set(CMAKE_Fortran_TARGET_FORWARD_LINKED_INFO_FILES
+  )
+
+# Fortran module output directory.
+set(CMAKE_Fortran_TARGET_MODULE_DIR "")

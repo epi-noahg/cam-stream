@@ -65,6 +65,11 @@ target_link_libraries(camdetect_annotate PRIVATE camdetect)
 add_executable(camdetect_runtest tools/run_test.cpp)
 target_link_libraries(camdetect_runtest PRIVATE camdetect)
 
+# Concurrency stress harness (run under -fsanitize=thread to race-check the
+# per-detector locking that lets the cameras' pipelines run in parallel).
+add_executable(camdetect_stress tools/stress_concurrent.cpp)
+target_link_libraries(camdetect_stress PRIVATE camdetect Threads::Threads)
+
 add_executable(camdetect_test_fusion tests/test_fusion.cpp)
 target_link_libraries(camdetect_test_fusion PRIVATE camdetect)
 enable_testing()

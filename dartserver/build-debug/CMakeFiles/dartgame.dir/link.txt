@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdartgame.a CMakeFiles/dartgame.dir/src/game/X01Engine.cpp.o CMakeFiles/dartgame.dir/src/game/CricketEngine.cpp.o CMakeFiles/dartgame.dir/src/game/RoundClockEngine.cpp.o CMakeFiles/dartgame.dir/src/game/Checkout.cpp.o CMakeFiles/dartgame.dir/src/game/GameManager.cpp.o
+/usr/bin/ranlib libdartgame.a

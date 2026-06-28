@@ -1,0 +1,9 @@
+x01_engine 4 0.00140385
+game_manager 4 0.000727458
+cricket_engine 4 0.000551
+round_clock_engine 4 0.000524
+zone_parse 4 0.0339118
+persistence 4 0.00309383
+fusion_invariance 0 0
+---
+fusion_invariance

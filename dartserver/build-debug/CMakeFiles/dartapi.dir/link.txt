@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdartapi.a CMakeFiles/dartapi.dir/src/api/Json.cpp.o CMakeFiles/dartapi.dir/src/api/WsServer.cpp.o CMakeFiles/dartapi.dir/src/api/Dispatcher.cpp.o
+/usr/bin/ranlib libdartapi.a

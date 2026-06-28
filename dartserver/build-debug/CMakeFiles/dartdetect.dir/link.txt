@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdartdetect.a CMakeFiles/dartdetect.dir/src/detection/DetectionTypes.cpp.o CMakeFiles/dartdetect.dir/src/detection/DetectionService.cpp.o "CMakeFiles/dartdetect.dir/Users/noahg/github/cam-stream/server/src/CameraCapture.cpp.o"
+/usr/bin/ranlib libdartdetect.a

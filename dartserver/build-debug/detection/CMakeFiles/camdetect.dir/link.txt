@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcamdetect.a CMakeFiles/camdetect.dir/src/AutoCalibrator.cpp.o CMakeFiles/camdetect.dir/src/BoardCalibration.cpp.o CMakeFiles/camdetect.dir/src/BoardCalibrator.cpp.o CMakeFiles/camdetect.dir/src/DartDetector.cpp.o CMakeFiles/camdetect.dir/src/DebugUI.cpp.o CMakeFiles/camdetect.dir/src/MultiCamFusion.cpp.o CMakeFiles/camdetect.dir/src/Pipeline.cpp.o CMakeFiles/camdetect.dir/src/Renderer.cpp.o CMakeFiles/camdetect.dir/src/ZoneMap.cpp.o CMakeFiles/camdetect.dir/src/ZoneMapper.cpp.o CMakeFiles/camdetect.dir/sources/FileSource.cpp.o
+/usr/bin/ranlib libcamdetect.a

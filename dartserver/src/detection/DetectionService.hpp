@@ -121,6 +121,7 @@ public:
 private:
     void feedLoopReplay_();
     void feedLoopCamera_(int cam_id);
+    void processLoopCamera_(int cam_id);
     void statusLoop_();
     BoardStatus computeStatus_() const;
     /// Copy the latest frame for one camera out of display_frames_.
@@ -131,6 +132,7 @@ private:
     std::unique_ptr<camdetect::Pipeline> pipeline_;
 
     std::vector<std::thread>           feed_threads_;
+    std::vector<std::thread>           proc_threads_;
     std::thread                        status_thread_;
     std::atomic<bool>                  running_ {false};
     std::atomic<bool>                  finished_ {false};
@@ -154,6 +156,14 @@ private:
     // CameraCapture (server/src) into this header.
     struct LiveCams;
     std::unique_ptr<LiveCams>          live_;
+
+    // Per-camera capture→processing handoff (latest-frame-wins).  The capture
+    // callback only stores the newest frame + notifies; a dedicated worker
+    // thread (processLoopCamera_) processes the latest frame and drops any
+    // skipped ones, so the camera is never throttled by processFrame cost.
+    // Opaque (holds mutex/condvar/cv::Mat) → defined in the .cpp.
+    struct CamHandoff;
+    std::unique_ptr<CamHandoff>        handoff_;
 
     // Pending auto-calib results awaiting save (one per camera).  Holds
     // camdetect types (BoardCalibration / ZoneMap), so it is defined in the

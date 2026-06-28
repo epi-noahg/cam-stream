@@ -115,6 +115,12 @@ private:
     void refineFusedZone_(FusedHit& f) const;
 
     mutable std::mutex                                  mtx_;
+    // Per-detector mutex: guards EVERYTHING about detector i — processFrame,
+    // state/viz reads, calib/zoneMap reads, refreshBackground/reset, and the
+    // detector-pointer swap.  Lets the three per-camera detection pipelines run
+    // concurrently.  Lock order is always mtx_ → det_mtx_[i] (ascending);
+    // never det_mtx_ then mtx_.
+    mutable std::array<std::mutex, NUM_CAMS>            det_mtx_;
     std::array<std::unique_ptr<DartDetector>, NUM_CAMS> detectors_;
     MultiCamFusion                                      fusion_;
     HitCallback                                         on_hit_;

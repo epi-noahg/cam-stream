@@ -48,6 +48,14 @@ void CameraCapture::loop()
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  width_);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, height_);
     cap.set(cv::CAP_PROP_FPS,          fps_);
+    // Bound in-driver queueing to ~1 frame so cap.read() returns the FRESHEST
+    // frame, not one several deep — otherwise heavy downstream processing lets
+    // the V4L2 driver build a backlog and the detector works on stale frames.
+    // Set after the format/resolution changes (some drivers reset props on
+    // format change).  Belt-and-suspenders with DetectionService's
+    // latest-frame-wins worker, which guarantees freshness even if a driver
+    // ignores BUFFERSIZE.
+    cap.set(cv::CAP_PROP_BUFFERSIZE, 1);
 
     const int cc = static_cast<int>(cap.get(cv::CAP_PROP_FOURCC));
     const char fourcc[5] = { static_cast<char>(cc & 0xFF),

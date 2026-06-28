@@ -88,14 +88,17 @@ void Pipeline::setOnHitUpdated(HitUpdateCallback cb)
 void Pipeline::setZoneMap(int cam_id, ZoneMap zm)
 {
     if (cam_id < 0 || cam_id >= NUM_CAMS) return;
-    std::lock_guard<std::mutex> lk(mtx_);
+    std::lock_guard<std::mutex> lk(det_mtx_[cam_id]);
     detectors_[cam_id]->setZoneMap(std::move(zm));
 }
 
 void Pipeline::setCalibration(int cam_id, BoardCalibration calib)
 {
     if (cam_id < 0 || cam_id >= NUM_CAMS) return;
-    std::lock_guard<std::mutex> lk(mtx_);
+    // det_mtx_ excludes a concurrent processFrame on this detector while the
+    // pointer is swapped (a use-after-free risk now that processFrame runs
+    // outside mtx_).
+    std::lock_guard<std::mutex> lk(det_mtx_[cam_id]);
     detectors_[cam_id] = std::make_unique<DartDetector>(cam_id, std::move(calib));
 }
 
@@ -103,34 +106,45 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
 {
     if (cam_id < 0 || cam_id >= NUM_CAMS) return;
 
-    std::optional<DartHit>  hit;
-    std::optional<FusedHit> fused;
-    HitCallback             cb;
-
+    // ── Phase 1: advance the shared fusion clock ───────────────────────────
+    // The newest timestamp seen on any camera; lets an open fusion window close
+    // on time even when one camera lags or never reports the current dart.
     {
         std::lock_guard<std::mutex> lk(mtx_);
-
-        // Advance the shared fusion clock with the newest timestamp seen on any
-        // camera.  This is what lets an open fusion window close on time even
-        // when one camera lags or never reports the current dart.
         if (timestamp > fusion_clock_) fusion_clock_ = timestamp;
+    }
 
+    // ── Phase 2: heavy per-camera detection (parallel across cameras) ──────
+    // Guarded by THIS detector's mutex only, so the three pipelines overlap.
+    std::optional<DartHit> hit;
+    {
+        std::lock_guard<std::mutex> lk(det_mtx_[cam_id]);
         hit = detectors_[cam_id]->processFrame(frame, timestamp);
+    }
 
-        // Cross-cam support: a dart that really sticks at hit->board_xy must
-        // leave foreground in the peers' cumulative masks at the projected
-        // pixel.  A shadow or reflection fools one camera but has no backing
-        // anywhere else — fusion uses this to break junk-vs-real ties.
-        if (hit) {
-            for (int i = 0; i < NUM_CAMS; ++i) {
-                if (i == cam_id) continue;
-                const auto& det = *detectors_[i];
-                if (!det.cumSupportValid() || !det.calib().isValid()) continue;
-                ++hit->support_peers;
-                const cv::Point2f px = det.calib().boardToImage(hit->board_xy);
-                if (det.hasForegroundNear(px, 18.f)) ++hit->support_cams;
-            }
+    // ── Phase 3: cross-cam support ─────────────────────────────────────────
+    // A dart that really sticks at hit->board_xy must leave foreground in the
+    // peers' cumulative masks at the projected pixel.  A shadow or reflection
+    // fools one camera but has no backing anywhere else — fusion uses this to
+    // break junk-vs-real ties.  One peer lock at a time, each released before
+    // the mtx_ phase below (never det_mtx_ then mtx_).
+    if (hit) {
+        for (int i = 0; i < NUM_CAMS; ++i) {
+            if (i == cam_id) continue;
+            std::lock_guard<std::mutex> lk(det_mtx_[i]);
+            const auto& det = *detectors_[i];
+            if (!det.cumSupportValid() || !det.calib().isValid()) continue;
+            ++hit->support_peers;
+            const cv::Point2f px = det.calib().boardToImage(hit->board_xy);
+            if (det.hasForegroundNear(px, 18.f)) ++hit->support_cams;
         }
+    }
+
+    // ── Phase 4: fusion + dedup + commit (Pipeline-shared state) ───────────
+    std::optional<FusedHit> fused;
+    HitCallback             cb;
+    {
+        std::lock_guard<std::mutex> lk(mtx_);
 
         if (hit)
             CAMTRACE("[trace] t=%.2f f=%d cam%d HIT zone=%s xy=(%.0f,%.0f) "
@@ -298,6 +312,7 @@ void Pipeline::refineFusedZone_(FusedHit& f) const
     //    point, so good crossings read near-unanimously regardless of each
     //    camera's own tip slide.
     for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
         const auto& det = *detectors_[i];
         if (!det.calib().isValid() || det.zoneMap().empty()) continue;
         const cv::Point2f px = det.calib().boardToImage(X);
@@ -395,22 +410,32 @@ void Pipeline::watchdogStuckHuman()
     // Cross-cam watchdog: if 2+ peers say OK and one is HumanBlob, the
     // outlier is almost certainly seeing lighting noise rather than a real
     // human → force a bg refresh on it after STUCK_HUMAN_FRAMES (~2s).
+    // Snapshot states first (each under its detector lock, one at a time).
+    DetectorState states[NUM_CAMS];
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        states[i] = detectors_[i]->state();
+    }
+
     int ok_count    = 0;
     int human_count = 0;
     for (int i = 0; i < NUM_CAMS; ++i) {
-        const auto s = detectors_[i]->state();
-        if (s == DetectorState::Normal || s == DetectorState::BoardClean)
+        if (states[i] == DetectorState::Normal ||
+            states[i] == DetectorState::BoardClean)
             ++ok_count;
-        if (s == DetectorState::HumanBlob)
+        if (states[i] == DetectorState::HumanBlob)
             ++human_count;
     }
 
     for (int i = 0; i < NUM_CAMS; ++i) {
-        const bool is_human = detectors_[i]->state() == DetectorState::HumanBlob;
+        const bool is_human = states[i] == DetectorState::HumanBlob;
         const bool peers_ok = ok_count >= 2;
         if (is_human && peers_ok) {
             if (++stuck_human_frames_[i] > STUCK_HUMAN_FRAMES) {
-                detectors_[i]->refreshBackground();
+                {
+                    std::lock_guard<std::mutex> lk(det_mtx_[i]);
+                    detectors_[i]->refreshBackground();
+                }
                 stuck_human_frames_[i] = 0;
             }
         } else {
@@ -425,7 +450,10 @@ void Pipeline::watchdogStuckHuman()
     const bool round_complete = (darts_in_round_ >= MAX_DARTS_PER_ROUND);
     if (round_complete && human_count > 0) {
         if (++post_round_human_frames_ > POST_ROUND_STUCK_FRAMES) {
-            for (auto& d : detectors_) d->refreshBackground();
+            for (int i = 0; i < NUM_CAMS; ++i) {
+                std::lock_guard<std::mutex> lk(det_mtx_[i]);
+                detectors_[i]->refreshBackground();
+            }
             post_round_human_frames_ = 0;
         }
     } else {
@@ -443,8 +471,9 @@ RoundStatus Pipeline::computeRoundStatus_() const
 {
     bool any_human  = false;
     bool any_warmup = false;
-    for (const auto& d : detectors_) {
-        const auto s = d->state();
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        const auto s = detectors_[i]->state();
         if (s == DetectorState::HumanBlob) any_human  = true;
         if (s == DetectorState::Warmup)    any_warmup = true;
     }
@@ -471,32 +500,39 @@ void Pipeline::resetRound()
 {
     std::lock_guard<std::mutex> lk(mtx_);
     fusion_.reset();
-    for (auto& d : detectors_) d->reset();
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> dlk(det_mtx_[i]);
+        detectors_[i]->reset();
+    }
     darts_in_round_ = 0;
     round_hits_.clear();
 }
 
 void Pipeline::setDiffThreshold(float v)
 {
-    std::lock_guard<std::mutex> lk(mtx_);
-    for (auto& d : detectors_) d->setDiffThreshold(v);
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        detectors_[i]->setDiffThreshold(v);
+    }
 }
 
 float Pipeline::diffThreshold() const
 {
-    std::lock_guard<std::mutex> lk(mtx_);
+    std::lock_guard<std::mutex> lk(det_mtx_[0]);
     return detectors_[0] ? detectors_[0]->diffThreshold() : 0.f;
 }
 
 void Pipeline::setLineMergePerpPx(float v)
 {
-    std::lock_guard<std::mutex> lk(mtx_);
-    for (auto& d : detectors_) d->setLineMergePerpPx(v);
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        detectors_[i]->setLineMergePerpPx(v);
+    }
 }
 
 float Pipeline::lineMergePerpPx() const
 {
-    std::lock_guard<std::mutex> lk(mtx_);
+    std::lock_guard<std::mutex> lk(det_mtx_[0]);
     return detectors_[0] ? detectors_[0]->lineMergePerpPx() : 0.f;
 }
 
@@ -508,10 +544,13 @@ std::vector<FusedHit> Pipeline::roundHits() const
 
 void Pipeline::refreshBackground(int cam_id)
 {
-    std::lock_guard<std::mutex> lk(mtx_);
     if (cam_id < 0) {
-        for (auto& d : detectors_) d->refreshBackground();
+        for (int i = 0; i < NUM_CAMS; ++i) {
+            std::lock_guard<std::mutex> lk(det_mtx_[i]);
+            detectors_[i]->refreshBackground();
+        }
     } else if (cam_id < NUM_CAMS) {
+        std::lock_guard<std::mutex> lk(det_mtx_[cam_id]);
         detectors_[cam_id]->refreshBackground();
     }
 }
@@ -519,7 +558,7 @@ void Pipeline::refreshBackground(int cam_id)
 DetectorViz Pipeline::camViz(int cam_id) const
 {
     if (cam_id < 0 || cam_id >= NUM_CAMS) return {};
-    std::lock_guard<std::mutex> lk(mtx_);
+    std::lock_guard<std::mutex> lk(det_mtx_[cam_id]);
     return detectors_[cam_id]->lastViz();
 }
 
@@ -542,7 +581,11 @@ void Pipeline::maybeAutoReset()
                                      "[trace] t=%.2f reset-watch darts=%d",
                                      fusion_clock_, darts_in_round_);
             for (int i = 0; i < NUM_CAMS; ++i) {
-                const auto viz = detectors_[i]->lastViz();
+                DetectorViz viz;
+                {
+                    std::lock_guard<std::mutex> lk(det_mtx_[i]);
+                    viz = detectors_[i]->lastViz();
+                }
                 off += std::snprintf(buf + off, sizeof(buf) - off,
                                      "  cam%d{st=%d fg=%d cln=%d}",
                                      i, static_cast<int>(viz.state),
@@ -552,11 +595,16 @@ void Pipeline::maybeAutoReset()
         }
     }
 
-    for (const auto& d : detectors_)
-        if (!d->boardLooksCleared()) return;
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        if (!detectors_[i]->boardLooksCleared()) return;
+    }
 
     fusion_.reset();
-    for (auto& d : detectors_) d->reset();
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        std::lock_guard<std::mutex> lk(det_mtx_[i]);
+        detectors_[i]->reset();
+    }
     darts_in_round_ = 0;
     round_hits_.clear();
 }

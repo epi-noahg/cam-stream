@@ -17,6 +17,8 @@
 #include <chrono>
 #include <cctype>
 #include <cstdint>
+#include <condition_variable>
+#include <cstdlib>
 #include <iostream>
 #include <array>
 #include <filesystem>
@@ -51,6 +53,22 @@ struct DetectionService::LiveCams {
     std::array<std::unique_ptr<camstream::CameraCapture>, NUM_CAMS> caps;
 };
 
+// ── Per-camera capture→processing handoff (latest-frame-wins) ───────────────
+// The capture thread reseats `frame` to the newest decoded frame and bumps
+// `latest_seq`; the worker copies it out, sets processed_seq = latest_seq
+// (dropping any frames it skipped), and runs the heavy pipeline off-thread.
+struct DetectionService::CamHandoff {
+    struct Slot {
+        std::mutex              mtx;
+        std::condition_variable cv;
+        cv::Mat                 frame;            // newest frame awaiting processing
+        double                  ts            {0.0};
+        std::uint64_t           latest_seq    {0};
+        std::uint64_t           processed_seq {0};
+    };
+    std::array<Slot, NUM_CAMS> slots;
+};
+
 // ── Pending auto-calib results (per camera), kept out of the header ──────────
 // Produced by runAutoCalib(), consumed by saveCalibration().
 struct DetectionService::PendingCalibs {
@@ -67,6 +85,16 @@ struct DetectionService::PendingCalibs {
 };
 
 namespace {
+// CAMDETECT_PERF=1 enables coarse throughput logging (per-camera processed
+// fps).  Env-gated, cached — zero cost when unset.
+bool perfEnabled() {
+    static const bool on = [] {
+        const char* v = std::getenv("CAMDETECT_PERF");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
 // Base64 (standard alphabet, padded) for embedding JPEGs in JSON messages.
 std::string base64(const std::vector<uchar>& data) {
     static constexpr char tbl[] =
@@ -131,7 +159,8 @@ const char* phaseStr(camdetect::RoundPhase p) {
 } // namespace
 
 DetectionService::DetectionService(dart::game::GameManager& gm)
-    : gm_(gm), pending_(std::make_unique<PendingCalibs>()) {}
+    : gm_(gm), handoff_(std::make_unique<CamHandoff>()),
+      pending_(std::make_unique<PendingCalibs>()) {}
 DetectionService::~DetectionService() { stop(); }
 
 bool DetectionService::init(const Config& cfg) {
@@ -181,6 +210,10 @@ void DetectionService::start() {
         feed_threads_.emplace_back([this] { feedLoopReplay_(); });
     } else {
         live_ = std::make_unique<LiveCams>();
+        // Workers first so they're parked on the condvar before frames arrive
+        // (correctness doesn't depend on order — the seq counter covers it).
+        for (int c = 0; c < NUM_CAMS; ++c)
+            proc_threads_.emplace_back([this, c] { processLoopCamera_(c); });
         for (int c = 0; c < NUM_CAMS; ++c)
             feed_threads_.emplace_back([this, c] { feedLoopCamera_(c); });
     }
@@ -189,10 +222,15 @@ void DetectionService::start() {
 
 void DetectionService::stop() {
     running_ = false;
+    // Wake any worker parked on its condvar so it observes running_ == false.
+    if (handoff_)
+        for (auto& s : handoff_->slots) s.cv.notify_all();
     if (live_)
         for (auto& cap : live_->caps) if (cap) cap->stop();
     for (auto& t : feed_threads_) if (t.joinable()) t.join();
     feed_threads_.clear();
+    for (auto& t : proc_threads_) if (t.joinable()) t.join();
+    proc_threads_.clear();
     if (status_thread_.joinable()) status_thread_.join();
     if (scan_thread_.joinable()) scan_thread_.join();
 }
@@ -355,12 +393,62 @@ void DetectionService::feedLoopCamera_(int cam_id) {
     cap->start([this, session_start](camstream::RawFrame rf) {
         const double ts = std::chrono::duration<double>(
             std::chrono::steady_clock::now() - session_start).count();
-        pipeline_->feedFrame(rf.cam_id, rf.bgr, ts);
+        // Latest-frame-wins: only store the newest frame + notify; the worker
+        // thread (processLoopCamera_) runs the heavy pipeline so the capture
+        // thread never blocks and never builds a backlog.  rf.bgr is already a
+        // fresh per-frame clone and is read-only downstream, so sharing the
+        // buffer across the worker + snapshot path is safe.
+        auto& slot = handoff_->slots[rf.cam_id];
+        {
+            std::lock_guard<std::mutex> lk(slot.mtx);
+            slot.frame = rf.bgr;
+            slot.ts    = ts;
+            ++slot.latest_seq;
+        }
+        slot.cv.notify_one();
         // Retain the latest frame for snapshots + auto-calibration.
         std::lock_guard<std::mutex> lk(display_mtx_);
-        display_frames_[rf.cam_id] = rf.bgr.clone();
+        display_frames_[rf.cam_id] = rf.bgr;
     });
     live_->caps[cam_id] = std::move(cap);
+}
+
+void DetectionService::processLoopCamera_(int cam_id) {
+    auto& slot = handoff_->slots[cam_id];
+    std::uint64_t fps_frames = 0;
+    auto fps_t0 = std::chrono::steady_clock::now();
+
+    while (running_) {
+        cv::Mat frame;
+        double  ts = 0.0;
+        {
+            std::unique_lock<std::mutex> lk(slot.mtx);
+            slot.cv.wait_for(lk, std::chrono::milliseconds(100), [&] {
+                return !running_ || slot.latest_seq != slot.processed_seq;
+            });
+            if (!running_) break;
+            if (slot.latest_seq == slot.processed_seq) continue;  // spurious / timeout
+            frame = slot.frame;                    // shallow copy (refcount++)
+            ts    = slot.ts;
+            slot.processed_seq = slot.latest_seq;  // drop any skipped frames
+        }
+        if (frame.empty()) continue;
+
+        pipeline_->feedFrame(cam_id, frame, ts);
+
+        if (perfEnabled()) {
+            ++fps_frames;
+            const auto now = std::chrono::steady_clock::now();
+            const double el = std::chrono::duration<double>(now - fps_t0).count();
+            if (el >= 1.0) {
+                std::cout << "[perf] cam" << cam_id << " "
+                          << (static_cast<double>(fps_frames) / el)
+                          << " fps processed\n";
+                fps_frames = 0;
+                fps_t0     = now;
+            }
+        }
+    }
 }
 
 void DetectionService::statusLoop_() {
