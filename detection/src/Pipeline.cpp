@@ -223,6 +223,10 @@ void Pipeline::feedFrame(int cam_id, const cv::Mat& frame, double timestamp)
                 if (!is_dup) {
                     ++darts_in_round_;
                     round_hits_.push_back(*fused);
+                    // Fill silent peers via epipolar recall BEFORE the callback
+                    // fires, so the first report already carries the extra vote.
+                    recallSilentPeers_(round_hits_.back());
+                    *fused = round_hits_.back();
                     cb = on_hit_;
                     CAMTRACE("[trace]   COMMIT dart %d: %s",
                              darts_in_round_, fused->zone.c_str());
@@ -388,6 +392,61 @@ void Pipeline::refineFusedZone_(FusedHit& f) const
         }
     }
     f.confidence = std::clamp(consensus * placement * ring_mass, 0.f, 1.f);
+}
+
+void Pipeline::recallSilentPeers_(FusedHit& h)
+{
+    int n_voters = 0;
+    for (int i = 0; i < NUM_CAMS; ++i)
+        if (h.per_cam[i].cam_id >= 0) ++n_voters;
+    if (n_voters >= NUM_CAMS) return;   // everyone already voted
+
+    std::vector<DartHit> union_votes;
+    for (int i = 0; i < NUM_CAMS; ++i)
+        if (h.per_cam[i].cam_id >= 0) union_votes.push_back(h.per_cam[i]);
+
+    int probed = 0;
+    for (int i = 0; i < NUM_CAMS; ++i) {
+        if (h.per_cam[i].cam_id >= 0) continue;          // not silent
+        const auto& det = *detectors_[i];
+        if (!det.cumSupportValid() || !det.calib().isValid()) continue;
+        const cv::Point2f px = det.calib().boardToImage(h.board_xy);
+        // Blank the projections of every OTHER committed round hit so recall
+        // can't re-vote an already-scored neighbour (covers darts scored by
+        // any camera, not just this peer's own committed regions).
+        std::vector<cv::Point2f> exclude;
+        for (const auto& other : round_hits_) {
+            if (&other == &h) continue;
+            exclude.push_back(det.calib().boardToImage(other.board_xy));
+        }
+        if (auto p = det.probeDartNear(px, RECALL_RADIUS_PX, exclude,
+                                       h.timestamp)) {
+            union_votes.push_back(*p);
+            ++probed;
+            CAMTRACE("[trace]   RECALL cam%d found dart near (%.0f,%.0f) "
+                     "zone=%s xy=(%.0f,%.0f)",
+                     i, px.x, px.y, p->zone.c_str(),
+                     p->board_xy.x, p->board_xy.y);
+        }
+    }
+    if (probed == 0) return;
+
+    // Re-fuse the union.  fuseVotes' slide-aware consistency is the real gate:
+    // a recalled vote that doesn't lie on a board line through the committed
+    // contact point is dropped from the cluster, so a spurious probe cannot
+    // move the score — it simply fails to add a voter.
+    if (auto refused = MultiCamFusion::fuseVotes(union_votes)) {
+        int nv_after = 0;
+        for (int i = 0; i < NUM_CAMS; ++i)
+            if (refused->per_cam[i].cam_id >= 0) ++nv_after;
+        if (nv_after <= n_voters) return;   // all probes slide-rejected
+        refused->timestamp = h.timestamp;
+        refineFusedZone_(*refused);
+        CAMTRACE("[trace]   RECALL merged %s -> %s (votes %d->%d, conf=%.2f)",
+                 h.zone.c_str(), refused->zone.c_str(), n_voters, nv_after,
+                 refused->confidence);
+        h = *refused;
+    }
 }
 
 void Pipeline::watchdogStuckHuman()

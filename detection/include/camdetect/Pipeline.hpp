@@ -114,6 +114,19 @@ private:
     /// hits, whose tip can have slid along the dart axis.  Lock-held helper.
     void refineFusedZone_(FusedHit& f) const;
 
+    /// EPIPOLAR RECALL.  Just after a dart is committed with fewer than
+    /// NUM_CAMS voters, ask each silent peer to look for the same dart at the
+    /// committed point projected into it (boardToImage), and — if a thin,
+    /// persistent, slide-consistent component is there — merge that vote in and
+    /// re-fuse.  Turns fragile votes=1 hits into votes≥2 (tighter position,
+    /// higher confidence) with near-zero false-positive cost, because the
+    /// search is geometry-anchored and gated by fuseVotes' slide consistency.
+    /// Lock-held; mutates @p h (a round_hits_ entry) in place.
+    void recallSilentPeers_(FusedHit& h);
+    /// Search radius (px) around the projected contact point for recall: large
+    /// enough to span a single camera's along-slide projected into the peer.
+    static constexpr float RECALL_RADIUS_PX = 50.f;
+
     mutable std::mutex                                  mtx_;
     std::array<std::unique_ptr<DartDetector>, NUM_CAMS> detectors_;
     MultiCamFusion                                      fusion_;

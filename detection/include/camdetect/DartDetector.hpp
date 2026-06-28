@@ -74,6 +74,22 @@ public:
     /// can see a dart that a peer claims to have found.
     bool hasForegroundNear(const cv::Point2f& px, float radius_px) const;
 
+    /// EPIPOLAR RECALL.  A peer camera that never promoted a candidate is asked,
+    /// once a dart is committed at board point X, to look for it at @p px =
+    /// boardToImage(X): the contact point is the only part of the dart on the
+    /// board plane, so the homography maps it exactly to one pixel while the
+    /// shaft sticks out in an unknown out-of-plane direction.  We therefore
+    /// search a DISK around @p px (not a directional band) for a thin elongated
+    /// component whose tip endpoint lands within @p radius_px of @p px, gated by
+    /// temporal persistence and with @p exclude_px (other committed darts'
+    /// projections into this camera) blanked out.  Returns a synthetic DartHit
+    /// for fusion, or nullopt.  Const: reads only the latest masks.
+    std::optional<DartHit> probeDartNear(
+        const cv::Point2f&              px,
+        float                          radius_px,
+        const std::vector<cv::Point2f>& exclude_px,
+        double                         timestamp) const;
+
 private:
     int                               cam_id_;
     BoardCalibration                  calib_;
@@ -100,6 +116,12 @@ private:
     /// (dark-on-dark) tip pixels otherwise lost to per-frame thresholding.
     cv::Mat                           dist_acc_;
     int                               dist_acc_n_     {0};
+    /// Per-pixel temporal persistence of the cumulative (empty-board) mask:
+    /// incremented where foreground is present, decayed otherwise, capped at
+    /// CUM_PERSIST_CAP.  Epipolar recall requires a probed component to be
+    /// persistent (≥ CUM_PERSIST_MIN), which kills one-frame noise streaks —
+    /// the dominant false-positive source when probing at a lowered bar.
+    cv::Mat                           cum_persist_;   // CV_8U
 
     DetectorViz                       last_viz_       {};
     float                             diff_threshold_     {15.f};
@@ -165,6 +187,10 @@ private:
     static constexpr float TIP_BACKING_MIN_AREA         =   100.f;
     static constexpr float TIP_BACKING_SEARCH_PX        =    20.f;
     static constexpr int   MAX_LOGGED_TIPS              =    12;  // tip-suppression memory, not round limit
+    /// Epipolar recall: temporal-persistence accumulator cap and the minimum
+    /// persisted-frame count a probed component must reach to be trusted.
+    static constexpr int   CUM_PERSIST_CAP              =     6;
+    static constexpr int   CUM_PERSIST_MIN             =     3;
 };
 
 } // namespace camdetect

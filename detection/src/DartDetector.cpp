@@ -466,6 +466,7 @@ void DartDetector::reset()
     has_candidate_           = false;
     dist_acc_.release();
     dist_acc_n_              = 0;
+    cum_persist_.release();
     emitted_                 = false;
     last_tip_pixel_          = {};
     last_viz_                = {};
@@ -501,6 +502,103 @@ bool DartDetector::hasForegroundNear(const cv::Point2f& px,
     if (roi.empty()) return false;
     // A handful of speckle pixels shouldn't count as a witness.
     return cv::countNonZero(latest_cum_mask_(roi)) >= 20;
+}
+
+std::optional<DartHit> DartDetector::probeDartNear(
+    const cv::Point2f&              px,
+    float                          radius_px,
+    const std::vector<cv::Point2f>& exclude_px,
+    double                         timestamp) const
+{
+    if (!cumSupportValid() || latest_cum_mask_.empty() || !calib_.isValid())
+        return std::nullopt;
+
+    // Persistence-gated probe mask: only foreground stable for ≥ CUM_PERSIST_MIN
+    // frames (kills one-frame noise streaks — the dominant FP source here).
+    cv::Mat probe = (!cum_persist_.empty() &&
+                     cum_persist_.size() == latest_cum_mask_.size())
+                        ? (cum_persist_ >= CUM_PERSIST_MIN)
+                        : (latest_cum_mask_ > 0);
+
+    // Blank out other committed darts' projections + this camera's own scored
+    // regions, so recall never re-votes an already-scored neighbour.
+    for (const auto& ex : exclude_px)
+        cv::circle(probe, ex, 22, cv::Scalar(0), -1);
+    if (!committed_regions_.empty() &&
+        committed_regions_.size() == probe.size())
+        probe.setTo(0, committed_regions_);
+
+    std::vector<std::vector<cv::Point>> cont;
+    cv::findContours(probe, cont, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+
+    // Pick the thin elongated component with an endpoint within the (generous)
+    // search radius of px.  The radius is generous because a single firing
+    // camera's X carries its along-slide, displacing px from the true tip by
+    // tens of px; the slide-aware consistency check in fuseVotes does the real
+    // gating, so a tight radius here would silently miss the dart.
+    const std::vector<cv::Point>* best = nullptr;
+    float                         best_d = radius_px + 1.f;
+    Endpoints                     best_ep{};
+    for (const auto& c : cont) {
+        const float area = static_cast<float>(cv::contourArea(c));
+        if (area < MIN_BLOB_AREA || area > MAX_BLOB_AREA) continue;
+        cv::RotatedRect r = cv::minAreaRect(c);
+        const float w = std::max(r.size.width, r.size.height);
+        const float h = std::min(r.size.width, r.size.height);
+        if (h <= 0.f || w / h < MIN_ASPECT_RATIO) continue;
+        const Endpoints ep = dartAxisByMidpoints(c, probe, line_merge_perp_px_);
+        const float d = std::min(static_cast<float>(cv::norm(ep.a - px)),
+                                 static_cast<float>(cv::norm(ep.b - px)));
+        if (d < best_d) { best_d = d; best = &c; best_ep = ep; }
+    }
+    if (!best) return std::nullopt;
+
+    // Tip = narrower end, else end nearer board centre (same as the emit path).
+    const cv::Point2f a_board = calib_.imageToBoard(best_ep.a);
+    const cv::Point2f b_board = calib_.imageToBoard(best_ep.b);
+    bool a_is_tip;
+    if (best_ep.width_a > 0.f && best_ep.width_b > 0.f &&
+        std::abs(best_ep.width_a - best_ep.width_b) >
+            0.10f * std::max(best_ep.width_a, best_ep.width_b))
+        a_is_tip = best_ep.width_a < best_ep.width_b;
+    else
+        a_is_tip = a_board.dot(a_board) < b_board.dot(b_board);
+    const cv::Point2f tip        = a_is_tip ? best_ep.a : best_ep.b;
+    const cv::Point2f board_xy   = a_is_tip ? a_board   : b_board;
+    const cv::Point2f tail_board = a_is_tip ? b_board   : a_board;
+    if (std::sqrt(board_xy.dot(board_xy)) > MAX_BOARD_RADIUS_MM)
+        return std::nullopt;
+
+    DartHit hit{};
+    hit.cam_id    = cam_id_;
+    hit.board_xy  = board_xy;
+    hit.tip_pixel = tip;
+    // Board-space axis (tip→tail): the line through the contact point that the
+    // crossing actually uses — robust to which end we labelled the tip.
+    cv::Point2f chord = tail_board - board_xy;
+    const float cn = std::sqrt(chord.dot(chord));
+    hit.axis_board = cn > 1e-3f ? cv::Point2f(chord.x / cn, chord.y / cn)
+                                : cv::Point2f(0.f, 1.f);
+    const cv::Vec2f sc = calib_.localScaleMmPerPx(tip);
+    const float mm_per_px = sc[0] > 0.f ? sc[0] : 0.6f;
+    hit.sigma_across_mm = std::max(2.5f, mm_per_px * 2.5f);
+    hit.sigma_along_mm  = 40.f;          // confirmatory vote: line tight, tip loose
+    hit.sigma_mm        = hit.sigma_across_mm;
+    ZoneResult zr;
+    if (!zone_map_.empty()) {
+        zr = zone_map_.lookup(tip);
+        hit.zone_margin_mm = zone_map_.boundaryDistancePx(tip) * mm_per_px;
+    } else {
+        zr = ZoneMapper::lookup(board_xy);
+        hit.zone_margin_mm = ZoneMapper::boundaryMarginMM(board_xy);
+    }
+    hit.zone       = zr.label;
+    hit.score      = zr.value;
+    hit.shape_q    = 0.5f;
+    hit.view_q     = std::clamp(0.6f / (sc[1] > 0.f ? sc[1] : 0.6f), 0.f, 1.f);
+    hit.confidence = 0.4f;
+    hit.timestamp  = timestamp;
+    return hit;
 }
 
 std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
@@ -815,6 +913,20 @@ std::optional<DartHit> DartDetector::processFrame(const cv::Mat& frame,
 
     // No human in frame from here on — the cumulative mask is trustworthy.
     cum_mask_clean_ = true;
+
+    // Temporal persistence of the cumulative foreground: +1 where present (cap
+    // CUM_PERSIST_CAP), -1 (saturating) elsewhere.  Epipolar recall trusts only
+    // components that have persisted ≥ CUM_PERSIST_MIN frames — a real dart is
+    // stable, a threshold-noise streak is not.
+    {
+        if (cum_persist_.empty() ||
+            cum_persist_.size() != latest_cum_mask_.size())
+            cum_persist_ = cv::Mat::zeros(latest_cum_mask_.size(), CV_8U);
+        const cv::Mat fg = latest_cum_mask_ > 0;          // CV_8U 0/255
+        cv::add(cum_persist_, 1, cum_persist_, fg);
+        cv::subtract(cum_persist_, 1, cum_persist_, ~fg); // saturates at 0
+        cv::min(cum_persist_, CUM_PERSIST_CAP, cum_persist_);
+    }
 
     // ── Adaptive bg updates ────────────────────────────────────────────────
     //
