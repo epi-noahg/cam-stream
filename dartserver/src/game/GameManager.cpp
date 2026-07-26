@@ -255,9 +255,11 @@ void GameManager::recordDetectedThrow(const Throw& thr, const ThrowMeta& meta) {
 void GameManager::correctThrow(int turnIndex, int throwIndex,
                                const Throw& newThrow) {
     GameState copy;
+    bool wasOver = false;
     {
         std::lock_guard<std::mutex> lk(mtx_);
         if (!has_game_) return;
+        wasOver = state_.gameOver;
         if (turnIndex < 0 || turnIndex >= static_cast<int>(state_.turns.size()))
             return;
         if (throwIndex < 0 ||
@@ -319,13 +321,15 @@ void GameManager::correctThrow(int turnIndex, int throwIndex,
                 }
             }
         }
-        // For Cricket / Round the Clock the replay already cleared the
-        // match-level flags; an edited game simply continues from the new state.
+        // For Cricket / Round the Clock the replay (recalculate*) already
+        // rebuilt winner / finishedPlayers / gameOver, so the edited game
+        // simply continues from — or ends at — the recomputed state.
 
         state_ = std::move(rec);
         copy = state_;
     }
     if (on_changed_) on_changed_(copy);
+    if (!wasOver && copy.gameOver && on_game_over_) on_game_over_(copy);
 }
 
 void GameManager::undo() {
@@ -348,15 +352,18 @@ void GameManager::nextPlayer() {
         pushHistoryLocked_();
 
         const int n = static_cast<int>(state_.players.size());
-        int idx = (state_.currentIndex + 1) % n;
-        for (int a = 0; a < n; ++a) {
-            if (!contains(state_.finishedPlayers, state_.players[idx].id)) break;
+        // Hand over to the next active player, materialising exactly one turn
+        // slot per player we step over (including the one we land on).  This
+        // keeps turn `k` owned by player `k % n`, which is what lets
+        // recalculate*() re-attribute marks/points correctly after an edit.
+        int idx = state_.currentIndex;
+        for (int step = 0; step < n; ++step) {
             idx = (idx + 1) % n;
+            state_.turns.push_back({});
+            if (!contains(state_.finishedPlayers, state_.players[idx].id)) break;
         }
         state_.currentIndex = idx;
         state_.dartIndex    = 0;
-        if (state_.turns.empty() || !state_.turns.back().empty())
-            state_.turns.push_back({});
         copy = state_;
     }
     if (on_changed_) on_changed_(copy);

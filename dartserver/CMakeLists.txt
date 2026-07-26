@@ -46,6 +46,17 @@ add_executable(test_roundclock tests/test_roundclock.cpp)
 target_link_libraries(test_roundclock PRIVATE dartgame)
 add_test(NAME round_clock_engine COMMAND test_roundclock)
 
+# ── Nasty-case simulation tests (Cricket / Round the Clock) ──────────────────
+foreach(sim
+    cricket_scoring cricket_cutthroat cricket_undo cricket_correct_past
+    cricket_winstate cricket_skip cricket_bull cricket_teams
+    rtc_sim cricket_fullgame)
+    add_executable(test_${sim} tests/sim/test_${sim}.cpp)
+    target_link_libraries(test_${sim} PRIVATE dartgame)
+    target_compile_options(test_${sim} PRIVATE -Wall -Wextra)
+    add_test(NAME sim_${sim} COMMAND test_${sim})
+endforeach()
+
 # ─────────────────────────────────────────────────────────────────────────────
 # dartdetect — bridges the camdetect Pipeline to the game.  Pulls in OpenCV and
 # the camdetect static library (built from ../detection), plus CameraCapture

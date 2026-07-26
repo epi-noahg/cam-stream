@@ -79,6 +79,11 @@ ApplyResult applyRoundClockThrow(const GameState& state, const Throw& thr) {
 }
 
 GameState recalculateRoundClock(const GameState& state) {
+    // Authoritative turn history; applyRoundClockThrow() mutates a scratch
+    // copy's `turns` while replaying, so keep the original and restore it.
+    const std::vector<std::vector<Throw>> recorded = state.turns;
+    const int nplayers = static_cast<int>(state.players.size());
+
     GameState cur = state;
     for (PlayerState& p : cur.players) {
         p.target  = 1;
@@ -91,15 +96,43 @@ GameState recalculateRoundClock(const GameState& state) {
     cur.finishedPlayers.clear();
     cur.gameOver     = false;
 
-    const int nplayers = static_cast<int>(state.players.size());
-    for (std::size_t turnIndex = 0; turnIndex < state.turns.size(); ++turnIndex) {
-        const std::vector<Throw>& turn = state.turns[turnIndex];
+    // Turn `i` belongs to player `i % nplayers` (alignment preserved by the
+    // manager, incl. manual hand-overs).  RTC ends on the first finish.
+    bool over        = false;
+    int  winnerIndex = -1;
+    for (std::size_t turnIndex = 0; turnIndex < recorded.size() && !over; ++turnIndex) {
+        const std::vector<Throw>& turn = recorded[turnIndex];
         const int playerIndex = static_cast<int>(turnIndex) % nplayers;
         for (std::size_t throwIndex = 0; throwIndex < turn.size(); ++throwIndex) {
             cur.currentIndex = playerIndex;
             cur.dartIndex    = static_cast<int>(throwIndex);
-            cur = applyRoundClockThrow(cur, turn[throwIndex]).state;
+            ApplyResult r = applyRoundClockThrow(cur, turn[throwIndex]);
+            cur = std::move(r.state);
+            if (r.finished) { over = true; winnerIndex = playerIndex; break; }
         }
+    }
+
+    cur.turns = recorded;  // discard the replay's scratch turn mutations
+
+    if (over) {
+        // The winner's whole team finishes; place everyone else; end the match.
+        const int winnerTeam = teamKey(cur.players[winnerIndex]);
+        cur.finishedPlayers.clear();
+        for (const PlayerState& p : cur.players)
+            if (teamKey(p) == winnerTeam) cur.finishedPlayers.push_back(p.id);
+        for (const PlayerState& p : cur.players) {
+            bool present = false;
+            for (int f : cur.finishedPlayers) if (f == p.id) { present = true; break; }
+            if (!present) cur.finishedPlayers.push_back(p.id);
+        }
+        cur.winner       = cur.players[winnerIndex].id;
+        cur.gameOver     = true;
+        cur.currentIndex = winnerIndex;
+        cur.dartIndex    = 0;
+    } else if (!recorded.empty()) {
+        const int lastTurn = static_cast<int>(recorded.size()) - 1;
+        cur.currentIndex = lastTurn % nplayers;
+        cur.dartIndex    = static_cast<int>(recorded[lastTurn].size()) % 3;
     }
     return cur;
 }

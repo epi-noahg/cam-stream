@@ -112,13 +112,22 @@ ApplyResult applyCricketThrow(const GameState& state, const Throw& thr) {
 
         if (scoringMarks > 0) {
             if (ns.cricket.cutThroat) {
-                // Dump points on every opponent who has not closed this number.
+                // Dump points on every opponent TEAM that has not closed this
+                // number — once per team, not per member (team-mates share the
+                // score via propagateTeam, so charging each member would
+                // double-count for multi-player teams).
+                std::vector<int> chargedTeams;
                 for (PlayerState& op : ns.players) {
-                    if (teamKey(op) == teamKey(me)) continue;
+                    const int tk = teamKey(op);
+                    if (tk == teamKey(me)) continue;
+                    bool already = false;
+                    for (int c : chargedTeams) if (c == tk) { already = true; break; }
+                    if (already) continue;
                     ensureMarks(op);
                     if (op.marks[ti] < kMarksToClose) {
                         op.score += scoringMarks * value;
                         propagateTeam(ns, op.id);
+                        chargedTeams.push_back(tk);
                     }
                 }
             } else {
@@ -159,6 +168,11 @@ ApplyResult applyCricketThrow(const GameState& state, const Throw& thr) {
 }
 
 GameState recalculateCricket(const GameState& state) {
+    // Authoritative turn history.  applyCricketThrow() mutates a scratch copy's
+    // `turns` while replaying, so keep the original and restore it at the end.
+    const std::vector<std::vector<Throw>> recorded = state.turns;
+    const int nplayers = static_cast<int>(state.players.size());
+
     GameState cur = state;
     for (PlayerState& p : cur.players) {
         p.score   = 0;
@@ -172,15 +186,47 @@ GameState recalculateCricket(const GameState& state) {
     cur.finishedPlayers.clear();
     cur.gameOver     = false;
 
-    const int nplayers = static_cast<int>(state.players.size());
-    for (std::size_t turnIndex = 0; turnIndex < state.turns.size(); ++turnIndex) {
-        const std::vector<Throw>& turn = state.turns[turnIndex];
+    // Replay every recorded dart.  Turn `i` belongs to player `i % nplayers`;
+    // the manager preserves that alignment even across manual hand-overs
+    // (nextPlayer materialises a turn slot per player it steps over).  Cricket
+    // ends on the first finish, so we stop replaying there.
+    bool over        = false;
+    int  winnerIndex = -1;
+    for (std::size_t turnIndex = 0; turnIndex < recorded.size() && !over; ++turnIndex) {
+        const std::vector<Throw>& turn = recorded[turnIndex];
         const int playerIndex = static_cast<int>(turnIndex) % nplayers;
         for (std::size_t throwIndex = 0; throwIndex < turn.size(); ++throwIndex) {
             cur.currentIndex = playerIndex;
             cur.dartIndex    = static_cast<int>(throwIndex);
-            cur = applyCricketThrow(cur, turn[throwIndex]).state;
+            ApplyResult r = applyCricketThrow(cur, turn[throwIndex]);
+            cur = std::move(r.state);
+            if (r.finished) { over = true; winnerIndex = playerIndex; break; }
         }
+    }
+
+    cur.turns = recorded;  // discard the replay's scratch turn mutations
+
+    if (over) {
+        // Mirror GameManager's Cricket finish bookkeeping: the winner's whole
+        // team finishes, every remaining player is placed, and the match ends.
+        const int winnerTeam = teamKey(cur.players[winnerIndex]);
+        cur.finishedPlayers.clear();
+        for (const PlayerState& p : cur.players)
+            if (teamKey(p) == winnerTeam) cur.finishedPlayers.push_back(p.id);
+        for (const PlayerState& p : cur.players) {
+            bool present = false;
+            for (int f : cur.finishedPlayers) if (f == p.id) { present = true; break; }
+            if (!present) cur.finishedPlayers.push_back(p.id);
+        }
+        cur.winner       = cur.players[winnerIndex].id;
+        cur.gameOver     = true;
+        cur.currentIndex = winnerIndex;
+        cur.dartIndex    = 0;
+    } else if (!recorded.empty()) {
+        // Resume on whoever owns the last (in-progress) turn.
+        const int lastTurn = static_cast<int>(recorded.size()) - 1;
+        cur.currentIndex = lastTurn % nplayers;
+        cur.dartIndex    = static_cast<int>(recorded[lastTurn].size()) % 3;
     }
     return cur;
 }
